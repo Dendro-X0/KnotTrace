@@ -1,0 +1,65 @@
+# Release and installer build
+
+## Build the installer (Windows)
+
+```bash
+cd apps/desktop
+npm install
+npm run tauri build
+```
+
+Artifacts land under the **workspace** `target/` directory (not `apps/desktop/src-tauri/target/`):
+
+```
+target/release/
+├── network-desktop.exe
+└── bundle/
+    └── msi/
+        └── Network Companion_0.9.0_x64_en-US.msi
+```
+
+NSIS (`.exe`) bundles appear under `target/release/bundle/nsis/` when enabled.
+
+## Pre-push checklist
+
+- [ ] `cargo test -p network-core` passes
+- [ ] `cargo check --workspace` passes
+- [ ] `npm run build` passes in `apps/desktop`
+- [ ] `npm run tauri build` completes without errors
+- [ ] Version aligned: `Cargo.toml`, `package.json`, `tauri.conf.json`, `CHANGELOG.md`
+- [ ] `CHANGELOG.md` updated for the release
+- [ ] Smoke test installed app: health check → diagnosis → Network throughput (optional) → tray quit
+
+## Version bump
+
+Update these together:
+
+| File | Field |
+|------|-------|
+| `Cargo.toml` | `[workspace.package] version` |
+| `apps/desktop/package.json` | `version` |
+| `apps/desktop/src-tauri/tauri.conf.json` | `version` |
+| `CHANGELOG.md` | New section + date |
+
+## Git push
+
+```bash
+git status
+git add .
+git commit -m "Release v0.9.0"
+git push -u origin main
+```
+
+Tag when ready:
+
+```bash
+git tag v0.9.0
+git push origin v0.9.0
+```
+
+## Notes
+
+- First `tauri build` may take several minutes (Rust release compile + bundling).
+- On machines with limited virtual memory, use `CARGO_BUILD_JOBS=1 npm run tauri build` to reduce parallel rustc jobs.
+- Ensure `node_modules` and `target/` are not committed (see root `.gitignore`).
+- DNS Assist apply requires elevated privileges on some Windows interfaces; observe-only features work without admin.

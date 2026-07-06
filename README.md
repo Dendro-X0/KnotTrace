@@ -42,6 +42,7 @@ Full setup, verification commands, and repo layout: **[docs/START-HERE.md](docs/
 | [docs/release.md](docs/release.md) | Installer build and pre-push checklist |
 | [docs/architecture.md](docs/architecture.md) | Modules and data flow |
 | [docs/platform-support.md](docs/platform-support.md) | OS feature matrix |
+| [docs/github-ci.md](docs/github-ci.md) | GitHub Actions CI and release publishing |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 | [specs/backend/](specs/backend/) | Design specs and roadmap |
 

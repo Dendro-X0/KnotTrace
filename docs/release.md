@@ -57,6 +57,14 @@ git tag v0.9.0
 git push origin v0.9.0
 ```
 
+## GitHub Actions
+
+CI and release workflows live in `.github/workflows/`. See [docs/github-ci.md](github-ci.md) for:
+
+- Running CI on push/PR
+- Publishing installer assets to a GitHub Release
+- Re-building an existing tag (e.g. `v0.9.0`) via **Actions → Release → Run workflow**
+
 ## Notes
 
 - First `tauri build` may take several minutes (Rust release compile + bundling).

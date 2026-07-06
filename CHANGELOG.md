@@ -61,5 +61,5 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
-[0.9.0]: https://github.com/your-org/network-companion/compare/v0.8.0...v0.9.0
-[0.8.0]: https://github.com/your-org/network-companion/compare/v0.7.0...v0.8.0
+[0.9.0]: https://github.com/Dendro-X0/network/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/Dendro-X0/network/compare/v0.7.0...v0.8.0

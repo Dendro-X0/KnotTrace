@@ -43,6 +43,7 @@ Windows: `%LOCALAPPDATA%/NetworkCompanion/`
 - [architecture.md](./architecture.md) — repo layout and module boundaries
 - [platform-support.md](./platform-support.md) — what works on each OS
 - [../specs/backend/](../specs/backend/) — design specs and roadmap
+- [github-ci.md](./github-ci.md) — GitHub Actions CI and release publishing
 
 ## Principles
 

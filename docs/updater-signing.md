@@ -2,6 +2,39 @@
 
 KnotTrace uses **Tauri minisign** for update artifacts on desktop and mobile. This is separate from Windows Authenticode or Apple notarization — it proves updates came from your release pipeline, not from a random download mirror.
 
+## Quick setup (first release)
+
+You already have a key pair if `apps/desktop/src-tauri/.updater/knottrace.key` exists. **Do not regenerate** unless you intend to rotate keys and update `tauri.conf.json`.
+
+**Windows (PowerShell):**
+
+```powershell
+.\scripts\setup-github-signing-secret.ps1
+```
+
+**macOS / Linux / Git Bash:**
+
+```bash
+./scripts/setup-github-signing-secret.sh
+```
+
+With [GitHub CLI](https://cli.github.com/) logged in (`gh auth login`), either script sets both secrets automatically. Otherwise it prints the repo secrets URL and copy instructions.
+
+| Secret | Value |
+|--------|--------|
+| `TAURI_SIGNING_PRIVATE_KEY` | Full file contents of `knottrace.key` |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Empty (create the secret with a blank value) |
+
+Then: **Actions → Release → Run workflow** → tag `v1.1.1`.
+
+**No key yet?** Generate once:
+
+```bash
+./scripts/generate-updater-keys.sh
+```
+
+Then run the setup script above. Commit any `knottrace.key.pub` / `tauri.conf.json` pubkey changes if you generated a new pair.
+
 ## Two signing layers
 
 | Layer | Purpose | OSS approach |

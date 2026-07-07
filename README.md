@@ -45,7 +45,7 @@ Full setup, verification commands, and repo layout: **[docs/START-HERE.md](docs/
 | [docs/architecture.md](docs/architecture.md) | Modules and data flow |
 | [docs/platform-support.md](docs/platform-support.md) | OS feature matrix |
 | [docs/github-ci.md](docs/github-ci.md) | GitHub Actions CI and release publishing |
-| [docs/updater-signing.md](docs/updater-signing.md) | Signed updates, OSS keys, Android/iOS |
+| [docs/updater-signing.md](docs/updater-signing.md) | Signed updates, OSS keys, Android/iOS — **start here for release secrets** |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 | [specs/backend/](specs/backend/) | Design specs and roadmap |
 

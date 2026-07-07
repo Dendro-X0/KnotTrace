@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import shutil
 from pathlib import Path
 
 from PIL import Image
@@ -56,8 +57,10 @@ def main() -> int:
 
     write_sizes()
 
+    # Use npm exec for portability. On Windows, ensure we call an actual executable.
+    npm = shutil.which("npm") or ("npm.cmd" if sys.platform.startswith("win") else "npm")
     subprocess.run(
-        ["npx", "tauri", "icon", str(MASTER)],
+        [npm, "exec", "--", "tauri", "icon", str(MASTER)],
         cwd=DESKTOP,
         check=True,
     )

@@ -2400,7 +2400,7 @@ dependencies = [
 
 [[package]]
 name = "network-core"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "chrono",
  "hickory-resolver",
@@ -2417,7 +2417,7 @@ dependencies = [
 
 [[package]]
 name = "network-desktop"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "chrono",
  "dirs",

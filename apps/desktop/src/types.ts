@@ -52,6 +52,70 @@ export interface HealthReport {
   diagnosis?: NetworkDiagnosis | null;
   stability?: StabilityProbeResult | null;
   site_reachability?: SiteReachabilityStatus | null;
+  egress?: EgressReport | null;
+  network_context?: NetworkContextReport | null;
+  recommendations?: NetworkRecommendations | null;
+}
+
+export type EgressConfidence = "high" | "medium" | "low" | "unknown";
+export type NetworkContextKind =
+  | "home_lan"
+  | "guest_wifi"
+  | "public_cellular"
+  | "captive_portal"
+  | "unknown";
+export type NetworkRiskLevel = "low" | "moderate" | "high";
+export type CaptivePortalState = "not_detected" | "suspected" | "confirmed";
+
+export interface EgressEndpointResult {
+  provider: string;
+  ip: string | null;
+  latency_ms: number | null;
+  success: boolean;
+  error: string | null;
+}
+
+export interface EgressPathReport {
+  kind: "system" | "tor_socks";
+  primary_ip: string | null;
+  endpoints: EgressEndpointResult[];
+  summary: string;
+}
+
+export interface EgressReport {
+  primary_ip: string | null;
+  confidence: EgressConfidence;
+  system_path: EgressPathReport;
+  tor_path?: EgressPathReport | null;
+  summary: string;
+}
+
+export interface CaptivePortalStatus {
+  state: CaptivePortalState;
+  probe_url: string;
+  status_code: number | null;
+  redirected: boolean;
+  summary: string;
+}
+
+export interface NetworkContextReport {
+  kind: NetworkContextKind;
+  risk_level: NetworkRiskLevel;
+  captive_portal: CaptivePortalStatus;
+  signals: string[];
+  summary: string;
+}
+
+export interface NetworkRecommendation {
+  category: string;
+  priority: number;
+  title: string;
+  message: string;
+}
+
+export interface NetworkRecommendations {
+  items: NetworkRecommendation[];
+  summary: string;
 }
 
 export interface SiteReachResult {
@@ -169,6 +233,9 @@ export type BottleneckCategory =
   | "mtu_fragmentation"
   | "wifi_path"
   | "cellular_path"
+  | "public_network"
+  | "captive_portal"
+  | "egress_unstable"
   | "healthy";
 
 export interface BottleneckHint {

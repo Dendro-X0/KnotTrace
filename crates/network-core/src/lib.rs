@@ -7,11 +7,14 @@ mod connect;
 mod diagnosis;
 mod dns_integrity;
 mod dns_platform;
+mod egress;
 mod env;
 mod fingerprint;
+mod network_context;
 mod probe;
 mod protect;
 mod reachability;
+mod recommendations;
 mod score;
 mod stability;
 mod store;
@@ -37,7 +40,9 @@ pub use dns_integrity::{
     save_dns_integrity_settings, DnsIntegrityError,
 };
 pub use env::detect_environment;
+pub use egress::{egress_unstable, probe_egress};
 pub use fingerprint::environment_fingerprint;
+pub use network_context::{assess_network_context, is_untrusted_context, probe_captive_portal};
 pub use probe::{measure_tcp_latency, probe_dns_resolver, resolve_dns_addresses, run_quick_probe};
 pub use stability::run_stability_probes;
 pub use tor::{detect_tor_status, is_tor_socks_endpoint};
@@ -46,6 +51,7 @@ pub use protect::{
     should_notify, ProtectError,
 };
 pub use reachability::{probe_site_reachability, site_access_degraded};
+pub use recommendations::build_recommendations;
 pub use score::score_health;
 pub use store::{HistoryStore, StoreError};
 pub use throughput::{
@@ -87,6 +93,15 @@ pub async fn run_health_check_with_settings(
     let site_reachability = Some(
         probe_site_reachability(&integrity_settings.verification_domains, &environment).await,
     );
+    let captive_portal = probe_captive_portal().await;
+    let network_context = Some(assess_network_context(
+        &environment,
+        &captive_portal,
+        dns_integrity.as_ref(),
+        site_reachability.as_ref(),
+        &probe,
+    ));
+    let egress = Some(probe_egress(&environment).await);
     let stability = Some(run_stability_probes().await);
 
     let mut report = HealthReport {
@@ -98,7 +113,11 @@ pub async fn run_health_check_with_settings(
         diagnosis: None,
         stability,
         site_reachability,
+        egress,
+        network_context,
+        recommendations: None,
     };
+    report.recommendations = Some(build_recommendations(&report));
     report.diagnosis = Some(diagnose_network(&report));
 
     Ok(report)

@@ -163,6 +163,12 @@ pub struct HealthReport {
     pub stability: Option<StabilityProbeResult>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub site_reachability: Option<SiteReachabilityStatus>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub egress: Option<EgressReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub network_context: Option<NetworkContextReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recommendations: Option<NetworkRecommendations>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -318,9 +324,9 @@ pub struct ProtectSettings {
     pub notify_on_grade_drop: bool,
     pub notify_on_untrusted_network: bool,
     pub notify_on_degraded: bool,
-    #[serde(default)]
+    #[serde(default = "default_auto_apply_dns")]
     pub auto_apply_dns: bool,
-    #[serde(default)]
+    #[serde(default = "default_auto_apply_connect")]
     pub auto_apply_connect: bool,
     #[serde(default = "default_auto_apply_untrusted_only")]
     pub auto_apply_on_untrusted_only: bool,
@@ -332,12 +338,20 @@ pub struct ProtectSettings {
     pub auto_recover_site_access: bool,
 }
 
+fn default_auto_apply_dns() -> bool {
+    true
+}
+
+fn default_auto_apply_connect() -> bool {
+    false
+}
+
 fn default_auto_recover_dns_integrity() -> bool {
     true
 }
 
 fn default_auto_recover_site_access() -> bool {
-    true
+    false
 }
 
 fn default_auto_apply_untrusted_only() -> bool {
@@ -458,7 +472,124 @@ pub enum BottleneckCategory {
     MtuFragmentation,
     WifiPath,
     CellularPath,
+    PublicNetwork,
+    CaptivePortal,
+    EgressUnstable,
     Healthy,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EgressConfidence {
+    High,
+    Medium,
+    Low,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EgressPathKind {
+    System,
+    TorSocks,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EgressEndpointResult {
+    pub provider: String,
+    pub ip: Option<String>,
+    pub latency_ms: Option<f64>,
+    pub success: bool,
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EgressPathReport {
+    pub kind: EgressPathKind,
+    pub primary_ip: Option<String>,
+    pub endpoints: Vec<EgressEndpointResult>,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EgressReport {
+    pub primary_ip: Option<String>,
+    pub confidence: EgressConfidence,
+    pub system_path: EgressPathReport,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tor_path: Option<EgressPathReport>,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NetworkContextKind {
+    HomeLan,
+    GuestWifi,
+    PublicCellular,
+    CaptivePortal,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum NetworkRiskLevel {
+    Low,
+    Moderate,
+    High,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CaptivePortalState {
+    NotDetected,
+    Suspected,
+    Confirmed,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CaptivePortalStatus {
+    pub state: CaptivePortalState,
+    pub probe_url: String,
+    pub status_code: Option<u16>,
+    pub redirected: bool,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkContextReport {
+    pub kind: NetworkContextKind,
+    pub risk_level: NetworkRiskLevel,
+    pub captive_portal: CaptivePortalStatus,
+    pub signals: Vec<String>,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RecommendationCategory {
+    PublicNetwork,
+    CaptivePortal,
+    DnsSecurity,
+    VpnPrivacy,
+    ProxyPath,
+    TorPath,
+    Egress,
+    General,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkRecommendation {
+    pub category: RecommendationCategory,
+    pub priority: u8,
+    pub title: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkRecommendations {
+    pub items: Vec<NetworkRecommendation>,
+    pub summary: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

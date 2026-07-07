@@ -12,6 +12,8 @@ pub fn diagnose_network(report: &HealthReport) -> NetworkDiagnosis {
     push_dns_hints(report, &mut hints);
     push_integrity_hints(report, &mut hints);
     push_reachability_hints(report, &mut hints);
+    push_context_hints(report, &mut hints);
+    push_egress_hints(report, &mut hints);
     push_stability_hints(report, &mut hints);
     push_path_hints(report, &mut hints);
 
@@ -230,6 +232,68 @@ fn push_reachability_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint
     });
 }
 
+fn push_context_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
+    let Some(context) = &report.network_context else {
+        return;
+    };
+
+    if matches!(context.kind, NetworkContextKind::CaptivePortal) {
+        hints.push(BottleneckHint {
+            category: BottleneckCategory::CaptivePortal,
+            severity: AlertLevel::Critical,
+            title: "Captive portal detected".to_string(),
+            message: context.captive_portal.summary.clone(),
+            suggestions: vec![
+                "Open a browser and complete the Wi-Fi login page.".to_string(),
+                "Re-run a health check after sign-in.".to_string(),
+            ],
+        });
+        return;
+    }
+
+    if matches!(
+        context.kind,
+        NetworkContextKind::GuestWifi | NetworkContextKind::PublicCellular
+    ) && matches!(context.risk_level, NetworkRiskLevel::Moderate | NetworkRiskLevel::High)
+    {
+        let severity = if matches!(context.risk_level, NetworkRiskLevel::High) {
+            AlertLevel::Critical
+        } else {
+            AlertLevel::Warning
+        };
+
+        hints.push(BottleneckHint {
+            category: BottleneckCategory::PublicNetwork,
+            severity,
+            title: "Public or guest network".to_string(),
+            message: context.summary.clone(),
+            suggestions: vec![
+                "Use a VPN for sensitive accounts on guest Wi-Fi.".to_string(),
+                "Let KnotTrace apply trusted DNS if hijacking is detected.".to_string(),
+            ],
+        });
+    }
+}
+
+fn push_egress_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
+    let Some(egress) = &report.egress else {
+        return;
+    };
+
+    if crate::egress::egress_unstable(egress) {
+        hints.push(BottleneckHint {
+            category: BottleneckCategory::EgressUnstable,
+            severity: AlertLevel::Warning,
+            title: "Unstable public IP detection".to_string(),
+            message: egress.summary.clone(),
+            suggestions: vec![
+                "Proxy or VPN paths may be masking egress.".to_string(),
+                "Compare results after captive portal sign-in.".to_string(),
+            ],
+        });
+    }
+}
+
 fn push_stability_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
     if let Some(stability) = &report.stability {
         if let Some(bufferbloat) = &stability.bufferbloat {
@@ -418,6 +482,9 @@ fn category_label(category: BottleneckCategory) -> &'static str {
         BottleneckCategory::MtuFragmentation => "MTU fragmentation",
         BottleneckCategory::WifiPath => "Wi-Fi path",
         BottleneckCategory::CellularPath => "cellular path",
+        BottleneckCategory::PublicNetwork => "public network",
+        BottleneckCategory::CaptivePortal => "captive portal",
+        BottleneckCategory::EgressUnstable => "egress instability",
         BottleneckCategory::Healthy => "healthy",
     }
 }
@@ -473,6 +540,9 @@ mod tests {
             diagnosis: None,
             stability: None,
             site_reachability: None,
+            egress: None,
+            network_context: None,
+            recommendations: None,
         }
     }
 

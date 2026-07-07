@@ -156,6 +156,9 @@ mod tests {
             diagnosis: None,
             stability: None,
             site_reachability: None,
+            egress: None,
+            network_context: None,
+            recommendations: None,
         }
     }
 

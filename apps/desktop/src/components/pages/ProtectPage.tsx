@@ -29,7 +29,7 @@ const TOGGLES: Array<{
 }> = [
   { key: "enabled", label: "Smart protect", hint: "Monitor trust and connection quality" },
   { key: "auto_apply_dns", label: "Auto-improve DNS", hint: "Apply faster DNS on untrusted or poor networks" },
-  { key: "auto_apply_connect", label: "Auto-switch proxy node", hint: "Pick a faster node when Mihomo/sing-box is available" },
+  { key: "auto_apply_connect", label: "Auto-switch proxy node", hint: "Opt-in: pick a faster node when Mihomo/sing-box is available" },
   {
     key: "auto_recover_dns_integrity",
     label: "Recover from DNS poisoning",
@@ -38,7 +38,7 @@ const TOGGLES: Array<{
   {
     key: "auto_recover_site_access",
     label: "Recover site access",
-    hint: "Switch proxy nodes when verification sites fail over HTTPS",
+    hint: "Opt-in: switch proxy nodes when verification sites fail over HTTPS",
   },
   {
     key: "auto_apply_on_untrusted_only",

@@ -4,6 +4,21 @@ All notable changes to Network Companion are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions align with `tauri.conf.json` and workspace `Cargo.toml`.
 
+## [1.3.0] - 2026-07-07
+
+### Added
+
+- **Public egress IP probes** — multi-provider IP detection with confidence scoring (Win/macOS/Linux)
+- **Guest/public network context** — classifies hotel/café Wi-Fi, cellular, and captive portals
+- **Network recommendations** — guidance panel without forced WiFi/VPN/proxy changes
+- **Tor egress comparison** — compares system path vs Tor SOCKS when reachable
+- Spec: [`specs/backend/public-network-egress-v1.3.md`](specs/backend/public-network-egress-v1.3.md)
+
+### Changed
+
+- **Protect defaults** — proxy node auto-switch and site-access recovery now **opt-in** (off by default)
+- Guest Wi-Fi on private gateways is treated as **untrusted** even when tagged `home_lan`
+
 ## [1.2.0] - 2026-07-07
 
 ### Added

@@ -17,10 +17,10 @@ pub fn default_protect_settings() -> ProtectSettings {
         notify_on_untrusted_network: true,
         notify_on_degraded: true,
         auto_apply_dns: true,
-        auto_apply_connect: true,
+        auto_apply_connect: false,
         auto_apply_on_untrusted_only: true,
         auto_recover_dns_integrity: true,
-        auto_recover_site_access: true,
+        auto_recover_site_access: false,
     }
 }
 
@@ -52,7 +52,7 @@ pub fn evaluate_protect(
     previous_grade: Option<HealthGrade>,
     settings: &ProtectSettings,
 ) -> ProtectStatus {
-    let trust_level = classify_trust_level(&report.environment, &report.score);
+    let trust_level = classify_trust_level(&report.environment, &report.score, report.network_context.as_ref());
     let mut alerts = Vec::new();
 
     if settings.enabled {
@@ -88,6 +88,21 @@ pub fn evaluate_protect(
         if let Some(reachability) = &report.site_reachability {
             if crate::reachability::site_access_degraded(reachability) {
                 alerts.push(site_access_alert(reachability, settings, &report.environment));
+            }
+        }
+
+        if let Some(context) = &report.network_context {
+            if matches!(context.kind, NetworkContextKind::GuestWifi | NetworkContextKind::PublicCellular)
+                && !report.environment.tags.contains(&EnvironmentTag::Vpn)
+            {
+                alerts.push(guest_network_alert(context, settings));
+            }
+
+            if matches!(
+                context.captive_portal.state,
+                CaptivePortalState::Suspected | CaptivePortalState::Confirmed
+            ) {
+                alerts.push(captive_portal_alert(context, settings));
             }
         }
     }
@@ -159,10 +174,21 @@ pub fn should_notify(
     None
 }
 
-fn classify_trust_level(environment: &EnvironmentSnapshot, score: &HealthScore) -> TrustLevel {
+fn classify_trust_level(
+    environment: &EnvironmentSnapshot,
+    score: &HealthScore,
+    network_context: Option<&NetworkContextReport>,
+) -> TrustLevel {
+    let behind_vpn = environment.tags.contains(&EnvironmentTag::Vpn);
+
+    if let Some(context) = network_context {
+        if crate::network_context::is_untrusted_context(context, behind_vpn) {
+            return TrustLevel::Untrusted;
+        }
+    }
+
     let on_public = environment.tags.contains(&EnvironmentTag::Public);
     let on_home = environment.tags.contains(&EnvironmentTag::HomeLan);
-    let behind_vpn = environment.tags.contains(&EnvironmentTag::Vpn);
 
     if on_public && !behind_vpn {
         return TrustLevel::Untrusted;
@@ -300,7 +326,7 @@ fn site_access_alert(
     };
 
     let proxy_note = if environment.proxy.enabled {
-        " Proxy is active — Connect Assist may switch nodes automatically."
+        " Proxy is active — review Connect Assist if sites fail."
     } else {
         ""
     };
@@ -318,6 +344,35 @@ fn site_access_alert(
         actions: vec![ProtectAction {
             kind: ProtectActionKind::RunCheck,
             label: "View details".to_string(),
+        }],
+    }
+}
+
+fn guest_network_alert(context: &NetworkContextReport, settings: &ProtectSettings) -> ProtectAlert {
+    ProtectAlert {
+        level: AlertLevel::Warning,
+        title: "Guest or public network".to_string(),
+        message: format!(
+            "{} Avoid sensitive logins unless a VPN is active.{}",
+            context.summary,
+            auto_protect_note(settings)
+        ),
+        actions: alert_actions(settings),
+    }
+}
+
+fn captive_portal_alert(context: &NetworkContextReport, settings: &ProtectSettings) -> ProtectAlert {
+    ProtectAlert {
+        level: AlertLevel::Critical,
+        title: "Wi-Fi sign-in required".to_string(),
+        message: format!(
+            "{} Complete the hotspot login in your browser before trusting this path.{}",
+            context.captive_portal.summary,
+            auto_protect_note(settings)
+        ),
+        actions: vec![ProtectAction {
+            kind: ProtectActionKind::RunCheck,
+            label: "Re-check after login".to_string(),
         }],
     }
 }
@@ -406,6 +461,9 @@ mod tests {
             diagnosis: None,
             stability: None,
             site_reachability: None,
+            egress: None,
+            network_context: None,
+            recommendations: None,
         }
     }
 
@@ -415,6 +473,27 @@ mod tests {
         let status = evaluate_protect(&report, None, &default_protect_settings());
         assert_eq!(status.trust_level, TrustLevel::Untrusted);
         assert!(!status.alerts.is_empty());
+    }
+
+    #[test]
+    fn flags_guest_wifi_as_untrusted() {
+        let mut report = sample_report(vec![EnvironmentTag::HomeLan], HealthGrade::Good);
+        report.network_context = Some(NetworkContextReport {
+            kind: NetworkContextKind::GuestWifi,
+            risk_level: NetworkRiskLevel::Moderate,
+            captive_portal: CaptivePortalStatus {
+                state: CaptivePortalState::NotDetected,
+                probe_url: "http://example".to_string(),
+                status_code: Some(204),
+                redirected: false,
+                summary: "clear".to_string(),
+            },
+            signals: vec!["Wi-Fi".to_string()],
+            summary: "guest wifi".to_string(),
+        });
+
+        let status = evaluate_protect(&report, None, &default_protect_settings());
+        assert_eq!(status.trust_level, TrustLevel::Untrusted);
     }
 
     #[test]

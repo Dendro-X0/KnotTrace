@@ -3,6 +3,7 @@ import { Network, Radar } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { FactList } from "@/components/shared";
 import { StabilityProbesPanel } from "@/components/StabilityProbesPanel";
+import { NetworkInsightsPanel } from "@/components/NetworkInsightsPanel";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -149,6 +150,12 @@ export function NetworkPage({ state }: NetworkPageProps) {
       </Card>
 
       <StabilityProbesPanel stability={state.report?.stability} />
+      <NetworkInsightsPanel
+        loading={loading}
+        egress={state.report?.egress}
+        networkContext={state.report?.network_context}
+        recommendations={state.report?.recommendations}
+      />
       <ThroughputPanel state={state} />
     </div>
   );

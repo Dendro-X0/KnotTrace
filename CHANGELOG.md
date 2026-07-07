@@ -4,6 +4,23 @@ All notable changes to KnotTrace are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions align with `tauri.conf.json` and workspace `Cargo.toml`.
 
+## [1.4.1] - 2026-07-07
+
+### Added
+
+- **Multi-platform release builds** — GitHub Actions now publishes Linux (AppImage, `.deb`, `.rpm`) and macOS (`.dmg`, `.app.tar.gz`) installers alongside Windows
+- Release and platform docs updated for desktop + planned mobile paths
+
+### Fixed
+
+- **NSIS installer icon** — Windows setup executable now uses the KnotTrace logo instead of the default Tauri installer icon
+- Regenerated `icon.ico` / `icon.icns` from the master icon asset
+
+### Changed
+
+- Linux release job uses Ubuntu 22.04 with Tauri v2 WebKitGTK 4.1 build dependencies
+- Only the Windows release job generates `latest.json` updater metadata to avoid cross-job overwrites
+
 ## [1.4.0] - 2026-07-07
 
 ### Added
@@ -170,6 +187,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.4.1]: https://github.com/Dendro-X0/network/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/Dendro-X0/network/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/Dendro-X0/network/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/Dendro-X0/network/compare/v1.1.1...v1.2.0

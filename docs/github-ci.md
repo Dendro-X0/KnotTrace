@@ -37,14 +37,16 @@ Future `main` pushes without a tag show **CI only** (3 green checks).
 
 ### Release
 
-Builds the Windows Tauri bundle and creates a GitHub Release with:
+Builds Tauri bundles on **Windows, Linux, and macOS** and publishes assets to the same GitHub Release tag.
 
-- MSI installer (`KnotTrace_<version>_x64_en-US.msi`)
-- `latest.json` + `.sig` files for in-app signed updates
+- **Windows**: MSI + NSIS installer
+- **Linux**: AppImage + `.deb` + `.rpm`
+- **macOS**: `.app.tar.gz` + `.dmg`
+- `latest.json` + `.sig` files for in-app signed updates (generated on the Windows release job)
 
 Uses [tauri-apps/tauri-action](https://github.com/tauri-apps/tauri-action) with `includeUpdaterJson: true`.
 
-**Timing:** the first Windows release after a dependency bump can take **20–40 minutes** (cold Rust cache). Later releases on the same runner image are usually **8–15 minutes** thanks to `Swatinem/rust-cache`.
+**Timing:** the first multi-platform release after a dependency bump can take **20–50 minutes** (cold Rust cache and three runners). Later releases are typically faster with `Swatinem/rust-cache`.
 
 ### Required secret (signed updates)
 
@@ -54,9 +56,13 @@ Uses [tauri-apps/tauri-action](https://github.com/tauri-apps/tauri-action) with 
 
 Generate keys: `./scripts/generate-updater-keys.sh` — see [updater-signing.md](updater-signing.md).
 
-### Android releases (optional, manual)
+### Mobile releases (planned, manual)
 
-Mobile is not part of the default release path. When ready:
+Android and iOS are not part of the default desktop release path yet.
+
+Android is available as an optional manual workflow. iOS installer/release automation is planned for a future workflow.
+
+When running Android manually:
 
 1. Run **Actions → Release Android → Run workflow** with the tag (e.g. `v1.1.1`).
 2. Set secrets `ANDROID_KEY_BASE64`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS`.
@@ -71,21 +77,21 @@ This avoids a skipped Android job on every desktop release.
 
 ## Tag already pushed without assets
 
-If you tagged `v0.9.0` before adding the release workflow:
+If you tagged `v1.4.0` before adding the release workflow:
 
 1. Push the workflow files to `main`.
 2. Go to **Actions → Release → Run workflow**.
-3. Enter tag `v0.9.0` and run.
+3. Enter tag `v1.4.0` and run.
 
 This checks out the tag, builds the installer, and attaches files to the GitHub Release.
 
 Alternatively, delete and recreate the tag after the workflow exists:
 
 ```bash
-git tag -d v0.9.0
-git push origin :refs/tags/v0.9.0
-git tag v0.9.0
-git push origin v0.9.0
+git tag -d v1.4.0
+git push origin :refs/tags/v1.4.0
+git tag v1.4.0
+git push origin v1.4.0
 ```
 
 ## Future releases
@@ -95,10 +101,10 @@ git push origin v0.9.0
 3. Commit, push, tag, and push the tag:
 
 ```bash
-git commit -am "Release v0.9.1"
+git commit -am "Release v1.4.1"
 git push
-git tag v0.9.1
-git push origin v0.9.1
+git tag v1.4.1
+git push origin v1.4.1
 ```
 
 The release workflow runs automatically on tag push.

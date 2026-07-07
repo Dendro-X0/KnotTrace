@@ -1,6 +1,6 @@
 # KnotTrace
 
-**v1.4.0** — A minimalist desktop companion that monitors your connection, improves it automatically when safe, and explains slowdowns in plain language.
+**v1.4.1** — A minimalist desktop companion that monitors your connection, improves it automatically when safe, and explains slowdowns in plain language.
 
 KnotTrace watches network health in the background, applies reversible DNS and proxy improvements on untrusted or poor connections, and pinpoints whether issues are local, DNS-related, or on the proxy path.
 
@@ -21,7 +21,7 @@ KnotTrace watches network health in the background, applies reversible DNS and p
 
 You can turn off any automatic behavior on the **Protect** page.
 
-## Highlights in v1.4.0
+## Highlights in v1.4.x
 
 - **Slow-speed diagnosis** — classifies slowdown shape (DNS delay, proxy path, captive portal, bufferbloat, and more) with confidence
 - **Proxy path report** — shows which sites fail only through your system proxy so you can switch nodes manually

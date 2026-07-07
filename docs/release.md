@@ -1,6 +1,6 @@
 # Release and installer build
 
-## Build the installer (Windows)
+## Build installers (desktop)
 
 ```bash
 cd apps/desktop
@@ -14,11 +14,15 @@ Artifacts land under the **workspace** `target/` directory (not `apps/desktop/sr
 target/release/
 ├── network-desktop.exe
 └── bundle/
-    └── msi/
-        └── KnotTrace_1.4.0_x64_en-US.msi
+    ├── msi/             # Windows
+    ├── nsis/            # Windows
+    ├── appimage/        # Linux
+    ├── deb/             # Linux
+    ├── rpm/             # Linux
+    └── dmg/             # macOS
 ```
 
-NSIS (`.exe`) bundles appear under `target/release/bundle/nsis/` when enabled.
+Exact files vary by runner OS.
 
 ## Pre-push checklist
 
@@ -28,7 +32,7 @@ NSIS (`.exe`) bundles appear under `target/release/bundle/nsis/` when enabled.
 - [ ] `npm run tauri build` completes without errors
 - [ ] Version aligned: `Cargo.toml`, `package.json`, `tauri.conf.json`, `CHANGELOG.md`
 - [ ] `CHANGELOG.md` updated for the release
-- [ ] Smoke test installed app: health check → diagnosis → Network throughput (optional) → tray quit
+- [ ] Smoke test installer on each desktop OS target you publish (Windows/macOS/Linux)
 
 ## Version bump
 
@@ -46,15 +50,15 @@ Update these together:
 ```bash
 git status
 git add .
-git commit -m "Release v1.4.0"
+git commit -m "Release v1.4.1"
 git push -u origin main
 ```
 
 Tag when ready:
 
 ```bash
-git tag v1.4.0
-git push origin v1.4.0
+git tag v1.4.1
+git push origin v1.4.1
 ```
 
 ## GitHub Actions
@@ -62,8 +66,15 @@ git push origin v1.4.0
 CI and release workflows live in `.github/workflows/`. See [docs/github-ci.md](github-ci.md) for:
 
 - Running CI on push/PR
-- Publishing installer assets to a GitHub Release
-- Re-building an existing tag (e.g. `v1.4.0`) via **Actions → Release → Run workflow**
+- Publishing Windows/macOS/Linux installer assets to a GitHub Release
+- Re-building an existing tag (e.g. `v1.4.1`) via **Actions → Release → Run workflow**
+
+## Mobile plan
+
+Android and iOS installers are planned future work.
+
+- Android currently has a separate manual workflow: `.github/workflows/release-android.yml`
+- iOS release automation is not wired yet
 
 ## Notes
 

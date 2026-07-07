@@ -4,6 +4,8 @@
 
 Tauri bundles for Windows, macOS, and Linux. **Primary development and testing target is Windows.**
 
+Release automation now builds desktop installers for all three platforms on tag pushes.
+
 | Feature | Windows | macOS / Linux |
 |---------|---------|---------------|
 | Health monitor & probes | Yes | Yes |
@@ -35,3 +37,8 @@ Recommendations and integrity checks still work everywhere.
 - Automatic MTU/MSS repair
 - Background bandwidth saturation tests
 - Guaranteed ISP speed improvements
+
+## Mobile roadmap
+
+- **Android**: manual release workflow exists (`release-android.yml`), not part of default desktop release path
+- **iOS**: planned for future release workflow and installer/signing setup

@@ -47,7 +47,7 @@ Full setup, verification commands, and repo layout: **[docs/START-HERE.md](docs/
 | [docs/github-ci.md](docs/github-ci.md) | GitHub Actions CI and release publishing |
 | [docs/updater-signing.md](docs/updater-signing.md) | Signed updates, OSS keys, Android/iOS — **start here for release secrets** |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
-| [specs/backend/](specs/backend/) | Design specs and roadmap |
+| [specs/backend/](specs/backend/) | Design specs and roadmap (incl. [v1.2 connectivity recovery](specs/backend/connectivity-recovery-v1.2.md)) |
 
 ## Verify before push
 

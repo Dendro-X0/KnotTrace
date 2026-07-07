@@ -155,6 +155,7 @@ mod tests {
             dns_integrity: None,
             diagnosis: None,
             stability: None,
+            site_reachability: None,
         }
     }
 

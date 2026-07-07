@@ -51,6 +51,23 @@ export interface HealthReport {
   dns_integrity?: DnsIntegrityStatus | null;
   diagnosis?: NetworkDiagnosis | null;
   stability?: StabilityProbeResult | null;
+  site_reachability?: SiteReachabilityStatus | null;
+}
+
+export interface SiteReachResult {
+  domain: string;
+  success: boolean;
+  status_code: number | null;
+  latency_ms: number | null;
+  error: string | null;
+}
+
+export interface SiteReachabilityStatus {
+  checked_domains: number;
+  success_count: number;
+  failure_count: number;
+  results: SiteReachResult[];
+  summary: string;
 }
 
 export type BufferbloatGrade = "none" | "mild" | "moderate" | "severe";
@@ -144,6 +161,7 @@ export type BottleneckCategory =
   | "dns_failure"
   | "dns_slow"
   | "dns_integrity"
+  | "site_access"
   | "proxy_path"
   | "vpn_tunnel"
   | "tor_tunnel"
@@ -296,6 +314,8 @@ export interface ProtectSettings {
   auto_apply_dns: boolean;
   auto_apply_connect: boolean;
   auto_apply_on_untrusted_only: boolean;
+  auto_recover_dns_integrity: boolean;
+  auto_recover_site_access: boolean;
 }
 
 export interface AutoProtectResult {

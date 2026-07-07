@@ -4,6 +4,19 @@ All notable changes to Network Companion are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions align with `tauri.conf.json` and workspace `Cargo.toml`.
 
+## [Unreleased]
+
+### Added
+
+- **Site reachability probes** — HTTPS checks on verification domains to detect proxy/path blocks
+- **Connectivity recovery (smart protect)** — auto DNS on integrity poisoning; auto proxy switch on site failures
+- Protect toggles: `auto_recover_dns_integrity`, `auto_recover_site_access`
+- Spec: [`specs/backend/connectivity-recovery-v1.2.md`](specs/backend/connectivity-recovery-v1.2.md)
+
+### Changed
+
+- CI skips doc-only pushes; Release workflows excluded from commit status on `main`
+
 ## [1.1.1] - 2026-07-07
 
 ### Added

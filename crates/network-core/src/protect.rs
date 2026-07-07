@@ -19,6 +19,8 @@ pub fn default_protect_settings() -> ProtectSettings {
         auto_apply_dns: true,
         auto_apply_connect: true,
         auto_apply_on_untrusted_only: true,
+        auto_recover_dns_integrity: true,
+        auto_recover_site_access: true,
     }
 }
 
@@ -80,6 +82,12 @@ pub fn evaluate_protect(
                 DnsIntegrityState::Caution | DnsIntegrityState::Suspicious
             ) {
                 alerts.push(dns_integrity_alert(integrity, settings));
+            }
+        }
+
+        if let Some(reachability) = &report.site_reachability {
+            if crate::reachability::site_access_degraded(reachability) {
+                alerts.push(site_access_alert(reachability, settings, &report.environment));
             }
         }
     }
@@ -265,14 +273,48 @@ fn dns_integrity_alert(integrity: &DnsIntegrityStatus, settings: &ProtectSetting
         level,
         title: "DNS integrity concern".to_string(),
         message: format!(
-            "{} We are watching this and will not change DNS without your smart-protect policy.{}",
+            "{} Smart protect can apply trusted DNS automatically when integrity recovery is enabled.{}",
             integrity.summary,
-            if settings.auto_apply_dns {
-                " Faster DNS may be applied automatically on untrusted networks."
+            if settings.auto_recover_dns_integrity && settings.auto_apply_dns {
+                " Recovery may run even on familiar networks."
             } else {
                 ""
             }
         ),
+        actions: vec![ProtectAction {
+            kind: ProtectActionKind::RunCheck,
+            label: "View details".to_string(),
+        }],
+    }
+}
+
+fn site_access_alert(
+    reachability: &SiteReachabilityStatus,
+    settings: &ProtectSettings,
+    environment: &EnvironmentSnapshot,
+) -> ProtectAlert {
+    let level = if reachability.success_count == 0 {
+        AlertLevel::Critical
+    } else {
+        AlertLevel::Warning
+    };
+
+    let proxy_note = if environment.proxy.enabled {
+        " Proxy is active — Connect Assist may switch nodes automatically."
+    } else {
+        ""
+    };
+
+    let auto_note = if settings.auto_recover_site_access && settings.auto_apply_connect {
+        " Site-access recovery is enabled."
+    } else {
+        ""
+    };
+
+    ProtectAlert {
+        level,
+        title: "Sites unreachable on current path".to_string(),
+        message: format!("{}{}{}", reachability.summary, proxy_note, auto_note),
         actions: vec![ProtectAction {
             kind: ProtectActionKind::RunCheck,
             label: "View details".to_string(),
@@ -363,6 +405,7 @@ mod tests {
             dns_integrity: None,
             diagnosis: None,
             stability: None,
+            site_reachability: None,
         }
     }
 

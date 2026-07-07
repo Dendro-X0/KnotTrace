@@ -103,7 +103,7 @@ async fn run_auto_protect(
     let mut applied = Vec::new();
 
     if settings.auto_apply_dns {
-        match try_auto_dns(report).await {
+        match try_auto_dns(report, settings).await {
             Ok(message) => applied.push(AutoProtectAction {
                 kind: "dns".to_string(),
                 message,
@@ -118,7 +118,7 @@ async fn run_auto_protect(
     }
 
     if settings.auto_apply_connect {
-        match try_auto_connect(report).await {
+        match try_auto_connect(report, settings).await {
             Ok(message) => applied.push(AutoProtectAction {
                 kind: "connect".to_string(),
                 message,
@@ -148,6 +148,20 @@ fn should_run_auto_protect(
     report: &HealthReport,
     settings: &ProtectSettings,
 ) -> bool {
+    if settings.auto_recover_dns_integrity
+        && settings.auto_apply_dns
+        && dns_integrity_requires_recovery(report)
+    {
+        return true;
+    }
+
+    if settings.auto_recover_site_access
+        && settings.auto_apply_connect
+        && site_access_requires_recovery(report)
+    {
+        return true;
+    }
+
     if settings.auto_apply_on_untrusted_only {
         matches!(status.trust_level, TrustLevel::Untrusted)
             || matches!(report.score.grade, HealthGrade::Poor)
@@ -157,6 +171,26 @@ fn should_run_auto_protect(
             TrustLevel::Untrusted | TrustLevel::Caution
         ) || matches!(report.score.grade, HealthGrade::Fair | HealthGrade::Poor)
     }
+}
+
+fn dns_integrity_requires_recovery(report: &HealthReport) -> bool {
+    report.dns_integrity.as_ref().is_some_and(|integrity| {
+        matches!(
+            integrity.state,
+            network_core::DnsIntegrityState::Caution | network_core::DnsIntegrityState::Suspicious
+        ) && matches!(
+            integrity.confidence,
+            network_core::DnsIntegrityConfidence::Medium | network_core::DnsIntegrityConfidence::High
+        )
+    })
+}
+
+fn site_access_requires_recovery(report: &HealthReport) -> bool {
+    report
+        .site_reachability
+        .as_ref()
+        .is_some_and(network_core::site_access_degraded)
+        && report.environment.proxy.enabled
 }
 
 fn auto_protect_allowed(app: &AppHandle) -> Result<bool, String> {
@@ -187,7 +221,7 @@ fn mark_auto_protect(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-async fn try_auto_dns(report: &HealthReport) -> Result<String, String> {
+async fn try_auto_dns(report: &HealthReport, settings: &ProtectSettings) -> Result<String, String> {
     if get_assist_state(&data_dir())
         .map_err(|error| error.to_string())?
         .active
@@ -199,12 +233,21 @@ async fn try_auto_dns(report: &HealthReport) -> Result<String, String> {
         .await
         .map_err(|error| error.to_string())?;
 
+    let integrity_recovery =
+        settings.auto_recover_dns_integrity && dns_integrity_requires_recovery(report);
+
     let resolver = recommendation
         .recommended
         .as_ref()
-        .filter(|_| recommendation.should_apply)
+        .filter(|_| recommendation.should_apply || integrity_recovery)
         .map(|candidate| candidate.resolver.clone())
-        .ok_or_else(|| "No DNS improvement available to apply automatically.".to_string())?;
+        .ok_or_else(|| {
+            if integrity_recovery {
+                "DNS integrity recovery could not find a trusted resolver to apply.".to_string()
+            } else {
+                "No DNS improvement available to apply automatically.".to_string()
+            }
+        })?;
 
     let result = apply_dns_assist(&data_dir(), &report.environment, &resolver)
         .await
@@ -213,7 +256,7 @@ async fn try_auto_dns(report: &HealthReport) -> Result<String, String> {
     Ok(result.message)
 }
 
-async fn try_auto_connect(report: &HealthReport) -> Result<String, String> {
+async fn try_auto_connect(report: &HealthReport, settings: &ProtectSettings) -> Result<String, String> {
     let recommendation = recommend_connect_discovered(
         &data_dir(),
         &report.environment,
@@ -222,10 +265,19 @@ async fn try_auto_connect(report: &HealthReport) -> Result<String, String> {
     .await
     .map_err(|error| error.to_string())?;
 
+    let site_recovery =
+        settings.auto_recover_site_access && site_access_requires_recovery(report);
+
     let switch = recommendation
         .recommended_switch
-        .filter(|_| recommendation.should_apply)
-        .ok_or_else(|| "No proxy switch available to apply automatically.".to_string())?;
+        .filter(|_| recommendation.should_apply || site_recovery)
+        .ok_or_else(|| {
+            if site_recovery {
+                "Site access recovery could not find a better proxy node.".to_string()
+            } else {
+                "No proxy switch available to apply automatically.".to_string()
+            }
+        })?;
 
     let config = discover_connect_config(&data_dir())
         .await

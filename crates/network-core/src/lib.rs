@@ -11,6 +11,7 @@ mod env;
 mod fingerprint;
 mod probe;
 mod protect;
+mod reachability;
 mod score;
 mod stability;
 mod store;
@@ -44,6 +45,7 @@ pub use protect::{
     default_protect_settings, evaluate_protect, load_protect_settings, save_protect_settings,
     should_notify, ProtectError,
 };
+pub use reachability::{probe_site_reachability, site_access_degraded};
 pub use score::score_health;
 pub use store::{HistoryStore, StoreError};
 pub use throughput::{
@@ -82,6 +84,9 @@ pub async fn run_health_check_with_settings(
     let dns_integrity = evaluate_dns_integrity(&environment, &integrity_settings)
         .await
         .ok();
+    let site_reachability = Some(
+        probe_site_reachability(&integrity_settings.verification_domains, &environment).await,
+    );
     let stability = Some(run_stability_probes().await);
 
     let mut report = HealthReport {
@@ -92,6 +97,7 @@ pub async fn run_health_check_with_settings(
         dns_integrity,
         diagnosis: None,
         stability,
+        site_reachability,
     };
     report.diagnosis = Some(diagnose_network(&report));
 

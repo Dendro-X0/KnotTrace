@@ -18,6 +18,8 @@ Runs on every push and pull request (Linux runners for speed):
 
 Duplicate runs on the same branch are cancelled automatically.
 
+**Docs-only pushes** (`docs/`, `specs/`, `*.md`) skip CI to avoid noise. Release workflows are not part of CI commit checks on `main`.
+
 Rust uses `CARGO_BUILD_JOBS=2` on GitHub runners. For local Windows builds that OOM, use `CARGO_BUILD_JOBS=1`.
 
 ### CI vs Release on commit status

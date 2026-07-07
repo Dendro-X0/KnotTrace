@@ -31,6 +31,16 @@ const TOGGLES: Array<{
   { key: "auto_apply_dns", label: "Auto-improve DNS", hint: "Apply faster DNS on untrusted or poor networks" },
   { key: "auto_apply_connect", label: "Auto-switch proxy node", hint: "Pick a faster node when Mihomo/sing-box is available" },
   {
+    key: "auto_recover_dns_integrity",
+    label: "Recover from DNS poisoning",
+    hint: "Apply trusted DNS when integrity checks detect hijacking",
+  },
+  {
+    key: "auto_recover_site_access",
+    label: "Recover site access",
+    hint: "Switch proxy nodes when verification sites fail over HTTPS",
+  },
+  {
     key: "auto_apply_on_untrusted_only",
     label: "Auto-fix only when needed",
     hint: "Limit automatic changes to untrusted or poor connections",

@@ -161,6 +161,8 @@ pub struct HealthReport {
     pub diagnosis: Option<NetworkDiagnosis>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stability: Option<StabilityProbeResult>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub site_reachability: Option<SiteReachabilityStatus>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -322,6 +324,20 @@ pub struct ProtectSettings {
     pub auto_apply_connect: bool,
     #[serde(default = "default_auto_apply_untrusted_only")]
     pub auto_apply_on_untrusted_only: bool,
+    /// Auto-apply DNS when integrity checks detect poisoning or hijacking.
+    #[serde(default = "default_auto_recover_dns_integrity")]
+    pub auto_recover_dns_integrity: bool,
+    /// Auto-switch proxy nodes when verification sites fail over HTTPS.
+    #[serde(default = "default_auto_recover_site_access")]
+    pub auto_recover_site_access: bool,
+}
+
+fn default_auto_recover_dns_integrity() -> bool {
+    true
+}
+
+fn default_auto_recover_site_access() -> bool {
+    true
 }
 
 fn default_auto_apply_untrusted_only() -> bool {
@@ -406,6 +422,24 @@ pub struct DnsIntegritySettings {
     pub verification_domains: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SiteReachResult {
+    pub domain: String,
+    pub success: bool,
+    pub status_code: Option<u16>,
+    pub latency_ms: Option<f64>,
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SiteReachabilityStatus {
+    pub checked_domains: u8,
+    pub success_count: u8,
+    pub failure_count: u8,
+    pub results: Vec<SiteReachResult>,
+    pub summary: String,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum BottleneckCategory {
@@ -416,6 +450,7 @@ pub enum BottleneckCategory {
     DnsFailure,
     DnsSlow,
     DnsIntegrity,
+    SiteAccess,
     ProxyPath,
     VpnTunnel,
     TorTunnel,

@@ -3,15 +3,24 @@ name: CI
 on:
   push:
     branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "specs/**"
+      - ".github/workflows/release.yml"
+      - ".github/workflows/release-android.yml"
   pull_request:
     branches: [main, master]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "specs/**"
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  # GitHub-hosted runners have 2 vCPUs; local Windows builds may need CARGO_BUILD_JOBS=1.
   CARGO_BUILD_JOBS: 2
 
 jobs:

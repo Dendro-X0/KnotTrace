@@ -11,6 +11,7 @@ pub fn diagnose_network(report: &HealthReport) -> NetworkDiagnosis {
     push_gateway_hints(report, &mut hints);
     push_dns_hints(report, &mut hints);
     push_integrity_hints(report, &mut hints);
+    push_reachability_hints(report, &mut hints);
     push_stability_hints(report, &mut hints);
     push_path_hints(report, &mut hints);
 
@@ -196,6 +197,39 @@ fn push_integrity_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) 
     }
 }
 
+fn push_reachability_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
+    let Some(reachability) = &report.site_reachability else {
+        return;
+    };
+
+    if !crate::reachability::site_access_degraded(reachability) {
+        return;
+    }
+
+    let severity = if reachability.success_count == 0 {
+        AlertLevel::Critical
+    } else {
+        AlertLevel::Warning
+    };
+
+    let mut suggestions = vec![
+        "If you use a proxy, try another node in Connect Assist.".to_string(),
+        "Check DNS integrity results for poisoning or split-DNS issues.".to_string(),
+    ];
+
+    if report.environment.proxy.enabled {
+        suggestions.push("Temporarily disable the proxy to see if sites load on the native path.".to_string());
+    }
+
+    hints.push(BottleneckHint {
+        category: BottleneckCategory::SiteAccess,
+        severity,
+        title: "Sites blocked or failing on this path".to_string(),
+        message: reachability.summary.clone(),
+        suggestions,
+    });
+}
+
 fn push_stability_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
     if let Some(stability) = &report.stability {
         if let Some(bufferbloat) = &stability.bufferbloat {
@@ -376,6 +410,7 @@ fn category_label(category: BottleneckCategory) -> &'static str {
         BottleneckCategory::DnsFailure => "DNS failures",
         BottleneckCategory::DnsSlow => "slow DNS",
         BottleneckCategory::DnsIntegrity => "DNS integrity",
+        BottleneckCategory::SiteAccess => "site access",
         BottleneckCategory::ProxyPath => "proxy path",
         BottleneckCategory::VpnTunnel => "VPN tunnel",
         BottleneckCategory::TorTunnel => "Tor tunnel",
@@ -437,6 +472,7 @@ mod tests {
             dns_integrity: None,
             diagnosis: None,
             stability: None,
+            site_reachability: None,
         }
     }
 

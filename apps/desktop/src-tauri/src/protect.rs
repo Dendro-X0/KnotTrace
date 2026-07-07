@@ -1,8 +1,9 @@
 use network_core::{
-    apply_connect_switch, apply_dns_assist, discover_connect_config, evaluate_protect,
-    get_assist_state, load_protect_settings, recommend_connect_discovered, recommend_dns_assist,
-    should_notify, AutoProtectAction, AutoProtectResult, HealthGrade,
-    HealthReport, ProtectSettings, ProtectStatus, TrustLevel,
+    apply_connect_switch, apply_dns_assist, background_check_warrants_notification,
+    discover_connect_config, evaluate_protect, get_assist_state, is_automated_check_reason,
+    load_protect_settings, recommend_connect_discovered, recommend_dns_assist, should_notify,
+    AutoProtectAction, AutoProtectResult, HealthGrade, HealthReport, ProtectSettings,
+    ProtectStatus, TrustLevel,
 };
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -31,7 +32,11 @@ impl ProtectRuntime {
     }
 }
 
-pub fn handle_protect_status(app: &AppHandle, report: &HealthReport) -> Result<(), String> {
+pub fn handle_protect_status(
+    app: &AppHandle,
+    report: &HealthReport,
+    check_reason: &str,
+) -> Result<(), String> {
     let settings = load_protect_settings(&data_dir()).map_err(|error| error.to_string())?;
     let previous_grade = app
         .try_state::<ProtectRuntime>()
@@ -56,7 +61,11 @@ pub fn handle_protect_status(app: &AppHandle, report: &HealthReport) -> Result<(
                 report.dns_integrity.as_ref(),
             )
         {
-            maybe_send_notification(app, &title, &body)?;
+            let should_show = !is_automated_check_reason(check_reason)
+                || background_check_warrants_notification(&status, report, previous_grade);
+            if should_show {
+                maybe_send_notification(app, &title, &body)?;
+            }
         }
     }
 

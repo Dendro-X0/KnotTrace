@@ -37,11 +37,13 @@ Future `main` pushes without a tag show **CI only** (3 green checks).
 
 ### Release
 
-Builds Tauri bundles on **Windows, Linux, and macOS** and publishes assets to the same GitHub Release tag.
+Builds Tauri bundles on **Windows, Linux, macOS, Android, and iOS** and publishes assets to the same GitHub Release tag.
 
 - **Windows**: MSI + NSIS installer
 - **Linux**: AppImage + `.deb` + `.rpm`
 - **macOS**: `.app.tar.gz` + `.dmg`
+- **Android**: signed APK (requires `ANDROID_KEY_*` secrets)
+- **iOS**: signed IPA (requires `IOS_*` secrets)
 - `latest.json` + `.sig` files for in-app signed updates (generated on the Windows release job)
 
 Uses [tauri-apps/tauri-action](https://github.com/tauri-apps/tauri-action) with `includeUpdaterJson: true`.
@@ -56,18 +58,18 @@ Uses [tauri-apps/tauri-action](https://github.com/tauri-apps/tauri-action) with 
 
 Generate keys: `./scripts/generate-updater-keys.sh` — see [updater-signing.md](updater-signing.md).
 
-### Mobile releases (planned, manual)
+### Mobile releases (signed, required)
 
-Android and iOS are not part of the default desktop release path yet.
+Android and iOS are part of the default desktop release path from v1.4.2. **Unsigned mobile builds are not published** — CI fails if signing secrets are missing.
 
-Android is available as an optional manual workflow. iOS installer/release automation is planned for a future workflow.
+See [mobile-signing.md](mobile-signing.md) for keystore/certificate setup.
 
-When running Android manually:
+| Platform | Secrets |
+|----------|---------|
+| Android | `ANDROID_KEY_BASE64`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS` |
+| iOS | `IOS_CERTIFICATE`, `IOS_CERTIFICATE_PASSWORD`, `IOS_MOBILE_PROVISION` |
 
-1. Run **Actions → Release Android → Run workflow** with the tag (e.g. `v1.1.1`).
-2. Set secrets `ANDROID_KEY_BASE64`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS`.
-
-This avoids a skipped Android job on every desktop release.
+The legacy **Release Android** workflow remains for manual rebuilds only.
 
 ## First-time setup after push
 

@@ -40,5 +40,6 @@ Recommendations and integrity checks still work everywhere.
 
 ## Mobile roadmap
 
-- **Android**: manual release workflow exists (`release-android.yml`), not part of default desktop release path
-- **iOS**: planned for future release workflow and installer/signing setup
+- **Android**: signed APK on every release tag (upload keystore in CI secrets)
+- **iOS**: signed IPA on every release tag (distribution cert + provisioning profile)
+- Install/trust steps: [mobile-signing.md](mobile-signing.md)

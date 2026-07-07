@@ -4,6 +4,26 @@ All notable changes to KnotTrace are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions align with `tauri.conf.json` and workspace `Cargo.toml`.
 
+## [1.4.2] - 2026-07-07
+
+### Added
+
+- **Android and iOS release jobs** — signed APK and IPA artifacts on tag pushes (requires mobile signing secrets)
+- **Explicit light/dark themes** — Light, Dark, and System modes with a sidebar toggle; preference persisted locally
+- Docs: [mobile-signing.md](docs/mobile-signing.md) — self-signed install policy and CI secret setup
+
+### Changed
+
+- **Sidebar navigation** — Clash-style full-width rectangular tabs with a compact 220px rail
+- **UI surfaces** — subtle gradient backgrounds on shell, sidebar, and cards in both themes
+- **Silent background checks** — automated health checks run without flashing a console on Windows; system notifications fire only when real network issues are detected (not routine untrusted-network advisories)
+- Release notes list Android and iOS install artifacts
+
+### Fixed
+
+- Theme no longer relies solely on OS `prefers-color-scheme`; user choice overrides system when set
+- Windows subprocess probes (`ping`, PowerShell DNS assist) use `CREATE_NO_WINDOW` so release builds stay silent during background checks
+
 ## [1.4.1] - 2026-07-07
 
 ### Added
@@ -187,6 +207,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.4.2]: https://github.com/Dendro-X0/network/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/Dendro-X0/network/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/Dendro-X0/network/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/Dendro-X0/network/compare/v1.2.0...v1.3.0

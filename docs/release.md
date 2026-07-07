@@ -50,15 +50,15 @@ Update these together:
 ```bash
 git status
 git add .
-git commit -m "Release v1.4.1"
+git commit -m "Release v1.4.2"
 git push -u origin main
 ```
 
 Tag when ready:
 
 ```bash
-git tag v1.4.1
-git push origin v1.4.1
+git tag v1.4.2
+git push origin v1.4.2
 ```
 
 ## GitHub Actions
@@ -71,10 +71,10 @@ CI and release workflows live in `.github/workflows/`. See [docs/github-ci.md](g
 
 ## Mobile plan
 
-Android and iOS installers are planned future work.
+Android and iOS installers ship on tag pushes from v1.4.2.
 
-- Android currently has a separate manual workflow: `.github/workflows/release-android.yml`
-- iOS release automation is not wired yet
+- Signing policy and install steps: [mobile-signing.md](mobile-signing.md)
+- Legacy manual workflow: `.github/workflows/release-android.yml`
 
 ## Notes
 

@@ -12,6 +12,7 @@ mod env;
 mod fingerprint;
 mod network_context;
 mod probe;
+mod process;
 mod protect;
 mod reachability;
 mod recommendations;
@@ -50,8 +51,9 @@ pub use probe::{measure_tcp_latency, probe_dns_resolver, resolve_dns_addresses, 
 pub use stability::run_stability_probes;
 pub use tor::{detect_tor_status, is_tor_socks_endpoint};
 pub use protect::{
-    default_protect_settings, evaluate_protect, load_protect_settings, save_protect_settings,
-    should_notify, ProtectError,
+    background_check_warrants_notification, default_protect_settings, evaluate_protect,
+    is_automated_check_reason, load_protect_settings, save_protect_settings, should_notify,
+    ProtectError,
 };
 pub use reachability::{
     classify_reachability_error, error_kind_label, probe_proxy_path_report,

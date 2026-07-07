@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { Activity, Globe, LayoutDashboard, Network, Shield } from "lucide-react";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { PageId } from "@/types";
@@ -41,31 +42,31 @@ function NavButton({
     <button
       type="button"
       className={cn(
-        "border transition-all",
+        "font-medium transition-colors",
         compact
-          ? "flex min-w-[4.25rem] shrink-0 snap-start flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-center"
-          : "w-full rounded-lg px-2.5 py-1.5 text-left",
+          ? "flex min-w-[4.75rem] shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-md px-2.5 py-2 text-center"
+          : "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left",
         active
-          ? "border-primary/30 bg-primary/10 text-primary shadow-sm"
-          : "border-transparent text-foreground hover:border-border/60 hover:bg-muted/50",
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : compact
+            ? "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+            : "text-foreground/90 hover:bg-muted/65",
       )}
       aria-current={active ? "page" : undefined}
       aria-label={compact ? `${item.label}: ${item.hint}` : undefined}
+      title={compact ? undefined : item.hint}
       onClick={() => onNavigate(item.id)}
     >
       {compact ? (
-        <span className="flex flex-col items-center gap-0.5 text-[0.68rem] leading-tight font-medium">
-          <Icon className="size-4 opacity-80" />
-          <span className="max-w-[4.25rem] truncate">{item.label}</span>
-        </span>
+        <>
+          <Icon className={cn("size-4", active ? "opacity-100" : "opacity-75")} />
+          <span className="max-w-[4.75rem] truncate text-[0.68rem] leading-tight">{item.label}</span>
+        </>
       ) : (
-        <span className="flex min-w-0 items-center gap-2">
-          <Icon className="size-4 shrink-0 opacity-80" />
-          <span className="min-w-0 flex-1 truncate text-sm font-medium leading-none">{item.label}</span>
-          <span className="text-muted-foreground hidden max-w-[7.5rem] shrink truncate text-[0.68rem] leading-none lg:inline">
-            {item.hint}
-          </span>
-        </span>
+        <>
+          <Icon className={cn("size-[1.125rem] shrink-0", active ? "opacity-100" : "opacity-80")} />
+          <span className="min-w-0 flex-1 truncate text-sm leading-none">{item.label}</span>
+        </>
       )}
     </button>
   );
@@ -73,25 +74,25 @@ function NavButton({
 
 export function Sidebar({ page, onNavigate, version }: SidebarProps) {
   return (
-    <aside className="bg-sidebar text-sidebar-foreground flex shrink-0 flex-col gap-2 border-b border-sidebar-border px-2 py-2 backdrop-blur-xl sm:gap-3 sm:px-3 sm:py-3 lg:min-h-0 lg:border-r lg:border-b-0 lg:py-4">
-      <div className="px-1 sm:px-2">
-        <div className="flex items-center gap-2 sm:gap-3">
+    <aside className="surface-panel text-sidebar-foreground flex shrink-0 flex-col gap-2 border-b border-sidebar-border py-2 sm:gap-3 sm:py-3 lg:min-h-0 lg:w-[220px] lg:border-r lg:border-b-0 lg:py-3">
+      <div className="px-3">
+        <div className="flex items-center gap-2.5">
           <img
             src="/knottrace-icon.png"
             alt=""
-            className="size-9 shrink-0 rounded-lg sm:size-10"
+            className="size-9 shrink-0 rounded-md sm:size-10"
           />
           <div className="min-w-0">
             <p className="text-muted-foreground truncate text-[0.62rem] tracking-[0.08em] uppercase sm:text-[0.68rem]">
               KnotTrace
             </p>
-            <h1 className="truncate text-sm font-semibold">Network companion</h1>
+            <h1 className="truncate text-sm font-semibold leading-tight">Network companion</h1>
           </div>
         </div>
       </div>
 
       <nav
-        className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
+        className="flex gap-1 overflow-x-auto px-2 pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
         aria-label="Main navigation"
       >
         {NAV_ITEMS.map((item) => (
@@ -105,9 +106,12 @@ export function Sidebar({ page, onNavigate, version }: SidebarProps) {
         ))}
       </nav>
 
-      <Separator className="hidden lg:block" />
+      <Separator className="mx-3 hidden lg:block" />
 
-      <nav className="hidden min-h-0 flex-1 lg:grid lg:gap-1" aria-label="Main navigation">
+      <nav
+        className="hidden min-h-0 flex-1 flex-col gap-0.5 px-2 lg:flex"
+        aria-label="Main navigation"
+      >
         {NAV_ITEMS.map((item) => (
           <NavButton
             key={item.id}
@@ -119,14 +123,22 @@ export function Sidebar({ page, onNavigate, version }: SidebarProps) {
         ))}
       </nav>
 
-      <Separator className="hidden lg:block" />
+      <Separator className="mx-3 hidden lg:block" />
 
-      <p className="text-muted-foreground hidden px-2 text-[0.7rem] lg:block">
+      <div className="hidden px-2 lg:block">
+        <ThemeToggle compact />
+      </div>
+
+      <p className="text-muted-foreground hidden px-3 text-[0.68rem] leading-snug lg:block">
         {version ? `v${version} · ` : ""}
         Closing the window keeps the app running in the tray.
       </p>
 
-      <p className="text-muted-foreground px-1 text-center text-[0.62rem] leading-snug sm:px-2 lg:hidden">
+      <div className="px-2 lg:hidden">
+        <ThemeToggle compact />
+      </div>
+
+      <p className="text-muted-foreground px-3 text-center text-[0.62rem] leading-snug lg:hidden">
         {version ? `v${version} · ` : ""}
         <span className="hidden sm:inline">Closing the window keeps the app in the tray.</span>
         <span className="sm:hidden">Runs in the tray when closed.</span>

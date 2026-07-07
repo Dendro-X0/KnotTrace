@@ -180,6 +180,50 @@ pub fn should_notify(
     None
 }
 
+/// Whether an automated background check found actionable network issues worth notifying.
+pub fn background_check_warrants_notification(
+    status: &ProtectStatus,
+    report: &HealthReport,
+    previous_grade: Option<HealthGrade>,
+) -> bool {
+    if matches!(report.score.grade, HealthGrade::Poor) {
+        return true;
+    }
+
+    if let Some(previous) = previous_grade {
+        if grade_dropped(previous, report.score.grade) {
+            return true;
+        }
+    }
+
+    if report.dns_integrity.as_ref().is_some_and(|integrity| {
+        matches!(
+            integrity.confidence,
+            DnsIntegrityConfidence::Medium | DnsIntegrityConfidence::High
+        ) && matches!(
+            integrity.state,
+            DnsIntegrityState::Caution | DnsIntegrityState::Suspicious
+        )
+    }) {
+        return true;
+    }
+
+    status.alerts.iter().any(|alert| {
+        if alert.title == "Untrusted network" {
+            return false;
+        }
+        matches!(
+            alert.level,
+            AlertLevel::Warning | AlertLevel::Critical
+        )
+    })
+}
+
+/// Returns true for checks triggered by the background monitor or other non-manual automation.
+pub fn is_automated_check_reason(reason: &str) -> bool {
+    !reason.starts_with("manual")
+}
+
 fn classify_trust_level(
     environment: &EnvironmentSnapshot,
     score: &HealthScore,
@@ -584,5 +628,35 @@ mod tests {
                 .iter()
                 .any(|alert| alert.title == "DNS integrity concern")
         );
+    }
+
+    #[test]
+    fn automated_checks_skip_notification_for_routine_untrusted_network() {
+        let report = sample_report(vec![EnvironmentTag::Public], HealthGrade::Good);
+        let status = evaluate_protect(&report, None, &default_protect_settings());
+
+        assert!(is_automated_check_reason("scheduled"));
+        assert!(!is_automated_check_reason("manual"));
+        assert!(!background_check_warrants_notification(&status, &report, None));
+    }
+
+    #[test]
+    fn automated_checks_notify_on_poor_grade() {
+        let report = sample_report(vec![EnvironmentTag::HomeLan], HealthGrade::Poor);
+        let status = evaluate_protect(&report, None, &default_protect_settings());
+
+        assert!(background_check_warrants_notification(&status, &report, None));
+    }
+
+    #[test]
+    fn automated_checks_notify_on_grade_drop() {
+        let report = sample_report(vec![EnvironmentTag::HomeLan], HealthGrade::Fair);
+        let status = evaluate_protect(&report, Some(HealthGrade::Good), &default_protect_settings());
+
+        assert!(background_check_warrants_notification(
+            &status,
+            &report,
+            Some(HealthGrade::Good)
+        ));
     }
 }

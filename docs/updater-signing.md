@@ -107,14 +107,17 @@ CI secrets:
 | `ANDROID_KEY_PASSWORD` | Keystore password |
 | `ANDROID_KEY_ALIAS` | `knottrace` |
 
-The release workflow writes `keystore.properties` before building when `ANDROID_KEY_BASE64` is set.
-
 **Important:** Use the **same** upload key for every release. Changing keys blocks in-place APK updates on user devices.
+
+Full install policy: [mobile-signing.md](mobile-signing.md).
 
 ## 5. iOS (mobile)
 
-- Tauri updater supports iOS for sideloaded/enterprise builds signed with your team certificate.
-- App Store distribution uses Apple’s update channel; the in-app checker still surfaces version info and opens the store URL when configured.
+- Requires distribution certificate (`.p12`) and provisioning profile (`.mobileprovision`) in CI secrets.
+- Tauri env vars: `IOS_CERTIFICATE`, `IOS_CERTIFICATE_PASSWORD`, `IOS_MOBILE_PROVISION`.
+- Users must trust the developer profile on device before launch.
+
+Full install policy: [mobile-signing.md](mobile-signing.md).
 
 ## 6. Local signed build
 

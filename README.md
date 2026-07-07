@@ -1,6 +1,6 @@
 # KnotTrace
 
-**v1.4.1** — A minimalist desktop companion that monitors your connection, improves it automatically when safe, and explains slowdowns in plain language.
+**v1.4.2** — A minimalist desktop companion that monitors your connection, improves it automatically when safe, and explains slowdowns in plain language.
 
 KnotTrace watches network health in the background, applies reversible DNS and proxy improvements on untrusted or poor connections, and pinpoints whether issues are local, DNS-related, or on the proxy path.
 
@@ -23,6 +23,8 @@ You can turn off any automatic behavior on the **Protect** page.
 
 ## Highlights in v1.4.x
 
+- **Light/dark themes** — explicit Light, Dark, or System mode with persisted preference
+- **Silent background monitoring** — no console flash on Windows; notifications only when issues are detected
 - **Slow-speed diagnosis** — classifies slowdown shape (DNS delay, proxy path, captive portal, bufferbloat, and more) with confidence
 - **Proxy path report** — shows which sites fail only through your system proxy so you can switch nodes manually
 - **Next steps panel** — Overview guidance linked to Connect and Network pages
@@ -57,6 +59,7 @@ Full setup, verification commands, and repo layout: **[docs/START-HERE.md](docs/
 | [docs/platform-support.md](docs/platform-support.md) | OS feature matrix |
 | [docs/github-ci.md](docs/github-ci.md) | GitHub Actions CI and release publishing |
 | [docs/updater-signing.md](docs/updater-signing.md) | Signed updates — **start here for release secrets** |
+| [docs/mobile-signing.md](docs/mobile-signing.md) | Android/iOS self-signed install policy and CI secrets |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 | [specs/backend/](specs/backend/) | Design specs and roadmap |
 

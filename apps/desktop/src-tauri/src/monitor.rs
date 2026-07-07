@@ -42,7 +42,7 @@ pub fn publish_report(
     update_after_report(app, report, reason)?;
 #[cfg(desktop)]
     crate::tray::update_tray_status(app, report);
-    let _ = handle_protect_status(app, report);
+    let _ = handle_protect_status(app, report, reason);
     app.emit("health-report-updated", report)
         .map_err(|error| error.to_string())
 }

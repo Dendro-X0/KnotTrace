@@ -12,10 +12,10 @@ export function App() {
   const state = useCompanion();
 
   return (
-    <div className="bg-background text-foreground grid min-h-dvh grid-cols-1 lg:h-dvh lg:grid-cols-[260px_minmax(0,1fr)] lg:overflow-hidden">
+    <div className="bg-background text-foreground grid min-h-dvh grid-cols-1 lg:h-dvh lg:grid-cols-[220px_minmax(0,1fr)] lg:overflow-hidden">
       <Sidebar page={state.page} onNavigate={state.navigate} version={state.appVersion} />
 
-      <div className="grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-2 p-2 sm:gap-3 sm:p-3 lg:m-2 lg:mr-3 lg:mb-3 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-border/60 lg:bg-background/35 lg:p-4 lg:shadow-sm lg:backdrop-blur-sm">
+      <div className="surface-panel grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-2 rounded-2xl border border-border/60 p-2 shadow-sm sm:gap-3 sm:p-3 lg:m-2 lg:mr-3 lg:mb-3 lg:overflow-hidden lg:p-4">
         <UpdateBanner
           update={state.updateCheck}
           checking={state.updateChecking}

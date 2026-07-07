@@ -1,4 +1,4 @@
-use std::process::Command;
+use crate::process::hidden_command;
 
 pub fn can_apply() -> bool {
     true
@@ -70,7 +70,7 @@ pub fn restore_dns_config(
 }
 
 fn run_powershell(script: &str) -> Result<String, String> {
-    let output = Command::new("powershell")
+    let output = hidden_command("powershell")
         .args([
             "-NoProfile",
             "-NonInteractive",

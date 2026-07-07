@@ -1,4 +1,5 @@
 use crate::probe::measure_tcp_latency;
+use crate::process::hidden_command;
 use crate::types::*;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
@@ -129,7 +130,7 @@ async fn ping_df(payload_size: u16, host: &str) -> bool {
 fn ping_df_blocking(payload_size: u16, host: &str) -> bool {
     #[cfg(windows)]
     {
-        let output = std::process::Command::new("ping")
+        let output = hidden_command("ping")
             .args([
                 "-n",
                 "1",
@@ -157,7 +158,7 @@ fn ping_df_blocking(payload_size: u16, host: &str) -> bool {
 
     #[cfg(not(windows))]
     {
-        let output = std::process::Command::new("ping")
+        let output = hidden_command("ping")
             .args([
                 "-c",
                 "1",

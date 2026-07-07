@@ -41,13 +41,13 @@ export function StatusHero({ grade, summary, score, loading, dnsIntegrity }: Sta
 
   return (
     <Card className={statusCardClass(grade)}>
-      <CardContent className="flex items-center gap-4 py-0">
-        <div className="bg-background/40 flex size-12 shrink-0 items-center justify-center rounded-xl border border-border/50 shadow-sm">
-          <Icon className="size-6" />
+      <CardContent className="flex items-start gap-3 py-0 sm:items-center sm:gap-4">
+        <div className="bg-background/40 flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/50 shadow-sm sm:size-12">
+          <Icon className="size-5 sm:size-6" />
         </div>
         <div className="min-w-0 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-2xl font-bold tracking-wide">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <p className="text-xl font-bold tracking-wide sm:text-2xl">
               {grade ? grade.toUpperCase() : "—"}
             </p>
             {score != null && (

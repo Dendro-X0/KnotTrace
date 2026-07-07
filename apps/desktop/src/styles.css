@@ -105,7 +105,7 @@ summary {
   border-radius: 999px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   body {
     overflow: auto;
   }

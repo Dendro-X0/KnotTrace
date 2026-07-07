@@ -16,8 +16,8 @@ pub fn default_protect_settings() -> ProtectSettings {
         notify_on_grade_drop: true,
         notify_on_untrusted_network: true,
         notify_on_degraded: true,
-        auto_apply_dns: false,
-        auto_apply_connect: false,
+        auto_apply_dns: true,
+        auto_apply_connect: true,
         auto_apply_on_untrusted_only: true,
     }
 }
@@ -55,22 +55,22 @@ pub fn evaluate_protect(
 
     if settings.enabled {
         if matches!(trust_level, TrustLevel::Untrusted) {
-            alerts.push(untrusted_network_alert(&report.environment));
+            alerts.push(untrusted_network_alert(&report.environment, settings));
         }
 
         if matches!(report.score.grade, HealthGrade::Poor) {
-            alerts.push(degraded_connection_alert(&report.score));
+            alerts.push(degraded_connection_alert(&report.score, settings));
         } else if matches!(report.score.grade, HealthGrade::Fair) {
-            alerts.push(fair_connection_alert(&report.score));
+            alerts.push(fair_connection_alert(&report.score, settings));
         }
 
         if report.environment.proxy.enabled && matches!(report.score.grade, HealthGrade::Fair | HealthGrade::Poor) {
-            alerts.push(proxy_path_alert());
+            alerts.push(proxy_path_alert(settings));
         }
 
         if let Some(previous) = previous_grade {
             if grade_dropped(previous, report.score.grade) {
-                alerts.push(grade_drop_alert(previous, report.score.grade));
+                alerts.push(grade_drop_alert(previous, report.score.grade, settings));
             }
         }
 
@@ -79,7 +79,7 @@ pub fn evaluate_protect(
                 integrity.state,
                 DnsIntegrityState::Caution | DnsIntegrityState::Suspicious
             ) {
-                alerts.push(dns_integrity_alert(integrity));
+                alerts.push(dns_integrity_alert(integrity, settings));
             }
         }
     }
@@ -175,90 +175,86 @@ fn classify_trust_level(environment: &EnvironmentSnapshot, score: &HealthScore) 
     TrustLevel::Trusted
 }
 
-fn untrusted_network_alert(environment: &EnvironmentSnapshot) -> ProtectAlert {
-    let on_public = environment.tags.contains(&EnvironmentTag::Public);
-    let message = if on_public {
-        "You appear to be on a public or cellular network without VPN protection. Consider enabling your proxy or VPN before sensitive traffic."
+fn auto_protect_note(settings: &ProtectSettings) -> &'static str {
+    if settings.auto_apply_dns || settings.auto_apply_connect {
+        " KnotTrace will try to improve this automatically when it is safe to do so."
     } else {
-        "This network path does not look like a trusted home connection."
+        ""
+    }
+}
+
+fn untrusted_network_alert(environment: &EnvironmentSnapshot, settings: &ProtectSettings) -> ProtectAlert {
+    let on_public = environment.tags.contains(&EnvironmentTag::Public);
+    let auto = auto_protect_note(settings);
+    let message = if on_public {
+        format!(
+            "You appear to be on a public or cellular network.{auto} We will keep monitoring and notify you if action is needed."
+        )
+    } else {
+        format!(
+            "This network path does not look like a trusted home connection.{auto}"
+        )
     };
 
     ProtectAlert {
         level: AlertLevel::Warning,
         title: "Untrusted network".to_string(),
-        message: message.to_string(),
-        actions: vec![
-            ProtectAction {
-                kind: ProtectActionKind::ConnectAssist,
-                label: "Review proxy options".to_string(),
-            },
-            ProtectAction {
-                kind: ProtectActionKind::RunCheck,
-                label: "Run another health check".to_string(),
-            },
-        ],
+        message,
+        actions: alert_actions(settings),
     }
 }
 
-fn degraded_connection_alert(score: &HealthScore) -> ProtectAlert {
+fn degraded_connection_alert(score: &HealthScore, settings: &ProtectSettings) -> ProtectAlert {
     ProtectAlert {
         level: AlertLevel::Critical,
         title: "Connection degraded".to_string(),
-        message: format!("{} {}", score.summary, score.reasons.join("; ")),
-        actions: vec![
-            ProtectAction {
-                kind: ProtectActionKind::DnsAssist,
-                label: "Try DNS Assist".to_string(),
-            },
-            ProtectAction {
-                kind: ProtectActionKind::ConnectAssist,
-                label: "Try Connect Assist".to_string(),
-            },
-        ],
+        message: format!(
+            "{} {}{}",
+            score.summary,
+            score.reasons.join("; "),
+            auto_protect_note(settings)
+        ),
+        actions: alert_actions(settings),
     }
 }
 
-fn fair_connection_alert(score: &HealthScore) -> ProtectAlert {
+fn fair_connection_alert(score: &HealthScore, settings: &ProtectSettings) -> ProtectAlert {
     ProtectAlert {
         level: AlertLevel::Info,
         title: "Connection could be smoother".to_string(),
-        message: score.summary.clone(),
-        actions: vec![ProtectAction {
-            kind: ProtectActionKind::DnsAssist,
-            label: "Check DNS Assist".to_string(),
-        }],
+        message: format!("{}{}", score.summary, auto_protect_note(settings)),
+        actions: alert_actions(settings),
     }
 }
 
-fn proxy_path_alert() -> ProtectAlert {
+fn proxy_path_alert(settings: &ProtectSettings) -> ProtectAlert {
     ProtectAlert {
         level: AlertLevel::Warning,
         title: "Proxy path needs attention".to_string(),
-        message:
-            "A system proxy is active and connection quality is not ideal. A faster node may help."
-                .to_string(),
-        actions: vec![ProtectAction {
-            kind: ProtectActionKind::ConnectAssist,
-            label: "Review proxy nodes".to_string(),
-        }],
+        message: format!(
+            "A system proxy is active and connection quality is not ideal.{}",
+            auto_protect_note(settings)
+        ),
+        actions: alert_actions(settings),
     }
 }
 
-fn grade_drop_alert(previous: HealthGrade, current: HealthGrade) -> ProtectAlert {
+fn grade_drop_alert(previous: HealthGrade, current: HealthGrade, settings: &ProtectSettings) -> ProtectAlert {
     ProtectAlert {
         level: AlertLevel::Warning,
         title: "Health score dropped".to_string(),
         message: format!(
-            "Connection health changed from {previous:?} to {current:?}."
+            "Connection health changed from {previous:?} to {current:?}.{}",
+            auto_protect_note(settings)
         ),
         actions: vec![ProtectAction {
             kind: ProtectActionKind::RunCheck,
-            label: "Inspect latest results".to_string(),
+            label: "View latest results".to_string(),
         }],
     }
 }
 
-fn dns_integrity_alert(integrity: &DnsIntegrityStatus) -> ProtectAlert {
+fn dns_integrity_alert(integrity: &DnsIntegrityStatus, settings: &ProtectSettings) -> ProtectAlert {
     let level = match integrity.state {
         DnsIntegrityState::Suspicious => AlertLevel::Critical,
         DnsIntegrityState::Caution => AlertLevel::Warning,
@@ -267,29 +263,38 @@ fn dns_integrity_alert(integrity: &DnsIntegrityStatus) -> ProtectAlert {
 
     ProtectAlert {
         level,
-        title: "DNS integrity risk detected".to_string(),
+        title: "DNS integrity concern".to_string(),
         message: format!(
-            "{} Confidence: {:?}. {} of {} checked domains mismatched.",
+            "{} We are watching this and will not change DNS without your smart-protect policy.{}",
             integrity.summary,
-            integrity.confidence,
-            integrity.mismatch_count,
-            integrity.checked_domains
+            if settings.auto_apply_dns {
+                " Faster DNS may be applied automatically on untrusted networks."
+            } else {
+                ""
+            }
         ),
-        actions: vec![
-            ProtectAction {
-                kind: ProtectActionKind::DnsAssist,
-                label: "Review DNS Assist".to_string(),
-            },
-            ProtectAction {
-                kind: ProtectActionKind::RunCheck,
-                label: "Run another health check".to_string(),
-            },
-            ProtectAction {
-                kind: ProtectActionKind::ConnectAssist,
-                label: "Review proxy options".to_string(),
-            },
-        ],
+        actions: vec![ProtectAction {
+            kind: ProtectActionKind::RunCheck,
+            label: "View details".to_string(),
+        }],
     }
+}
+
+fn alert_actions(settings: &ProtectSettings) -> Vec<ProtectAction> {
+    if settings.auto_apply_dns || settings.auto_apply_connect {
+        return Vec::new();
+    }
+
+    vec![
+        ProtectAction {
+            kind: ProtectActionKind::DnsAssist,
+            label: "Try DNS Assist".to_string(),
+        },
+        ProtectAction {
+            kind: ProtectActionKind::ConnectAssist,
+            label: "Try Connect Assist".to_string(),
+        },
+    ]
 }
 
 fn grade_dropped(previous: HealthGrade, current: HealthGrade) -> bool {
@@ -392,7 +397,7 @@ mod tests {
             status
                 .alerts
                 .iter()
-                .any(|alert| alert.title == "DNS integrity risk detected")
+                .any(|alert| alert.title == "DNS integrity concern")
         );
     }
 }

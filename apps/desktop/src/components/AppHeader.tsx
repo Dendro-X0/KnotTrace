@@ -33,7 +33,7 @@ export function AppHeader({ state }: AppHeaderProps) {
             </Badge>
           )}
         </div>
-        <p className="text-muted-foreground text-xs">{monitorText}</p>
+        <p className="text-muted-foreground line-clamp-2 text-xs sm:line-clamp-none">{monitorText}</p>
         {state.report && (
           <p className="text-muted-foreground text-xs">
             Last checked {new Date(state.report.timestamp).toLocaleString()}
@@ -44,21 +44,23 @@ export function AppHeader({ state }: AppHeaderProps) {
 
       <Separator className="lg:hidden" />
 
-      <div className="flex shrink-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-        <Button onClick={() => void state.runCheck()} disabled={state.checking}>
+      <div className="flex shrink-0 flex-col items-stretch gap-2 min-[420px]:flex-row min-[420px]:items-center">
+        <Button className="w-full min-[420px]:w-auto" onClick={() => void state.runCheck()} disabled={state.checking}>
           {state.checking ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              Checking...
+              <span className="sm:hidden">Checking</span>
+              <span className="hidden sm:inline">Checking...</span>
             </>
           ) : (
             <>
               <RefreshCw className="size-4" />
-              Run health check
+              <span className="sm:hidden">Health check</span>
+              <span className="hidden sm:inline">Run health check</span>
             </>
           )}
         </Button>
-        <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/60 px-3 py-2 shadow-sm">
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-border/70 bg-card/60 px-3 py-2 shadow-sm min-[420px]:justify-start">
           <Switch
             id="monitor-toggle"
             checked={monitorActive}
@@ -67,7 +69,8 @@ export function AppHeader({ state }: AppHeaderProps) {
             }}
           />
           <Label htmlFor="monitor-toggle" className="text-muted-foreground text-xs">
-            Background monitor
+            <span className="hidden min-[420px]:inline">Background monitor</span>
+            <span className="min-[420px]:hidden">Monitor</span>
           </Label>
         </div>
       </div>

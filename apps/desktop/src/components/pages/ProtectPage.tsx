@@ -25,16 +25,18 @@ function protectBadgeVariant(trust: "trusted" | "caution" | "untrusted" | undefi
 const TOGGLES: Array<{
   key: keyof NonNullable<CompanionState["protectStatus"]>["settings"];
   label: string;
+  hint?: string;
 }> = [
-  { key: "enabled", label: "Protect mode" },
-  { key: "auto_apply_dns", label: "Auto-apply DNS Assist" },
-  { key: "auto_apply_connect", label: "Auto-apply Connect Assist" },
+  { key: "enabled", label: "Smart protect", hint: "Monitor trust and connection quality" },
+  { key: "auto_apply_dns", label: "Auto-improve DNS", hint: "Apply faster DNS on untrusted or poor networks" },
+  { key: "auto_apply_connect", label: "Auto-switch proxy node", hint: "Pick a faster node when Mihomo/sing-box is available" },
   {
     key: "auto_apply_on_untrusted_only",
-    label: "Auto-protect only on untrusted/poor networks",
+    label: "Auto-fix only when needed",
+    hint: "Limit automatic changes to untrusted or poor connections",
   },
-  { key: "notify_on_grade_drop", label: "Notify on grade drop" },
-  { key: "notify_on_untrusted_network", label: "Notify on untrusted network" },
+  { key: "notify_on_grade_drop", label: "Notify on score drop" },
+  { key: "notify_on_untrusted_network", label: "Notify on unfamiliar networks" },
   { key: "notify_on_degraded", label: "Notify on poor connection" },
 ];
 
@@ -120,9 +122,14 @@ export function ProtectPage({ state }: ProtectPageProps) {
                 key={toggle.key}
                 className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 px-3 py-2.5"
               >
-                <Label htmlFor={id} className="text-xs leading-snug">
-                  {toggle.label}
-                </Label>
+                <div className="min-w-0">
+                  <Label htmlFor={id} className="text-xs leading-snug">
+                    {toggle.label}
+                  </Label>
+                  {toggle.hint && (
+                    <p className="text-muted-foreground mt-0.5 text-[0.68rem]">{toggle.hint}</p>
+                  )}
+                </div>
                 <Switch
                   id={id}
                   checked={checked}

@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "mobile",
+  "description": "Capability for KnotTrace mobile builds",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "notification:default",
+    "updater:default",
+    "process:default"
+  ]
+}

@@ -19,10 +19,22 @@ Runs on every push and pull request:
 
 Builds the Windows Tauri bundle and creates a GitHub Release with:
 
-- MSI installer (`Network Companion_<version>_x64_en-US.msi`)
-- `network-desktop.exe`
+- MSI installer (`KnotTrace_<version>_x64_en-US.msi`)
+- `latest.json` + `.sig` files for in-app signed updates
 
-Uses [tauri-apps/tauri-action](https://github.com/tauri-apps/tauri-action) with `GITHUB_TOKEN` (no extra secrets required for public repos).
+Uses [tauri-apps/tauri-action](https://github.com/tauri-apps/tauri-action) with `includeUpdaterJson: true`.
+
+### Required secret (signed updates)
+
+| Secret | Description |
+|--------|-------------|
+| `TAURI_SIGNING_PRIVATE_KEY` | Contents of `apps/desktop/src-tauri/.updater/knottrace.key` |
+
+Generate keys: `./scripts/generate-updater-keys.sh` — see [updater-signing.md](updater-signing.md).
+
+### Optional Android job
+
+Set repository variable `ENABLE_ANDROID_RELEASE=true` and secrets `ANDROID_KEY_BASE64`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS`.
 
 ## First-time setup after push
 

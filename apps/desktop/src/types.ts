@@ -322,7 +322,22 @@ export interface HistoryTrendPoint {
   dns_integrity_mismatch_count?: number | null;
 }
 
-export const PAGE_STORAGE_KEY = "network-companion-active-page";
+export interface UpdateCheck {
+  available: boolean;
+  current_version: string;
+  latest_version: string | null;
+  release_url: string | null;
+  notes: string | null;
+  can_install_in_app: boolean;
+}
+
+export interface UpdateProgress {
+  phase: string;
+  downloaded: number;
+  total: number | null;
+}
+
+export const PAGE_STORAGE_KEY = "knottrace-active-page";
 
 export const PAGE_TITLES: Record<PageId, string> = {
   overview: "Overview",

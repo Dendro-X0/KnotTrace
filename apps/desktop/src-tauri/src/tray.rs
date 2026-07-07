@@ -24,7 +24,7 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     TrayIconBuilder::with_id("main")
         .menu(&menu)
         .icon(icon)
-        .tooltip("Network Companion")
+        .tooltip("KnotTrace")
         .show_menu_on_left_click(true)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => crate::monitor::show_main_window(app),
@@ -55,7 +55,7 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
 pub fn update_tray_status(app: &AppHandle, report: &HealthReport) {
     let grade = format!("{:?}", report.score.grade).to_uppercase();
     let tooltip = format!(
-        "Network Companion — {} ({}/100)",
+        "KnotTrace — {} ({}/100)",
         report.score.summary, report.score.score
     );
 

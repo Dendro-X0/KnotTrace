@@ -7,6 +7,7 @@ mod protect;
 mod state;
 mod throughput;
 mod tray;
+mod updater;
 
 use network_core::{HealthReport, HistoryTrendPoint};
 use state::{open_store, AppState, MonitorStatus};
@@ -81,6 +82,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             let store = open_store()?;
             app.manage(AppState {
@@ -91,8 +94,10 @@ pub fn run() {
             });
             app.manage(protect::ProtectRuntime::new());
 
+            #[cfg(desktop)]
             tray::setup_tray(app)?;
 
+            #[cfg(desktop)]
             if let Some(window) = app.get_webview_window("main") {
                 let window_handle = window.clone();
                 window.on_window_event(move |event| {
@@ -142,6 +147,9 @@ pub fn run() {
             throughput::get_throughput_settings,
             throughput::set_throughput_settings,
             throughput::run_throughput_test,
+            updater::get_app_info,
+            updater::check_for_updates,
+            updater::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

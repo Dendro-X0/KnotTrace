@@ -2,3 +2,9 @@
 **/dist
 **/node_modules
 .DS_Store
+apps/desktop/knottrace.key
+apps/desktop/knottrace.key.pub
+apps/desktop/src-tauri/.updater/knottrace.key
+**/keystore.properties
+**/*.jks
+**/*.keystore

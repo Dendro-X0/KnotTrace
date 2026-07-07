@@ -20,9 +20,15 @@ pub struct MonitorStatus {
 }
 
 pub fn data_dir() -> PathBuf {
-    dirs::data_local_dir()
-        .unwrap_or_else(std::env::temp_dir)
-        .join("NetworkCompanion")
+    let base = dirs::data_local_dir().unwrap_or_else(std::env::temp_dir);
+    let new_dir = base.join("KnotTrace");
+    let legacy_dir = base.join("NetworkCompanion");
+
+    if new_dir.exists() || !legacy_dir.exists() {
+        new_dir
+    } else {
+        legacy_dir
+    }
 }
 
 pub fn open_store() -> Result<HistoryStore, String> {

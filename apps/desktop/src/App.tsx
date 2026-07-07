@@ -1,3 +1,4 @@
+import { UpdateBanner } from "@/components/UpdateBanner";
 import { AppHeader } from "@/components/AppHeader";
 import { ConnectPage } from "@/components/pages/ConnectPage";
 import { DnsPage } from "@/components/pages/DnsPage";
@@ -11,10 +12,19 @@ export function App() {
   const state = useCompanion();
 
   return (
-    <div className="bg-background text-foreground grid min-h-screen grid-cols-1 overflow-hidden lg:h-screen lg:grid-cols-[260px_minmax(0,1fr)]">
-      <Sidebar page={state.page} onNavigate={state.navigate} />
+    <div className="bg-background text-foreground grid min-h-dvh grid-cols-1 lg:h-dvh lg:grid-cols-[260px_minmax(0,1fr)] lg:overflow-hidden">
+      <Sidebar page={state.page} onNavigate={state.navigate} version={state.appVersion} />
 
-      <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-3 p-3 lg:m-2 lg:mr-3 lg:mb-3 lg:rounded-2xl lg:border lg:border-border/60 lg:bg-background/35 lg:p-4 lg:shadow-sm lg:backdrop-blur-sm">
+      <div className="grid min-h-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-2 p-2 sm:gap-3 sm:p-3 lg:m-2 lg:mr-3 lg:mb-3 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-border/60 lg:bg-background/35 lg:p-4 lg:shadow-sm lg:backdrop-blur-sm">
+        <UpdateBanner
+          update={state.updateCheck}
+          checking={state.updateChecking}
+          installing={state.updateInstalling}
+          progress={state.updateProgress}
+          onCheck={() => void state.checkForUpdates()}
+          onInstall={() => void state.installUpdate()}
+          onOpenRelease={() => void state.openUpdateRelease()}
+        />
         <AppHeader state={state} />
 
         <main className="min-h-0 overflow-y-auto overflow-x-hidden pb-2 lg:pb-0">

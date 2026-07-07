@@ -1,21 +1,23 @@
-# Network Companion
+# KnotTrace
 
-**v0.9.0** — A cross-platform desktop companion for connection health monitoring, diagnosis, and small reversible network improvements.
+**v1.1.1** — A minimalist desktop companion that monitors your connection, improves it automatically when safe, and stays out of your way.
 
-Understand how your path behaves across home networks, VPN/proxy tunnels, and Tor — then apply assists only when you choose to.
+KnotTrace watches network health in the background, applies reversible DNS and proxy improvements on untrusted or poor connections, and explains issues in plain language.
 
-## Features
+## What runs automatically
 
-| Area | Highlights |
-|------|------------|
-| **Monitor** | Background health checks, system tray, desktop notifications |
-| **Diagnosis** | Bottleneck hints (Wi‑Fi, VPN, proxy, Tor, DNS, loss, integrity) |
-| **DNS** | Integrity checks, trends, reversible DNS Assist (**apply: Windows**) |
-| **Connect** | Mihomo/sing-box discovery, node recommendation, delay comparison |
-| **Protect** | Trust classification, alerts, opt-in auto-apply (off by default) |
-| **Network** | Stability probes (bufferbloat, MTU), on-demand throughput sample |
+| Feature | Default behavior |
+|---------|------------------|
+| **Health monitor** | On — checks every 15s when the network changes |
+| **Smart protect** | On — alerts and optional auto-fixes |
+| **Auto DNS improve** | On for untrusted/poor networks (Windows apply) |
+| **Auto proxy switch** | On when Mihomo/sing-box API is available |
+| **Diagnosis & alerts** | Automatic, plain-language summaries |
+| **DNS integrity watch** | Automatic detection; no silent DNS overrides |
+| **Throughput test** | Manual only (Network page) |
+| **Benchmark snapshots** | Manual only (Overview) |
 
-**Posture:** observe first. DNS and proxy changes are manual unless you enable auto-protect.
+You can turn off any automatic behavior on the **Protect** page.
 
 ## Quick start
 
@@ -43,6 +45,7 @@ Full setup, verification commands, and repo layout: **[docs/START-HERE.md](docs/
 | [docs/architecture.md](docs/architecture.md) | Modules and data flow |
 | [docs/platform-support.md](docs/platform-support.md) | OS feature matrix |
 | [docs/github-ci.md](docs/github-ci.md) | GitHub Actions CI and release publishing |
+| [docs/updater-signing.md](docs/updater-signing.md) | Signed updates, OSS keys, Android/iOS |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 | [specs/backend/](specs/backend/) | Design specs and roadmap |
 
@@ -58,7 +61,7 @@ On low-memory hosts, prefer `CARGO_BUILD_JOBS=1` for Rust commands.
 
 ## Local data
 
-`%LOCALAPPDATA%/NetworkCompanion/` on Windows — history, assist backups, settings, benchmarks.
+`%LOCALAPPDATA%/KnotTrace/` on Windows (migrates from `NetworkCompanion` if present).
 
 ## License
 

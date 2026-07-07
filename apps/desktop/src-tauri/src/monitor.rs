@@ -31,6 +31,7 @@ pub fn publish_report(
     reason: &str,
 ) -> Result<(), String> {
     update_after_report(app, report, reason)?;
+#[cfg(desktop)]
     crate::tray::update_tray_status(app, report);
     let _ = handle_protect_status(app, report);
     app.emit("health-report-updated", report)

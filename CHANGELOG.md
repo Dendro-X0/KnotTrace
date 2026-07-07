@@ -4,6 +4,58 @@ All notable changes to Network Companion are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions align with `tauri.conf.json` and workspace `Cargo.toml`.
 
+## [1.1.1] - 2026-07-07
+
+### Added
+
+- `scripts/fix-knottrace-icons.py` — regenerate Tauri icons without white canvas bleed
+
+### Changed
+
+- **Responsive layout** — sidebar, overview grids, and header adapt to narrow and wide window sizes
+- **Flatter sidebar tabs** — single-row nav pills instead of tall two-line cards
+- **Minimum window size** lowered to 380×520 for small-screen layouts
+
+### Fixed
+
+- **App icon** — title bar and taskbar no longer show white corners on the KnotTrace logo
+- **Proxy-aware health checks** — internet probe degrades gracefully behind Clash/Mihomo system proxy
+
+## [1.1.0] - 2026-07-06
+
+### Added
+
+- **Signed in-app updates** — download, verify (minisign), install, and restart via Tauri updater
+- **OSS signing workflow** — `scripts/generate-updater-keys.sh`, `docs/updater-signing.md`, CI secrets
+- **Android release job** (optional) — enable with repo variable `ENABLE_ANDROID_RELEASE=true`
+- Mobile updater capability file for Android/iOS builds
+
+### Changed
+
+- Update banner offers **Install update** when signed `latest.json` is available; falls back to GitHub otherwise
+
+## [1.0.0] - 2026-07-06
+
+### Added
+
+- **KnotTrace** rebrand — minimalist logo, new app name, window title, and tray
+- **In-app update checker** — compares your version to the latest GitHub release
+- **Smart protect defaults** — auto DNS and proxy improvements on untrusted/poor networks
+- Proxy-aware internet probes (SOCKS5 fallback for Clash/Mihomo system proxy)
+
+### Changed
+
+- Version display in sidebar; installer filenames now match `tauri.conf.json` version
+- Protect alerts use plain language; fewer manual action buttons when auto-fix is on
+- Local data folder: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion` still read)
+
+## [0.9.1] - 2026-07-06
+
+### Fixed
+
+- Health checks no longer fail entirely when direct internet TCP is blocked by system proxy
+- Internet latency measured via proxy path (SOCKS5) when Clash/Mihomo is active
+
 ## [0.9.0] - 2026-07-06
 
 ### Added

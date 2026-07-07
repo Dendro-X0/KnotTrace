@@ -45,45 +45,47 @@ export function OverviewPage({ state }: OverviewPageProps) {
   ];
 
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-2">
-      <StatusHero
-        loading={loading}
-        grade={grade}
-        score={state.report?.score.score}
-        dnsIntegrity={state.report?.dns_integrity}
-        summary={
-          state.checkError ??
-          state.report?.score.summary ??
-          "Run a check to see connection health."
-        }
-      />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <section className="grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(11rem,0.85fr)]">
+        <StatusHero
+          loading={loading}
+          grade={grade}
+          score={state.report?.score.score}
+          dnsIntegrity={state.report?.dns_integrity}
+          summary={
+            state.checkError ??
+            state.report?.score.summary ??
+            "Run a check to see connection health."
+          }
+        />
 
-      <div className="grid grid-cols-3 gap-3">
-        {loading
-          ? Array.from({ length: 3 }).map((_, index) => (
-              <Card key={index} className="py-3">
-                <CardContent className="py-0">
-                  <Skeleton className="mb-2 h-3 w-16" />
-                  <Skeleton className="h-5 w-20" />
-                </CardContent>
-              </Card>
-            ))
-          : quickStats.map((stat) => (
-              <MetricCard
-                key={stat.label}
-                label={stat.label}
-                value={stat.value}
-                icon={stat.icon}
-                tone={stat.tone}
-              />
-            ))}
-      </div>
+        <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-3 lg:grid-cols-1">
+          {loading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="py-3">
+                  <CardContent className="py-0">
+                    <Skeleton className="mb-2 h-3 w-16" />
+                    <Skeleton className="h-5 w-20" />
+                  </CardContent>
+                </Card>
+              ))
+            : quickStats.map((stat) => (
+                <MetricCard
+                  key={stat.label}
+                  label={stat.label}
+                  value={stat.value}
+                  icon={stat.icon}
+                  tone={stat.tone}
+                />
+              ))}
+        </div>
+      </section>
 
-      <Card className="min-h-0 xl:col-span-2">
-        <CardHeader>
+      <Card className="min-h-0">
+        <CardHeader className="pb-2">
           <CardTitle>Diagnosis & benchmarks</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 lg:grid-cols-2">
+        <CardContent className="grid gap-3 md:grid-cols-2">
           {loading ? (
             <>
               <Skeleton className="h-40 rounded-lg" />
@@ -105,13 +107,13 @@ export function OverviewPage({ state }: OverviewPageProps) {
       </Card>
 
       <Card className="min-h-0">
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle>Trends</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, index) => (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
                 <Skeleton key={index} className="h-24 rounded-lg" />
               ))}
             </div>
@@ -121,13 +123,13 @@ export function OverviewPage({ state }: OverviewPageProps) {
         </CardContent>
       </Card>
 
-      <Card className="min-h-0 xl:col-span-2">
-        <CardHeader>
+      <Card className="min-h-0">
+        <CardHeader className="pb-2">
           <CardTitle>Recent checks</CardTitle>
         </CardHeader>
         <CardContent className="min-h-0">
           {loading ? (
-            <div className="grid grid-cols-2 gap-2 xl:grid-cols-6">
+            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton key={index} className="h-20 rounded-lg" />
               ))}
@@ -150,8 +152,8 @@ export function OverviewPage({ state }: OverviewPageProps) {
               }
             />
           ) : (
-            <ScrollArea className="max-h-[24rem]">
-              <div className="grid grid-cols-1 gap-2 pr-3 sm:grid-cols-2 xl:grid-cols-6">
+            <ScrollArea className="max-h-[24rem] lg:max-h-none">
+              <div className="grid grid-cols-1 gap-2 pr-3 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
                 {state.history.map((item) => (
                   <div
                     key={item.timestamp}

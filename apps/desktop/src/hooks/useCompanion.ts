@@ -21,6 +21,8 @@ import type {
   ProtectStatus,
   ThroughputProbeResult,
   ThroughputSettings,
+  UpdateCheck,
+  UpdateProgress,
 } from "@/types";
 import { isPageId, PAGE_STORAGE_KEY } from "@/types";
 
@@ -72,6 +74,11 @@ export function useCompanion() {
   const [protectStatus, setProtectStatus] = useState<ProtectStatus | null>(null);
   const [protectError, setProtectError] = useState<string | null>(null);
   const [autoProtectNote, setAutoProtectNote] = useState("");
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+  const [updateCheck, setUpdateCheck] = useState<UpdateCheck | null>(null);
+  const [updateChecking, setUpdateChecking] = useState(false);
+  const [updateInstalling, setUpdateInstalling] = useState(false);
+  const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(null);
   const [bootstrapping, setBootstrapping] = useState(true);
 
   const navigate = useCallback((next: PageId) => {
@@ -221,6 +228,48 @@ export function useCompanion() {
       setThroughputError(
         error instanceof Error ? error.message : "Could not load throughput settings.",
       );
+    }
+  }, []);
+
+  const loadAppInfo = useCallback(async () => {
+    try {
+      const info = await invoke<{ name: string; version: string }>("get_app_info");
+      setAppVersion(info.version);
+    } catch {
+      setAppVersion(null);
+    }
+  }, []);
+
+  const checkForUpdates = useCallback(async () => {
+    setUpdateChecking(true);
+    try {
+      const result = await invoke<UpdateCheck>("check_for_updates");
+      setUpdateCheck(result);
+    } catch {
+      setUpdateCheck(null);
+    } finally {
+      setUpdateChecking(false);
+    }
+  }, []);
+
+  const openUpdateRelease = useCallback(async () => {
+    const url = updateCheck?.release_url;
+    if (!url) return;
+    const { openUrl } = await import("@tauri-apps/plugin-opener");
+    await openUrl(url);
+  }, [updateCheck?.release_url]);
+
+  const installUpdate = useCallback(async () => {
+    setUpdateInstalling(true);
+    setUpdateProgress({ phase: "started", downloaded: 0, total: null });
+    try {
+      await invoke("install_update");
+      const { relaunch } = await import("@tauri-apps/plugin-process");
+      await relaunch();
+    } catch (error) {
+      setUpdateInstalling(false);
+      setUpdateProgress(null);
+      throw error;
     }
   }, []);
 
@@ -534,6 +583,8 @@ export function useCompanion() {
         refreshIntegritySettings(),
         refreshBenchmarks(),
         refreshThroughputSettings(),
+        loadAppInfo(),
+        checkForUpdates(),
       ]);
 
       if (!cancelled) {
@@ -546,6 +597,8 @@ export function useCompanion() {
     };
   }, [
     loadConnectConfig,
+    checkForUpdates,
+    loadAppInfo,
     refreshAssist,
     refreshBenchmarks,
     refreshConnect,
@@ -573,6 +626,11 @@ export function useCompanion() {
         await listen<ProtectStatus>("protect-status-updated", (event) => {
           setProtectStatus(event.payload);
           setProtectError(null);
+        }),
+      );
+      unsubs.push(
+        await listen<UpdateProgress>("update-progress", (event) => {
+          setUpdateProgress(event.payload);
         }),
       );
       unsubs.push(
@@ -652,6 +710,11 @@ export function useCompanion() {
     protectStatus,
     protectError,
     autoProtectNote,
+    appVersion,
+    updateCheck,
+    updateChecking,
+    updateInstalling,
+    updateProgress,
     bootstrapping,
     runCheck,
     setMonitorEnabled,
@@ -667,6 +730,9 @@ export function useCompanion() {
     applyRecommendedConnect,
     saveProtectSettings,
     handleProtectAction,
+    checkForUpdates,
+    installUpdate,
+    openUpdateRelease,
   };
 }
 

@@ -7,20 +7,26 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to build and publish (e.g. v1.1.0)"
+        description: "Existing tag to build and publish (e.g. v1.1.1)"
         required: true
         type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: true
+
 env:
-  CARGO_BUILD_JOBS: 1
+  # Windows release builds are heavy; 2 jobs fits standard 2-vCPU runners.
+  CARGO_BUILD_JOBS: 2
 
 jobs:
   build-windows:
     name: Build Windows (signed updater)
     runs-on: windows-latest
+    timeout-minutes: 90
     steps:
       - name: Checkout tag
         uses: actions/checkout@v4
@@ -39,6 +45,8 @@ jobs:
         with:
           workspaces: |
             . -> target
+          shared-key: knottrace-windows
+          cache-on-failure: true
 
       - name: Install frontend dependencies
         working-directory: apps/desktop
@@ -65,97 +73,4 @@ jobs:
             - **NSIS setup.exe** — alternative installer
           releaseDraft: false
           prerelease: false
-          includeUpdaterJson: true
-
-  build-android:
-    name: Build Android (signed updater)
-    runs-on: ubuntu-latest
-    if: ${{ vars.ENABLE_ANDROID_RELEASE == 'true' }}
-    steps:
-      - name: Checkout tag
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: apps/desktop/package-lock.json
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Linux dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev librsvg2-dev patchelf
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            . -> target
-
-      - name: Install frontend dependencies
-        working-directory: apps/desktop
-        run: npm ci
-
-      - name: Initialize Android project
-        working-directory: apps/desktop
-        run: npm run tauri android init --ci
-
-      - name: Setup Android signing
-        working-directory: apps/desktop/src-tauri/gen/android
-        env:
-          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        run: |
-          echo "keyAlias=${ANDROID_KEY_ALIAS}" > keystore.properties
-          echo "password=${ANDROID_KEY_PASSWORD}" >> keystore.properties
-          echo "${ANDROID_KEY_BASE64}" | base64 -d > "$RUNNER_TEMP/knottrace.jks"
-          echo "storeFile=$RUNNER_TEMP/knottrace.jks" >> keystore.properties
-
-      - name: Patch Android release signing
-        working-directory: apps/desktop/src-tauri/gen/android/app
-        run: |
-          python3 <<'PY'
-          from pathlib import Path
-          path = Path("build.gradle.kts")
-          text = path.read_text()
-          if 'signingConfigs' not in text:
-              block = '''
-          signingConfigs {
-              create("release") {
-                  val keystorePropertiesFile = rootProject.file("keystore.properties")
-                  val keystoreProperties = java.util.Properties()
-                  if (keystorePropertiesFile.exists()) {
-                      keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
-                  }
-                  keyAlias = keystoreProperties["keyAlias"] as String
-                  keyPassword = keystoreProperties["password"] as String
-                  storeFile = file(keystoreProperties["storeFile"] as String)
-                  storePassword = keystoreProperties["password"] as String
-              }
-          }
-          '''
-              text = text.replace("buildTypes {", block + "\n    buildTypes {", 1)
-              text = text.replace(
-                  'getByName("release") {',
-                  'getByName("release") {\n            signingConfig = signingConfigs.getByName("release")',
-                  1,
-              )
-              path.write_text(text)
-          PY
-
-      - name: Build Android APK
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        with:
-          projectPath: apps/desktop
-          args: --target aarch64-linux-android
-          tagName: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-          releaseName: KnotTrace ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }} (Android)
           includeUpdaterJson: true

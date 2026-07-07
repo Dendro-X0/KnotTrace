@@ -6,14 +6,19 @@
 |----------|------|----------|
 | **CI** | `.github/workflows/ci.yml` | Push/PR to `main` or `master` |
 | **Release** | `.github/workflows/release.yml` | Push tag `v*`; manual dispatch |
+| **Release Android** | `.github/workflows/release-android.yml` | Manual dispatch only |
 
 ### CI
 
-Runs on every push and pull request:
+Runs on every push and pull request (Linux runners for speed):
 
 - `cargo test -p network-core`
-- `cargo check --workspace`
+- `cargo check -p network-desktop` (Linux WebKit deps; catches Rust/Tauri compile breaks)
 - `npm run build` in `apps/desktop`
+
+Duplicate runs on the same branch are cancelled automatically.
+
+Rust uses `CARGO_BUILD_JOBS=2` on GitHub runners. For local Windows builds that OOM, use `CARGO_BUILD_JOBS=1`.
 
 ### Release
 
@@ -24,6 +29,8 @@ Builds the Windows Tauri bundle and creates a GitHub Release with:
 
 Uses [tauri-apps/tauri-action](https://github.com/tauri-apps/tauri-action) with `includeUpdaterJson: true`.
 
+**Timing:** the first Windows release after a dependency bump can take **20–40 minutes** (cold Rust cache). Later releases on the same runner image are usually **8–15 minutes** thanks to `Swatinem/rust-cache`.
+
 ### Required secret (signed updates)
 
 | Secret | Description |
@@ -32,9 +39,14 @@ Uses [tauri-apps/tauri-action](https://github.com/tauri-apps/tauri-action) with 
 
 Generate keys: `./scripts/generate-updater-keys.sh` — see [updater-signing.md](updater-signing.md).
 
-### Optional Android job
+### Android releases (optional, manual)
 
-Set repository variable `ENABLE_ANDROID_RELEASE=true` and secrets `ANDROID_KEY_BASE64`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS`.
+Mobile is not part of the default release path. When ready:
+
+1. Run **Actions → Release Android → Run workflow** with the tag (e.g. `v1.1.1`).
+2. Set secrets `ANDROID_KEY_BASE64`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS`.
+
+This avoids a skipped Android job on every desktop release.
 
 ## First-time setup after push
 

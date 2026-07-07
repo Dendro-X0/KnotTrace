@@ -1,4 +1,4 @@
-# KnotTrace — set TAURI_SIGNING_PRIVATE_KEY on GitHub (Windows)
+# KnotTrace - set TAURI_SIGNING_PRIVATE_KEY on GitHub (Windows)
 $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot
@@ -11,7 +11,7 @@ if (-not (Test-Path $KeyPath)) {
     exit 1
 }
 
-Write-Host "KnotTrace updater signing — GitHub secret setup"
+Write-Host "KnotTrace updater signing - GitHub secret setup"
 Write-Host "=============================================="
 Write-Host ""
 Write-Host "Public key (must match tauri.conf.json):"
@@ -33,9 +33,11 @@ if ($gh) {
 Write-Host "Manual setup:"
 Write-Host "1. Open https://github.com/$Repo/settings/secrets/actions"
 Write-Host "2. New secret: TAURI_SIGNING_PRIVATE_KEY"
-Write-Host "   Value: copy entire file -> $KeyPath"
+Write-Host "   Value: copy entire file at:"
+Write-Host "   $KeyPath"
 Write-Host "3. New secret: TAURI_SIGNING_PRIVATE_KEY_PASSWORD (empty)"
 Write-Host "4. Re-run release workflow for tag v1.1.1"
 Write-Host ""
-Write-Host "Copy private key to clipboard (PowerShell):"
-Write-Host "  Get-Content -Raw apps/desktop/src-tauri/.updater/knottrace.key | Set-Clipboard"
+Write-Host "Copy private key to clipboard:"
+$clipCmd = "Get-Content -Raw `"$KeyPath`" | Set-Clipboard"
+Write-Host "  $clipCmd"

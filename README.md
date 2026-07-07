@@ -1,6 +1,6 @@
 # KnotTrace
 
-**v1.1.1** — A minimalist desktop companion that monitors your connection, improves it automatically when safe, and stays out of your way.
+**v1.2.0** — A minimalist desktop companion that monitors your connection, improves it automatically when safe, and stays out of your way.
 
 KnotTrace watches network health in the background, applies reversible DNS and proxy improvements on untrusted or poor connections, and explains issues in plain language.
 

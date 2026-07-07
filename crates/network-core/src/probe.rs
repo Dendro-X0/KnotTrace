@@ -9,8 +9,10 @@ use tokio::time::timeout;
 
 const INTERNET_PROBE_HOST: &str = "1.1.1.1";
 const INTERNET_PROBE_PORT: u16 = 443;
+const PROXY_PROBE_URL: &str = "http://www.gstatic.com/generate_204";
 const DNS_PROBE_QUERY: &str = "example.com";
 const PROBE_ATTEMPTS: usize = 3;
+const PROXY_PROBE_ATTEMPTS: usize = 2;
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(2);
 
 pub async fn measure_tcp_latency(host: &str, port: u16, attempts: usize) -> Result<LatencySample, String> {
@@ -39,15 +41,7 @@ pub async fn run_quick_probe(environment: &EnvironmentSnapshot) -> Result<ProbeR
         None
     };
 
-    let internet = Some(
-        tcp_latency_sample(
-            &format!("internet:{INTERNET_PROBE_HOST}"),
-            INTERNET_PROBE_HOST.to_string(),
-            INTERNET_PROBE_PORT,
-            PROBE_ATTEMPTS,
-        )
-        .await?,
-    );
+    let internet = probe_internet_latency(environment).await;
 
     let mut dns = Vec::new();
     for server in &environment.dns_servers {
@@ -64,6 +58,73 @@ pub async fn run_quick_probe(environment: &EnvironmentSnapshot) -> Result<ProbeR
         dns,
         duration_ms: started.elapsed().as_millis() as u64,
     })
+}
+
+async fn probe_internet_latency(environment: &EnvironmentSnapshot) -> Option<LatencySample> {
+    if let Ok(direct) = tcp_latency_sample(
+        &format!("internet:{INTERNET_PROBE_HOST}"),
+        INTERNET_PROBE_HOST.to_string(),
+        INTERNET_PROBE_PORT,
+        PROBE_ATTEMPTS,
+    )
+    .await
+    {
+        return Some(direct);
+    }
+
+    if environment.proxy.enabled {
+        let proxy_server = environment.proxy.server.as_deref()?;
+        if let Some(sample) = probe_http_via_proxy(proxy_server).await {
+            return Some(sample);
+        }
+        if !proxy_server.contains("://") {
+            return probe_http_via_proxy(&format!("socks5://{proxy_server}")).await;
+        }
+    }
+
+    None
+}
+
+async fn probe_http_via_proxy(proxy_server: &str) -> Option<LatencySample> {
+    let proxy_url = normalize_proxy_url(proxy_server);
+    let proxy = reqwest::Proxy::all(&proxy_url).ok()?;
+
+    let mut samples = Vec::new();
+    let mut failures = 0usize;
+
+    for _ in 0..PROXY_PROBE_ATTEMPTS {
+        let client = reqwest::Client::builder()
+            .proxy(proxy.clone())
+            .timeout(CONNECT_TIMEOUT)
+            .build()
+            .ok()?;
+
+        let started = Instant::now();
+        match client.get(PROXY_PROBE_URL).send().await {
+            Ok(response) if response.status().is_success() || response.status().as_u16() == 204 => {
+                samples.push(started.elapsed().as_secs_f64() * 1000.0);
+            }
+            _ => failures += 1,
+        }
+    }
+
+    if samples.is_empty() {
+        return None;
+    }
+
+    Some(LatencySample {
+        target: format!("internet:proxy:{proxy_server}"),
+        avg_ms: samples.iter().sum::<f64>() / samples.len() as f64,
+        loss_pct: (failures as f64 / PROXY_PROBE_ATTEMPTS as f64) * 100.0,
+    })
+}
+
+fn normalize_proxy_url(server: &str) -> String {
+    if server.contains("://") {
+        server.to_string()
+    } else {
+        format!("http://{server}")
+    }
 }
 
 async fn tcp_latency_sample(
@@ -177,5 +238,23 @@ pub async fn probe_dns_resolver(resolver_label: &str, query: &str) -> DnsProbe {
                 success: false,
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalizes_proxy_server_without_scheme() {
+        assert_eq!(normalize_proxy_url("127.0.0.1:7897"), "http://127.0.0.1:7897");
+    }
+
+    #[test]
+    fn preserves_proxy_server_with_scheme() {
+        assert_eq!(
+            normalize_proxy_url("socks5://127.0.0.1:7897"),
+            "socks5://127.0.0.1:7897"
+        );
     }
 }

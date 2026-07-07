@@ -15,7 +15,7 @@ thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 rusqlite = { version = "0.34", features = ["bundled"] }
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "socks"] }
 
 [[bin]]
 name = "network-probe"

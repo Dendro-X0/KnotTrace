@@ -9,12 +9,20 @@ use crate::state::{update_after_report, data_dir, AppState};
 use crate::protect::handle_protect_status;
 
 pub async fn perform_check(app: &AppHandle, reason: &str) -> Result<HealthReport, String> {
-    let integrity_settings = load_dns_integrity_settings(&data_dir()).map_err(|error| error.to_string())?;
-    let report = run_health_check_with_settings(Some(&integrity_settings))
-        .await
-        .map_err(|error| error.to_string())?;
-    publish_report(app, &report, reason)?;
-    Ok(report)
+    let integrity_settings =
+        load_dns_integrity_settings(&data_dir()).map_err(|error| error.to_string())?;
+
+    match run_health_check_with_settings(Some(&integrity_settings)).await {
+        Ok(report) => {
+            publish_report(app, &report, reason)?;
+            Ok(report)
+        }
+        Err(error) => {
+            let message = error.to_string();
+            let _ = app.emit("health-check-failed", &message);
+            Err(message)
+        }
+    }
 }
 
 pub fn publish_report(

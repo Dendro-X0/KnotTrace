@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useState } from "react";
 
+import { invokeErrorMessage } from "@/lib/utils";
 import type {
   AutoProtectResult,
   BenchmarkSnapshot,
@@ -240,7 +241,7 @@ export function useCompanion() {
         refreshBenchmarks(),
       ]);
     } catch (error) {
-      setCheckError(error instanceof Error ? error.message : "Health check failed.");
+      setCheckError(invokeErrorMessage(error, "Health check failed."));
     } finally {
       setChecking(false);
     }
@@ -575,8 +576,14 @@ export function useCompanion() {
         }),
       );
       unsubs.push(
+        await listen<string>("health-check-failed", (event) => {
+          setCheckError(event.payload);
+        }),
+      );
+      unsubs.push(
         await listen<HealthReport>("health-report-updated", (event) => {
           setReport(event.payload);
+          setCheckError(null);
           void refreshHistory();
           void refreshMonitorStatus();
           void refreshAssist();

@@ -18,7 +18,11 @@ Runs on every push and pull request (Linux runners for speed):
 
 Duplicate runs on the same branch are cancelled automatically.
 
-**Docs-only pushes** (`docs/`, `specs/`, `*.md`) skip CI to avoid noise. Release workflows are not part of CI commit checks on `main`.
+**Docs-only pushes** (`docs/`, `specs/`, `*.md`) skip CI to avoid noise. Release workflow edits are **not** skipped — they still run the CI jobs above.
+
+**Release vs CI:** pushing a tag runs the **Release** workflow (installers), not CI. A green v1.4.2 release with assets means Release succeeded even if no CI check appears on that tag commit.
+
+To run CI manually: **Actions → CI → Run workflow**.
 
 Rust uses `CARGO_BUILD_JOBS=2` on GitHub runners. For local Windows builds that OOM, use `CARGO_BUILD_JOBS=1`.
 

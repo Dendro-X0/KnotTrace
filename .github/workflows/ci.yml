@@ -7,14 +7,13 @@ on:
       - "**.md"
       - "docs/**"
       - "specs/**"
-      - ".github/workflows/release.yml"
-      - ".github/workflows/release-android.yml"
   pull_request:
     branches: [main, master]
     paths-ignore:
       - "**.md"
       - "docs/**"
       - "specs/**"
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}

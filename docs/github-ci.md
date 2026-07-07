@@ -20,6 +20,19 @@ Duplicate runs on the same branch are cancelled automatically.
 
 Rust uses `CARGO_BUILD_JOBS=2` on GitHub runners. For local Windows builds that OOM, use `CARGO_BUILD_JOBS=1`.
 
+### CI vs Release on commit status
+
+| Workflow | When it runs | What you see on `main` pushes |
+|----------|----------------|-------------------------------|
+| **CI** (3 jobs) | Every push/PR to `main` | Frontend + Rust checks |
+| **Release** | Tag push `v*` or manual dispatch | Only when you push a tag on that commit |
+
+If a commit shows **1 failing** check with **Release / Build Windows**, that is usually an old tag-triggered release (for example before `TAURI_SIGNING_PRIVATE_KEY` was set). GitHub keeps failed checks on the commit; a later successful manual release does not remove them.
+
+**v1.1.1** published successfully via Release run #7. The earlier Release #6 failure on the same commit is historical and safe to ignore.
+
+Future `main` pushes without a tag show **CI only** (3 green checks).
+
 ### Release
 
 Builds the Windows Tauri bundle and creates a GitHub Release with:

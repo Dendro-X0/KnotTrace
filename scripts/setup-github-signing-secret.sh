@@ -20,7 +20,7 @@ if [[ ! -f "$PUB_PATH" ]]; then
   exit 1
 fi
 
-echo "KnotTrace updater signing — GitHub secret setup"
+echo "KnotTrace updater signing - GitHub secret setup"
 echo "=============================================="
 echo ""
 echo "Public key (must match tauri.conf.json plugins.updater.pubkey):"
@@ -28,15 +28,13 @@ cat "$PUB_PATH"
 echo ""
 
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-  echo "GitHub CLI detected. Setting secrets on $REPO ..."
+  echo "GitHub CLI detected. Setting TAURI_SIGNING_PRIVATE_KEY on $REPO ..."
   gh secret set TAURI_SIGNING_PRIVATE_KEY --repo "$REPO" < "$KEY_PATH"
-  gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD --repo "$REPO" --body ""
   echo ""
-  echo "Done. Secrets set:"
-  echo "  TAURI_SIGNING_PRIVATE_KEY"
-  echo "  TAURI_SIGNING_PRIVATE_KEY_PASSWORD (empty)"
+  echo "Done. Only one secret is required for passwordless keys."
+  echo "Do not create TAURI_SIGNING_PRIVATE_KEY_PASSWORD unless your key file is encrypted."
   echo ""
-  echo "Re-run the release: Actions → Release → Run workflow → v1.1.1"
+  echo "Re-run the release: Actions -> Release -> Run workflow -> v1.1.1"
   exit 0
 fi
 
@@ -48,11 +46,10 @@ echo "   Name:  TAURI_SIGNING_PRIVATE_KEY"
 echo "   Value: entire contents of this file (copy all lines):"
 echo "           $KEY_PATH"
 echo ""
-echo "3. New repository secret"
-echo "   Name:  TAURI_SIGNING_PRIVATE_KEY_PASSWORD"
-echo "   Value: (leave blank — press space or use empty string)"
+echo "That is the only required secret when the key has no password (default)."
+echo "GitHub cannot store empty secrets, so skip TAURI_SIGNING_PRIVATE_KEY_PASSWORD."
 echo ""
-echo "4. Re-run release: Actions → Release → Run workflow → tag v1.1.1"
+echo "3. Re-run release: Actions -> Release -> Run workflow -> tag v1.1.1"
 echo ""
 echo "To print the private key for copy/paste (keep it secret):"
 echo "  cat \"$KEY_PATH\""

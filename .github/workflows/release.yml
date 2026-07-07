@@ -67,7 +67,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Keys from generate-updater-keys.sh have no password. GitHub cannot store
+          # empty secrets, so omit TAURI_SIGNING_PRIVATE_KEY_PASSWORD unless the key is encrypted.
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
         with:
           projectPath: apps/desktop
           tagName: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}

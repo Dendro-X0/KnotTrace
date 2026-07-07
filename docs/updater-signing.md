@@ -18,12 +18,12 @@ You already have a key pair if `apps/desktop/src-tauri/.updater/knottrace.key` e
 ./scripts/setup-github-signing-secret.sh
 ```
 
-With [GitHub CLI](https://cli.github.com/) logged in (`gh auth login`), either script sets both secrets automatically. Otherwise it prints the repo secrets URL and copy instructions.
+With [GitHub CLI](https://cli.github.com/) logged in (`gh auth login`), either script sets the secret automatically. Otherwise it prints the repo secrets URL and copy instructions.
 
-| Secret | Value |
-|--------|--------|
-| `TAURI_SIGNING_PRIVATE_KEY` | Full file contents of `knottrace.key` |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Empty (create the secret with a blank value) |
+| Secret | Required? | Value |
+|--------|-----------|--------|
+| `TAURI_SIGNING_PRIVATE_KEY` | **Yes** | Full file contents of `knottrace.key` |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | **No** | Only if your key file is password-protected. GitHub **cannot** store empty secrets — omit this for default passwordless keys. The workflow treats a missing secret as no password. |
 
 Then: **Actions → Release → Run workflow** → tag `v1.1.1`.
 
@@ -59,7 +59,7 @@ This creates:
 | Secret | Value |
 |--------|--------|
 | `TAURI_SIGNING_PRIVATE_KEY` | Full contents of `knottrace.key` **or** path on runner |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Empty string if no password |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | **Optional** — only when the private key is encrypted |
 
 If you lose the private key, existing installs cannot receive signed updates — generate a new pair and ship a manual reinstall once.
 

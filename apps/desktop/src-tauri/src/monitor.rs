@@ -1,4 +1,7 @@
-use network_core::{detect_environment, environment_fingerprint, load_dns_integrity_settings, run_health_check_with_settings, HealthReport};
+use network_core::{
+    detect_environment, environment_fingerprint, load_dns_integrity_settings,
+    run_health_check_with_settings, CheckProfile, HealthReport,
+};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -12,7 +15,13 @@ pub async fn perform_check(app: &AppHandle, reason: &str) -> Result<HealthReport
     let integrity_settings =
         load_dns_integrity_settings(&data_dir()).map_err(|error| error.to_string())?;
 
-    match run_health_check_with_settings(Some(&integrity_settings)).await {
+    let profile = if reason.starts_with("manual") {
+        CheckProfile::Fast
+    } else {
+        CheckProfile::Full
+    };
+
+    match run_health_check_with_settings(Some(&integrity_settings), profile).await {
         Ok(report) => {
             publish_report(app, &report, reason)?;
             Ok(report)

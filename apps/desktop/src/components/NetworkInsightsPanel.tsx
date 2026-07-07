@@ -61,7 +61,7 @@ export function NetworkInsightsPanel({
       </CardHeader>
       <CardContent className="min-h-0">
         <ScrollArea className="max-h-[28rem]">
-          <div className="space-y-3 pr-3 text-xs">
+          <div className="space-y-3 text-xs">
             {egress?.primary_ip && (
               <div className="rounded-lg border border-border/70 bg-muted/20 p-3">
                 <p className="text-muted-foreground mb-1 text-[0.68rem] uppercase tracking-wide">

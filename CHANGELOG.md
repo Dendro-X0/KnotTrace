@@ -1,8 +1,35 @@
 # Changelog
 
-All notable changes to Network Companion are documented here.
+All notable changes to KnotTrace are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions align with `tauri.conf.json` and workspace `Cargo.toml`.
+
+## [1.4.0] - 2026-07-07
+
+### Added
+
+- **Symptom-aware slow-speed diagnosis** — `slowdown_shape`, confidence, and primary bottleneck ranking in `network-core`
+- **Proxy path report** — parallel proxy vs direct HTTPS probes on verification domains; provider-side failure detection when sites fail only on the proxy path
+- **Site reachability error taxonomy** — timeout, connection reset, TLS, HTTP blocked, proxy, and DNS error kinds on probe results
+- **Fast / full check profiles** — manual checks use a fast profile; background monitor uses a full profile with richer probes
+- **Overview next steps** — shape-aware guidance panel with links to Connect and Network pages
+- **Proxy path panel** — side-by-side proxy vs direct results on the Network page
+- **Trend recurrence** — recurring slowdown patterns and DNS integrity mismatch counts in history trends
+- **Benchmark shape tags** — snapshots record the active slowdown shape at save time
+- Docs: [slowdown-factors.md](docs/slowdown-factors.md), [slow-speed-triage.md](docs/slow-speed-triage.md)
+- Spec: [slow-speed-diagnosis-v1.3.x.md](specs/backend/slow-speed-diagnosis-v1.3.x.md)
+
+### Changed
+
+- **Protect alerts** — incorporate slowdown shape context (proxy path, partial site failure, DNS integrity)
+- **Health check orchestration** — parallel probe stages via `tokio::join!`
+- **Unified scroll styling** — single `ScrollArea` component with `.app-scroll` thin scrollbar across panels and page scroll
+- **Overview layout** — diagnosis card, trends, and protect alerts use consistent scroll regions without flex height locking
+
+### Fixed
+
+- Overview and Protect panels no longer clip diagnosis hints or alerts without a working scroll region
+- Layout overlap regression where Trends and Recent checks painted over Diagnosis & benchmarks
 
 ## [1.3.0] - 2026-07-07
 
@@ -143,5 +170,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.4.0]: https://github.com/Dendro-X0/network/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/Dendro-X0/network/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/Dendro-X0/network/compare/v1.1.1...v1.2.0
 [0.9.0]: https://github.com/Dendro-X0/network/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/Dendro-X0/network/compare/v0.7.0...v0.8.0

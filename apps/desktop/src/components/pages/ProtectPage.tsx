@@ -82,8 +82,8 @@ export function ProtectPage({ state }: ProtectPageProps) {
           description="Your current network trust level looks stable. Alerts will appear here when action is recommended."
         />
       ) : (
-        <ScrollArea className="max-h-40">
-          <ul className="grid gap-2 pr-3">
+        <ScrollArea className="max-h-[min(22rem,50vh)]">
+          <ul className="grid gap-2">
             {status?.alerts.map((alert) => (
               <li
                 key={`${alert.title}-${alert.message}`}
@@ -114,7 +114,7 @@ export function ProtectPage({ state }: ProtectPageProps) {
         </ScrollArea>
       )}
 
-      <Separator />
+      <Separator className="shrink-0" />
 
       {loading ? (
         <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">

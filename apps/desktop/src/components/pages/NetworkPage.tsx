@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { FactList } from "@/components/shared";
 import { StabilityProbesPanel } from "@/components/StabilityProbesPanel";
 import { NetworkInsightsPanel } from "@/components/NetworkInsightsPanel";
+import { ProxyPathPanel } from "@/components/ProxyPathPanel";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +51,6 @@ export function NetworkPage({ state }: NetworkPageProps) {
           ) : env ? (
             <ScrollArea className="max-h-[28rem]">
               <FactList
-                className="pr-3"
                 rows={[
                   { label: "Host", value: env.hostname },
                   { label: "Active interface", value: env.active_interface ?? "Unknown" },
@@ -106,7 +106,7 @@ export function NetworkPage({ state }: NetworkPageProps) {
             </div>
           ) : probe ? (
             <ScrollArea className="max-h-[28rem]">
-              <div className="pr-3">
+              <div>
                 <FactList
                   rows={[
                     {
@@ -155,6 +155,11 @@ export function NetworkPage({ state }: NetworkPageProps) {
         egress={state.report?.egress}
         networkContext={state.report?.network_context}
         recommendations={state.report?.recommendations}
+      />
+      <ProxyPathPanel
+        loading={loading}
+        proxyEnabled={env?.proxy.enabled}
+        report={state.report?.proxy_path_report}
       />
       <ThroughputPanel state={state} />
     </div>

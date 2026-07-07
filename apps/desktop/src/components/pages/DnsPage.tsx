@@ -74,7 +74,7 @@ export function DnsPage({ state }: DnsPageProps) {
         />
       ) : (
         <ScrollArea className="min-h-0 flex-1">
-          <ul className="grid gap-2 pr-3">
+          <ul className="grid gap-2">
             {candidates.map((candidate) => {
               const recommended =
                 state.dnsRecommendation?.recommended?.resolver === candidate.resolver;

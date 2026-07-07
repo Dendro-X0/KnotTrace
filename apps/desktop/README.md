@@ -1,7 +1,12 @@
-# Tauri + Vanilla TS
+# KnotTrace desktop app
 
-This template should help get you started developing with Tauri in vanilla HTML, CSS and Typescript.
+React + Tauri v2 shell for the KnotTrace network companion.
 
-## Recommended IDE Setup
+## Development
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+```bash
+npm install
+npm run tauri dev
+```
+
+Project docs and release checklist: [../../docs/START-HERE.md](../../docs/START-HERE.md)

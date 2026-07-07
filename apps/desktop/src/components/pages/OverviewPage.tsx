@@ -4,6 +4,7 @@ import { BenchmarkPanel } from "@/components/BenchmarkPanel";
 import { EmptyState } from "@/components/EmptyState";
 import { MetricCard } from "@/components/MetricCard";
 import { NetworkDiagnosisPanel } from "@/components/NetworkDiagnosisPanel";
+import { NextStepsPanel } from "@/components/NextStepsPanel";
 import { StatusHero } from "@/components/StatusHero";
 import { TrendCharts } from "@/components/TrendCharts";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,10 @@ export function OverviewPage({ state }: OverviewPageProps) {
   const grade = state.report?.score.grade;
   const firstDnsSample = state.report?.probe.dns.find((sample) => sample.success);
   const loading = state.bootstrapping && !state.report;
+  const lastReason = state.monitorStatus?.last_reason ?? "";
+  const checkProfile = state.monitorStatus
+    ? (lastReason.startsWith("manual") ? "fast" : "full")
+    : undefined;
 
   const quickStats = [
     {
@@ -45,15 +50,17 @@ export function OverviewPage({ state }: OverviewPageProps) {
   ];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <section className="grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(11rem,0.85fr)]">
         <StatusHero
           loading={loading}
           grade={grade}
           score={state.report?.score.score}
           dnsIntegrity={state.report?.dns_integrity}
+          checkProfile={checkProfile}
           summary={
             state.checkError ??
+            state.report?.diagnosis?.summary ??
             state.report?.score.summary ??
             "Run a check to see connection health."
           }
@@ -85,7 +92,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
         <CardHeader className="pb-2">
           <CardTitle>Diagnosis & benchmarks</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2">
+        <CardContent className="grid min-h-0 items-start gap-3 md:grid-cols-2">
           {loading ? (
             <>
               <Skeleton className="h-40 rounded-lg" />
@@ -93,14 +100,19 @@ export function OverviewPage({ state }: OverviewPageProps) {
             </>
           ) : (
             <>
-              <NetworkDiagnosisPanel diagnosis={state.report?.diagnosis} />
-              <BenchmarkPanel
-                snapshots={state.benchmarkSnapshots}
-                saving={state.benchmarkSaving}
-                error={state.benchmarkError}
-                onSave={state.saveBenchmark}
-                onDelete={state.deleteBenchmark}
-              />
+              <div className="min-h-0 min-w-0">
+                <NetworkDiagnosisPanel diagnosis={state.report?.diagnosis} />
+              </div>
+              <div className="grid min-h-0 gap-3">
+                <NextStepsPanel state={state} />
+                <BenchmarkPanel
+                  snapshots={state.benchmarkSnapshots}
+                  saving={state.benchmarkSaving}
+                  error={state.benchmarkError}
+                  onSave={state.saveBenchmark}
+                  onDelete={state.deleteBenchmark}
+                />
+              </div>
             </>
           )}
         </CardContent>
@@ -153,7 +165,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
             />
           ) : (
             <ScrollArea className="max-h-[24rem] lg:max-h-none">
-              <div className="grid grid-cols-1 gap-2 pr-3 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+              <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
                 {state.history.map((item) => (
                   <div
                     key={item.timestamp}

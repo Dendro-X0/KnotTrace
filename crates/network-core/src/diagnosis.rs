@@ -21,18 +21,28 @@ pub fn diagnose_network(report: &HealthReport) -> NetworkDiagnosis {
         return NetworkDiagnosis {
             summary: "No obvious bottlenecks detected from current probes.".to_string(),
             primary_bottleneck: Some(BottleneckCategory::Healthy),
+            slowdown_shape: SlowdownShape::GeneralDegradation,
+            confidence: DiagnosisConfidence::Low,
             hints: vec![healthy_hint()],
         };
     }
 
-    hints.sort_by(|left, right| severity_rank(right.severity).cmp(&severity_rank(left.severity)));
+    let shape = classify_slowdown_shape(report);
+    let confidence = diagnosis_confidence(report, shape);
+    hints.sort_by(|left, right| {
+        hint_priority(report, shape, right)
+            .cmp(&hint_priority(report, shape, left))
+            .then_with(|| severity_rank(right.severity).cmp(&severity_rank(left.severity)))
+    });
 
     let primary_bottleneck = hints.first().map(|hint| hint.category);
-    let summary = build_summary(primary_bottleneck, hints.len());
+    let summary = build_summary(primary_bottleneck, hints.len(), shape, confidence);
 
     NetworkDiagnosis {
         summary,
         primary_bottleneck,
+        slowdown_shape: shape,
+        confidence,
         hints,
     }
 }
@@ -383,17 +393,81 @@ fn push_path_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
         });
     }
 
-    if on_proxy && degraded && !on_tor {
-        hints.push(BottleneckHint {
-            category: BottleneckCategory::ProxyPath,
-            severity: AlertLevel::Warning,
-            title: "Proxy path may limit throughput".to_string(),
-            message: "A system proxy is active and connection quality is not ideal.".to_string(),
-            suggestions: vec![
+    if on_proxy && !on_tor {
+        if let Some(path_report) = &report.proxy_path_report {
+            if path_report.proxy_failure_count > 0 || path_report.likely_provider_side {
+                let severity = if path_report.likely_provider_side {
+                    AlertLevel::Critical
+                } else {
+                    AlertLevel::Warning
+                };
+                hints.push(BottleneckHint {
+                    category: BottleneckCategory::ProxyPath,
+                    severity,
+                    title: if path_report.likely_provider_side {
+                        "Proxy provider path is impairing access".to_string()
+                    } else {
+                        "Proxy path is breaking major services".to_string()
+                    },
+                    message: path_report.summary.clone(),
+                    suggestions: vec![
+                        "Review the Proxy path report on the Network page for per-domain errors."
+                            .to_string(),
+                        "Switch proxy node or provider manually — KnotTrace cannot repair upstream filtering."
+                            .to_string(),
+                        "Open Connect Assist to compare nodes if Mihomo/sing-box is configured."
+                            .to_string(),
+                    ],
+                });
+            }
+        } else if degraded {
+            let proxy_major_failures = report
+                .site_reachability
+                .as_ref()
+                .map(crate::reachability::proxy_verification_failures)
+                .unwrap_or_default();
+
+            let (severity, title, message) = if !proxy_major_failures.is_empty() {
+                let sample = proxy_major_failures
+                    .iter()
+                    .take(2)
+                    .copied()
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                (
+                    AlertLevel::Critical,
+                    "Proxy path is breaking major services".to_string(),
+                    format!(
+                        "High-signal sites failed while a proxy is active (example: {sample}). This strongly suggests the proxy node is unstable, filtered, or resetting connections."
+                    ),
+                )
+            } else {
+                (
+                    AlertLevel::Warning,
+                    "Proxy path may limit performance".to_string(),
+                    "A system proxy is active and connection quality is not ideal.".to_string(),
+                )
+            };
+
+            let mut suggestions = vec![
                 "Try another node in Connect Assist.".to_string(),
-                "Compare Speedtest with proxy on vs off.".to_string(),
-            ],
-        });
+                "Compare direct vs proxy path with a manual check.".to_string(),
+            ];
+            if !proxy_major_failures.is_empty() {
+                suggestions.push(
+                    "If this is a corporate proxy/VPN, check for filtering rules or required allowlists."
+                        .to_string(),
+                );
+            }
+
+            hints.push(BottleneckHint {
+                category: BottleneckCategory::ProxyPath,
+                severity,
+                title,
+                message,
+                suggestions,
+            });
+        }
     }
 
     if on_vpn && (degraded || report.probe.internet.as_ref().is_some_and(|sample| sample.avg_ms >= 80.0)) {
@@ -451,18 +525,273 @@ fn severity_rank(level: AlertLevel) -> u8 {
     }
 }
 
-fn build_summary(primary: Option<BottleneckCategory>, hint_count: usize) -> String {
-    match primary {
-        Some(BottleneckCategory::Healthy) => {
-            "No obvious bottlenecks detected from current probes.".to_string()
-        }
-        Some(category) => format!(
-            "Likely bottleneck: {} ({} hint(s) total).",
-            category_label(category),
-            hint_count
-        ),
-        None => format!("{hint_count} network hint(s) detected."),
+fn classify_slowdown_shape(report: &HealthReport) -> SlowdownShape {
+    let captive = report.network_context.as_ref().is_some_and(|context| {
+        matches!(
+            context.captive_portal.state,
+            CaptivePortalState::Suspected | CaptivePortalState::Confirmed
+        ) || matches!(context.kind, NetworkContextKind::CaptivePortal)
+    });
+    if captive {
+        return SlowdownShape::RestrictedNetwork;
     }
+
+    let public_restricted = report.network_context.as_ref().is_some_and(|context| {
+        matches!(
+            context.kind,
+            NetworkContextKind::GuestWifi | NetworkContextKind::PublicCellular
+        ) && matches!(context.risk_level, NetworkRiskLevel::High)
+    });
+    let dns_cluster = dns_symptoms_cluster(report);
+    if public_restricted && (dns_cluster || reachability_degraded(report)) {
+        return SlowdownShape::RestrictedNetwork;
+    }
+
+    if dns_cluster {
+        return SlowdownShape::PageStart;
+    }
+
+    if severe_bufferbloat(report) {
+        return SlowdownShape::UnderLoadLag;
+    }
+
+    if reachability_degraded(report) {
+        return SlowdownShape::PartialSiteFailure;
+    }
+
+    if gateway_issue(report) {
+        return SlowdownShape::LinkLocalIssue;
+    }
+
+    if tunnel_overhead_suspected(report) {
+        return SlowdownShape::TunnelOverhead;
+    }
+
+    SlowdownShape::GeneralDegradation
+}
+
+fn diagnosis_confidence(report: &HealthReport, shape: SlowdownShape) -> DiagnosisConfidence {
+    match shape {
+        SlowdownShape::RestrictedNetwork => {
+            if report.network_context.as_ref().is_some_and(|context| {
+                matches!(context.captive_portal.state, CaptivePortalState::Confirmed)
+            }) {
+                DiagnosisConfidence::High
+            } else if report.network_context.as_ref().is_some_and(|context| {
+                matches!(context.risk_level, NetworkRiskLevel::High)
+            }) {
+                DiagnosisConfidence::Medium
+            } else {
+                DiagnosisConfidence::Low
+            }
+        }
+        SlowdownShape::PageStart => {
+            if report.dns_integrity.as_ref().is_some_and(|integrity| {
+                matches!(
+                    integrity.state,
+                    DnsIntegrityState::Caution | DnsIntegrityState::Suspicious
+                )
+            }) || report.probe.dns.iter().any(|sample| !sample.success)
+            {
+                DiagnosisConfidence::High
+            } else {
+                DiagnosisConfidence::Medium
+            }
+        }
+        SlowdownShape::UnderLoadLag => DiagnosisConfidence::High,
+        SlowdownShape::PartialSiteFailure => {
+            if report
+                .proxy_path_report
+                .as_ref()
+                .is_some_and(|path| path.likely_provider_side)
+            {
+                DiagnosisConfidence::High
+            } else if report.stability.as_ref().is_some_and(|stability| {
+                stability
+                    .mtu
+                    .as_ref()
+                    .is_some_and(|mtu| mtu.fragmentation_risk)
+            }) || report.environment.proxy.enabled
+                || report.environment.tags.contains(&EnvironmentTag::Vpn)
+                || report.environment.tags.contains(&EnvironmentTag::Tor)
+            {
+                DiagnosisConfidence::High
+            } else {
+                DiagnosisConfidence::Medium
+            }
+        }
+        SlowdownShape::LinkLocalIssue => DiagnosisConfidence::High,
+        SlowdownShape::TunnelOverhead => {
+            if report.environment.tor.detected || report.environment.tags.contains(&EnvironmentTag::Vpn) {
+                DiagnosisConfidence::Medium
+            } else {
+                DiagnosisConfidence::Low
+            }
+        }
+        SlowdownShape::GeneralDegradation => DiagnosisConfidence::Low,
+    }
+}
+
+fn hint_priority(report: &HealthReport, shape: SlowdownShape, hint: &BottleneckHint) -> u8 {
+    let base = severity_rank(hint.severity) * 10;
+    let bonus = match shape {
+        SlowdownShape::RestrictedNetwork => match hint.category {
+            BottleneckCategory::CaptivePortal => 80,
+            BottleneckCategory::PublicNetwork => 70,
+            BottleneckCategory::DnsIntegrity | BottleneckCategory::SiteAccess => 40,
+            _ => 0,
+        },
+        SlowdownShape::PageStart => match hint.category {
+            BottleneckCategory::DnsFailure => 80,
+            BottleneckCategory::DnsIntegrity => 70,
+            BottleneckCategory::DnsSlow => 60,
+            BottleneckCategory::CaptivePortal => 55,
+            BottleneckCategory::SiteAccess => 35,
+            _ => 0,
+        },
+        SlowdownShape::UnderLoadLag => match hint.category {
+            BottleneckCategory::Bufferbloat => 80,
+            BottleneckCategory::Gateway => 30,
+            BottleneckCategory::WifiPath | BottleneckCategory::VpnTunnel => 10,
+            _ => 0,
+        },
+        SlowdownShape::PartialSiteFailure => match hint.category {
+            BottleneckCategory::MtuFragmentation if tunnel_present(report) => 85,
+            BottleneckCategory::ProxyPath => 80,
+            BottleneckCategory::TorTunnel => 75,
+            BottleneckCategory::VpnTunnel => 70,
+            BottleneckCategory::SiteAccess => 65,
+            BottleneckCategory::DnsIntegrity => 40,
+            _ => 0,
+        },
+        SlowdownShape::TunnelOverhead => match hint.category {
+            BottleneckCategory::TorTunnel => 80,
+            BottleneckCategory::VpnTunnel => 75,
+            BottleneckCategory::ProxyPath => 65,
+            BottleneckCategory::MtuFragmentation => 45,
+            _ => 0,
+        },
+        SlowdownShape::LinkLocalIssue => match hint.category {
+            BottleneckCategory::Gateway => 80,
+            BottleneckCategory::WifiPath => 50,
+            BottleneckCategory::InternetLoss => 30,
+            _ => 0,
+        },
+        SlowdownShape::GeneralDegradation => match hint.category {
+            BottleneckCategory::InternetUnreachable => 90,
+            BottleneckCategory::InternetLoss => 70,
+            BottleneckCategory::InternetLatency => 60,
+            _ => 0,
+        },
+    };
+    base + bonus
+}
+
+fn build_summary(
+    primary: Option<BottleneckCategory>,
+    hint_count: usize,
+    shape: SlowdownShape,
+    confidence: DiagnosisConfidence,
+) -> String {
+    let confidence_note = match confidence {
+        DiagnosisConfidence::High => "Strong signals point to this cause.",
+        DiagnosisConfidence::Medium => "Current probes support this diagnosis.",
+        DiagnosisConfidence::Low => "Evidence is limited, so treat this as guidance.",
+    };
+
+    match shape {
+        SlowdownShape::RestrictedNetwork => {
+            format!("This looks like a restricted or guest network. Complete sign-in or verify the path first. {confidence_note}")
+        }
+        SlowdownShape::PageStart => {
+            format!("Pages are likely slowing down before they start loading. DNS or captive portal behavior is the strongest signal. {confidence_note}")
+        }
+        SlowdownShape::UnderLoadLag => {
+            format!("Your connection has acceptable reachability, but latency spikes badly under load. This looks more like bufferbloat than a bandwidth cap. {confidence_note}")
+        }
+        SlowdownShape::PartialSiteFailure => {
+            format!("Some sites are failing only on the current path. A proxy, tunnel, or MTU issue is more likely than a total outage. {confidence_note}")
+        }
+        SlowdownShape::TunnelOverhead => {
+            format!("A privacy or proxy tunnel appears to be adding overhead on this path. {confidence_note}")
+        }
+        SlowdownShape::LinkLocalIssue => {
+            format!("The strongest signal is close to your device or router, not the wider internet. {confidence_note}")
+        }
+        SlowdownShape::GeneralDegradation => match primary {
+            Some(BottleneckCategory::Healthy) => {
+                "No obvious bottlenecks detected from current probes.".to_string()
+            }
+            Some(category) => format!(
+                "Likely bottleneck: {} ({} hint(s) total). {}",
+                category_label(category),
+                hint_count,
+                confidence_note
+            ),
+            None => format!("{hint_count} network hint(s) detected. {confidence_note}"),
+        },
+    }
+}
+
+fn dns_symptoms_cluster(report: &HealthReport) -> bool {
+    let dns_failures = report.probe.dns.iter().any(|sample| !sample.success);
+    let dns_slow = report
+        .probe
+        .dns
+        .iter()
+        .filter(|sample| sample.success)
+        .any(|sample| sample.latency_ms >= DNS_SLOW_MS);
+    let integrity_bad = report.dns_integrity.as_ref().is_some_and(|integrity| {
+        matches!(
+            integrity.state,
+            DnsIntegrityState::Caution | DnsIntegrityState::Suspicious
+        )
+    });
+    let captive = report.network_context.as_ref().is_some_and(|context| {
+        matches!(
+            context.captive_portal.state,
+            CaptivePortalState::Suspected | CaptivePortalState::Confirmed
+        )
+    });
+
+    (dns_slow && (integrity_bad || dns_failures || captive)) || (dns_failures && integrity_bad)
+}
+
+fn severe_bufferbloat(report: &HealthReport) -> bool {
+    report.stability.as_ref().is_some_and(|stability| {
+        stability.bufferbloat.as_ref().is_some_and(|bufferbloat| {
+            matches!(
+                bufferbloat.grade,
+                BufferbloatGrade::Moderate | BufferbloatGrade::Severe
+            )
+        })
+    })
+}
+
+fn reachability_degraded(report: &HealthReport) -> bool {
+    report
+        .site_reachability
+        .as_ref()
+        .is_some_and(crate::reachability::site_access_degraded)
+}
+
+fn gateway_issue(report: &HealthReport) -> bool {
+    report.probe.gateway.as_ref().is_some_and(|gateway| {
+        gateway.loss_pct >= 50.0 || gateway.avg_ms >= GATEWAY_HIGH_LATENCY_MS
+    })
+}
+
+fn tunnel_present(report: &HealthReport) -> bool {
+    report.environment.proxy.enabled
+        || report.environment.tags.contains(&EnvironmentTag::Vpn)
+        || report.environment.tags.contains(&EnvironmentTag::Tor)
+        || report.environment.tor.detected
+}
+
+fn tunnel_overhead_suspected(report: &HealthReport) -> bool {
+    let degraded = matches!(report.score.grade, HealthGrade::Fair | HealthGrade::Poor);
+    let proxy_or_tunnel = tunnel_present(report);
+    proxy_or_tunnel && degraded && !reachability_degraded(report) && !dns_symptoms_cluster(report)
 }
 
 fn category_label(category: BottleneckCategory) -> &'static str {
@@ -543,6 +872,7 @@ mod tests {
             egress: None,
             network_context: None,
             recommendations: None,
+            proxy_path_report: None,
         }
     }
 
@@ -608,5 +938,159 @@ mod tests {
             diagnosis.primary_bottleneck,
             Some(BottleneckCategory::Healthy)
         );
+    }
+
+    #[test]
+    fn prioritizes_dns_for_page_start_slowdowns() {
+        let mut report = sample_report(
+            HealthGrade::Fair,
+            Some(LatencySample {
+                target: "internet".to_string(),
+                avg_ms: 35.0,
+                loss_pct: 0.0,
+            }),
+            vec![DnsProbe {
+                resolver: "system".to_string(),
+                query: "example.com".to_string(),
+                latency_ms: 120.0,
+                success: true,
+            }],
+            Vec::new(),
+        );
+        report.dns_integrity = Some(DnsIntegrityStatus {
+            state: DnsIntegrityState::Caution,
+            confidence: DnsIntegrityConfidence::Medium,
+            mismatch_count: 1,
+            checked_domains: 3,
+            summary: "Resolver answers differ from trusted DNS.".to_string(),
+            details: Vec::new(),
+        });
+
+        let diagnosis = diagnose_network(&report);
+        assert_eq!(diagnosis.primary_bottleneck, Some(BottleneckCategory::DnsIntegrity));
+        assert!(diagnosis.summary.contains("Pages are likely slowing down before they start loading"));
+    }
+
+    #[test]
+    fn prioritizes_bufferbloat_over_wifi_path() {
+        let mut report = sample_report(
+            HealthGrade::Fair,
+            Some(LatencySample {
+                target: "internet".to_string(),
+                avg_ms: 40.0,
+                loss_pct: 0.0,
+            }),
+            vec![DnsProbe {
+                resolver: "system".to_string(),
+                query: "example.com".to_string(),
+                latency_ms: 20.0,
+                success: true,
+            }],
+            Vec::new(),
+        );
+        report.stability = Some(StabilityProbeResult {
+            bufferbloat: Some(BufferbloatProbe {
+                idle_latency_ms: 18.0,
+                loaded_latency_ms: 180.0,
+                latency_delta_ms: 162.0,
+                grade: BufferbloatGrade::Severe,
+                summary: "Latency rises sharply during load.".to_string(),
+            }),
+            mtu: None,
+            duration_ms: 0,
+        });
+
+        let diagnosis = diagnose_network(&report);
+        assert_eq!(diagnosis.primary_bottleneck, Some(BottleneckCategory::Bufferbloat));
+        assert!(diagnosis.summary.contains("bufferbloat"));
+    }
+
+    #[test]
+    fn prioritizes_captive_portal_over_other_hints() {
+        let mut report = sample_report(
+            HealthGrade::Poor,
+            Some(LatencySample {
+                target: "internet".to_string(),
+                avg_ms: 80.0,
+                loss_pct: 0.0,
+            }),
+            vec![DnsProbe {
+                resolver: "system".to_string(),
+                query: "example.com".to_string(),
+                latency_ms: 25.0,
+                success: true,
+            }],
+            Vec::new(),
+        );
+        report.network_context = Some(NetworkContextReport {
+            kind: NetworkContextKind::CaptivePortal,
+            risk_level: NetworkRiskLevel::High,
+            captive_portal: CaptivePortalStatus {
+                state: CaptivePortalState::Confirmed,
+                probe_url: "http://connectivitycheck.gstatic.com/generate_204".to_string(),
+                status_code: Some(200),
+                redirected: true,
+                summary: "Captive portal login page detected before full internet access.".to_string(),
+            },
+            signals: vec!["Captive portal login page detected".to_string()],
+            summary: "Appears to be captive portal network (high risk).".to_string(),
+        });
+
+        let diagnosis = diagnose_network(&report);
+        assert_eq!(diagnosis.primary_bottleneck, Some(BottleneckCategory::CaptivePortal));
+        assert!(diagnosis.summary.contains("restricted or guest network"));
+    }
+
+    #[test]
+    fn proxy_major_site_failures_become_primary_bottleneck() {
+        let mut report = sample_report(
+            HealthGrade::Poor,
+            Some(LatencySample {
+                target: "internet".to_string(),
+                avg_ms: 60.0,
+                loss_pct: 0.0,
+            }),
+            vec![DnsProbe {
+                resolver: "system".to_string(),
+                query: "example.com".to_string(),
+                latency_ms: 20.0,
+                success: true,
+            }],
+            vec![EnvironmentTag::Proxy],
+        );
+        report.environment.proxy.enabled = true;
+        report.environment.proxy.server = Some("127.0.0.1:7890".to_string());
+        report.site_reachability = Some(SiteReachabilityStatus {
+            checked_domains: 4,
+            success_count: 1,
+            failure_count: 3,
+            results: vec![
+                SiteReachResult {
+                    domain: "www.google.com".to_string(),
+                    success: false,
+                    status_code: None,
+                    latency_ms: Some(100.0),
+                    error: Some("reset".to_string()),
+                    error_kind: Some(SiteReachErrorKind::ConnectionReset),
+                },
+                SiteReachResult {
+                    domain: "example.com".to_string(),
+                    success: true,
+                    status_code: Some(200),
+                    latency_ms: Some(40.0),
+                    error: None,
+                    error_kind: None,
+                },
+            ],
+            summary: "failed".to_string(),
+        });
+
+        let diagnosis = diagnose_network(&report);
+        assert_eq!(diagnosis.slowdown_shape, SlowdownShape::PartialSiteFailure);
+        assert_eq!(diagnosis.primary_bottleneck, Some(BottleneckCategory::ProxyPath));
+        assert!(diagnosis
+            .hints
+            .first()
+            .is_some_and(|hint| hint.title.to_ascii_lowercase().contains("major services")));
     }
 }

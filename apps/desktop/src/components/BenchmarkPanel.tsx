@@ -28,6 +28,10 @@ function formatMbps(value: number | null | undefined) {
   return value == null ? "—" : `${value.toFixed(0)} Mbps`;
 }
 
+function formatShape(value: BenchmarkSnapshot["slowdown_shape"]) {
+  return value ? value.replace(/_/g, " ") : "general";
+}
+
 function compareSnapshots(latest: BenchmarkSnapshot, previous: BenchmarkSnapshot) {
   const lines: string[] = [];
   const latestDown = latest.external_speedtest?.download_mbps;
@@ -186,7 +190,7 @@ export function BenchmarkPanel({
 
         {snapshots.length > 0 && (
           <ScrollArea className="max-h-40">
-            <ul className="grid gap-2 pr-3">
+            <ul className="grid gap-2">
               {snapshots.map((snapshot) => (
                 <li
                   key={snapshot.id}
@@ -198,6 +202,9 @@ export function BenchmarkPanel({
                       Score {snapshot.health_score} · DNS{" "}
                       {snapshot.probe_summary.dns_latency_ms?.toFixed(0) ?? "—"} ms · Down{" "}
                       {formatMbps(snapshot.external_speedtest?.download_mbps)}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Pattern: {formatShape(snapshot.slowdown_shape)}
                     </p>
                     <p className="text-muted-foreground">
                       {new Date(snapshot.timestamp).toLocaleString()}

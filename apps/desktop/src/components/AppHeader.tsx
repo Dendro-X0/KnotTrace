@@ -14,8 +14,9 @@ interface AppHeaderProps {
 
 export function AppHeader({ state }: AppHeaderProps) {
   const monitorActive = state.monitorStatus?.enabled ?? true;
+  const lastReason = state.monitorStatus?.last_reason ?? "";
   const monitorText = state.monitorStatus
-    ? `Checks every ${state.monitorStatus.poll_interval_secs}s · last trigger: ${formatReason(state.monitorStatus.last_reason)}`
+    ? `Checks every ${state.monitorStatus.poll_interval_secs}s · last trigger: ${formatReason(lastReason)}`
     : state.monitorError ?? "Starting background monitor...";
 
   return (

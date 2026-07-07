@@ -27,7 +27,7 @@ export function FeaturePage({
   footer,
 }: FeaturePageProps) {
   return (
-    <Card className="min-h-0 flex-1 border-border/70 bg-card/80 shadow-sm">
+    <Card className="min-h-0 border-border/70 bg-card/80 shadow-sm">
       <CardHeader>
         <div className="flex items-center gap-2">
           <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
@@ -37,7 +37,7 @@ export function FeaturePage({
         </div>
         {badge ? <Badge variant={badge.variant}>{badge.label}</Badge> : loading ? <Skeleton className="h-5 w-20 rounded-full" /> : null}
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
+      <CardContent className="flex flex-col gap-3">
         {loading ? (
           <div className="space-y-2">
             <Skeleton className="h-4 w-full max-w-xl" />

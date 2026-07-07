@@ -125,5 +125,6 @@ fn report_to_trend_point(report: HealthReport) -> HistoryTrendPoint {
         dns_integrity_state: integrity.map(|status| status.state),
         dns_integrity_confidence: integrity.map(|status| status.confidence),
         dns_integrity_mismatch_count: integrity.map(|status| status.mismatch_count),
+        slowdown_shape: report.diagnosis.as_ref().map(|diagnosis| diagnosis.slowdown_shape),
     }
 }

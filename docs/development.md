@@ -39,8 +39,10 @@ network/
 ├── crates/network-core/     # Engine: probes, diagnosis, assists
 ├── apps/desktop/            # React UI + Tauri shell
 ├── specs/backend/           # Design specs
-└── docs/                    # Onboarding and release docs
+└── docs/                    # Onboarding, release, and triage docs
 ```
+
+Related reading: [slowdown-factors.md](./slowdown-factors.md), [slow-speed-triage.md](./slow-speed-triage.md), [architecture.md](./architecture.md).
 
 ## CLI probe (optional)
 

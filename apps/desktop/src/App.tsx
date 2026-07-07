@@ -27,7 +27,7 @@ export function App() {
         />
         <AppHeader state={state} />
 
-        <main className="min-h-0 overflow-y-auto overflow-x-hidden pb-2 lg:pb-0">
+        <main className="app-scroll min-h-0 overflow-x-hidden pb-2 lg:pb-0">
           {state.page === "overview" && <OverviewPage state={state} />}
           {state.page === "dns" && <DnsPage state={state} />}
           {state.page === "connect" && <ConnectPage state={state} />}

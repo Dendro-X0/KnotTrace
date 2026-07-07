@@ -1,8 +1,22 @@
 use crate::types::*;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
+use tokio::task::JoinSet;
 
-const PROBE_TIMEOUT: Duration = Duration::from_secs(4);
+#[derive(Debug, Clone, Copy)]
+pub struct EgressProbeOptions {
+    pub timeout: Duration,
+    pub max_endpoints_per_path: usize,
+}
+
+impl Default for EgressProbeOptions {
+    fn default() -> Self {
+        Self {
+            timeout: Duration::from_secs(4),
+            max_endpoints_per_path: 3,
+        }
+    }
+}
 
 struct EgressEndpoint {
     provider: &'static str,
@@ -29,10 +43,17 @@ const ENDPOINTS: &[EgressEndpoint] = &[
 ];
 
 pub async fn probe_egress(environment: &EnvironmentSnapshot) -> EgressReport {
-    let system_path = probe_path(EgressPathKind::System, environment, None).await;
+    probe_egress_with_options(environment, EgressProbeOptions::default()).await
+}
+
+pub async fn probe_egress_with_options(
+    environment: &EnvironmentSnapshot,
+    options: EgressProbeOptions,
+) -> EgressReport {
+    let system_path = probe_path(EgressPathKind::System, environment, None, options).await;
     let tor_path = if environment.tor.socks_reachable {
         if let Some(endpoint) = environment.tor.socks_endpoint.as_deref() {
-            Some(probe_path(EgressPathKind::TorSocks, environment, Some(endpoint)).await)
+            Some(probe_path(EgressPathKind::TorSocks, environment, Some(endpoint), options).await)
         } else {
             None
         }
@@ -56,8 +77,9 @@ async fn probe_path(
     kind: EgressPathKind,
     environment: &EnvironmentSnapshot,
     tor_socks: Option<&str>,
+    options: EgressProbeOptions,
 ) -> EgressPathReport {
-    let client = match build_client(environment, tor_socks) {
+    let client = match build_client(environment, tor_socks, options.timeout) {
         Ok(client) => client,
         Err(error) => {
             return EgressPathReport {
@@ -69,58 +91,78 @@ async fn probe_path(
         }
     };
 
-    let mut endpoints = Vec::new();
-    for endpoint in ENDPOINTS {
-        let started = Instant::now();
-        let response = client.get(endpoint.url).send().await;
-        let elapsed = started.elapsed().as_millis() as f64;
+    let mut join_set = JoinSet::new();
+    for (index, endpoint) in ENDPOINTS
+        .iter()
+        .take(options.max_endpoints_per_path)
+        .enumerate()
+    {
+        let client = client.clone();
+        let provider = endpoint.provider.to_string();
+        let url = endpoint.url.to_string();
+        let parser = endpoint.parser;
+        join_set.spawn(async move {
+            let started = Instant::now();
+            let response = client.get(&url).send().await;
+            let elapsed = started.elapsed().as_millis() as f64;
 
-        match response {
-            Ok(response) => {
-                if !response.status().is_success() {
-                    endpoints.push(EgressEndpointResult {
-                        provider: endpoint.provider.to_string(),
-                        ip: None,
-                        latency_ms: Some(elapsed),
-                        success: false,
-                        error: Some(format!("HTTP {}", response.status())),
-                    });
-                    continue;
-                }
-
-                match response.text().await {
-                    Ok(body) => {
-                        let ip = (endpoint.parser)(&body);
-                        endpoints.push(EgressEndpointResult {
-                            provider: endpoint.provider.to_string(),
-                            ip: ip.clone(),
+            let result = match response {
+                Ok(response) => {
+                    if !response.status().is_success() {
+                        EgressEndpointResult {
+                            provider,
+                            ip: None,
                             latency_ms: Some(elapsed),
-                            success: ip.is_some(),
-                            error: if ip.is_some() {
-                                None
-                            } else {
-                                Some("Could not parse IP from response".to_string())
+                            success: false,
+                            error: Some(format!("HTTP {}", response.status())),
+                        }
+                    } else {
+                        match response.text().await {
+                            Ok(body) => {
+                                let ip = parser(&body);
+                                EgressEndpointResult {
+                                    provider,
+                                    ip: ip.clone(),
+                                    latency_ms: Some(elapsed),
+                                    success: ip.is_some(),
+                                    error: if ip.is_some() {
+                                        None
+                                    } else {
+                                        Some("Could not parse IP from response".to_string())
+                                    },
+                                }
+                            }
+                            Err(error) => EgressEndpointResult {
+                                provider,
+                                ip: None,
+                                latency_ms: Some(elapsed),
+                                success: false,
+                                error: Some(error.to_string()),
                             },
-                        });
+                        }
                     }
-                    Err(error) => endpoints.push(EgressEndpointResult {
-                        provider: endpoint.provider.to_string(),
-                        ip: None,
-                        latency_ms: Some(elapsed),
-                        success: false,
-                        error: Some(error.to_string()),
-                    }),
                 }
-            }
-            Err(error) => endpoints.push(EgressEndpointResult {
-                provider: endpoint.provider.to_string(),
-                ip: None,
-                latency_ms: Some(elapsed),
-                success: false,
-                error: Some(error.to_string()),
-            }),
+                Err(error) => EgressEndpointResult {
+                    provider,
+                    ip: None,
+                    latency_ms: Some(elapsed),
+                    success: false,
+                    error: Some(error.to_string()),
+                },
+            };
+
+            (index, result)
+        });
+    }
+
+    let mut ordered = Vec::new();
+    while let Some(joined) = join_set.join_next().await {
+        if let Ok((index, result)) = joined {
+            ordered.push((index, result));
         }
     }
+    ordered.sort_by_key(|(index, _)| *index);
+    let endpoints: Vec<EgressEndpointResult> = ordered.into_iter().map(|(_, result)| result).collect();
 
     let (primary_ip, confidence) = summarize_primary_ip(&endpoints);
     let summary = match (&primary_ip, confidence) {
@@ -140,9 +182,10 @@ async fn probe_path(
 fn build_client(
     environment: &EnvironmentSnapshot,
     tor_socks: Option<&str>,
+    timeout: Duration,
 ) -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder()
-        .timeout(PROBE_TIMEOUT)
+        .timeout(timeout)
         .redirect(reqwest::redirect::Policy::limited(2));
 
     if let Some(socks) = tor_socks {

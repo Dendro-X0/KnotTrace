@@ -52,6 +52,7 @@ export interface HealthReport {
   diagnosis?: NetworkDiagnosis | null;
   stability?: StabilityProbeResult | null;
   site_reachability?: SiteReachabilityStatus | null;
+  proxy_path_report?: ProxyPathReport | null;
   egress?: EgressReport | null;
   network_context?: NetworkContextReport | null;
   recommendations?: NetworkRecommendations | null;
@@ -118,12 +119,23 @@ export interface NetworkRecommendations {
   summary: string;
 }
 
+export type SiteReachErrorKind =
+  | "timeout"
+  | "connection_reset"
+  | "tls"
+  | "http_server"
+  | "http_blocked"
+  | "proxy"
+  | "dns"
+  | "unknown";
+
 export interface SiteReachResult {
   domain: string;
   success: boolean;
   status_code: number | null;
   latency_ms: number | null;
   error: string | null;
+  error_kind?: SiteReachErrorKind | null;
 }
 
 export interface SiteReachabilityStatus {
@@ -131,6 +143,26 @@ export interface SiteReachabilityStatus {
   success_count: number;
   failure_count: number;
   results: SiteReachResult[];
+  summary: string;
+}
+
+export type ProxyPathConfidence = "high" | "medium" | "low";
+
+export interface ProxyPathDomainComparison {
+  domain: string;
+  proxy: SiteReachResult;
+  direct: SiteReachResult;
+  proxy_only_failure: boolean;
+}
+
+export interface ProxyPathReport {
+  comparisons: ProxyPathDomainComparison[];
+  checked_domains: number;
+  proxy_failure_count: number;
+  direct_failure_count: number;
+  proxy_only_failure_count: number;
+  confidence: ProxyPathConfidence;
+  likely_provider_side: boolean;
   summary: string;
 }
 
@@ -249,6 +281,15 @@ export interface BottleneckHint {
 export interface NetworkDiagnosis {
   summary: string;
   primary_bottleneck: BottleneckCategory | null;
+  slowdown_shape:
+    | "page_start"
+    | "under_load_lag"
+    | "partial_site_failure"
+    | "restricted_network"
+    | "tunnel_overhead"
+    | "link_local_issue"
+    | "general_degradation";
+  confidence: "high" | "medium" | "low";
   hints: BottleneckHint[];
 }
 
@@ -276,6 +317,15 @@ export interface BenchmarkSnapshot {
   probe_summary: BenchmarkProbeSummary;
   dns_integrity_state: DnsIntegrityState | null;
   primary_bottleneck: BottleneckCategory | null;
+  slowdown_shape?:
+    | "page_start"
+    | "under_load_lag"
+    | "partial_site_failure"
+    | "restricted_network"
+    | "tunnel_overhead"
+    | "link_local_issue"
+    | "general_degradation"
+    | null;
   external_speedtest?: ExternalSpeedtestNote | null;
   notes?: string | null;
 }
@@ -407,6 +457,15 @@ export interface HistoryTrendPoint {
   dns_integrity_state?: DnsIntegrityState | null;
   dns_integrity_confidence?: DnsIntegrityConfidence | null;
   dns_integrity_mismatch_count?: number | null;
+  slowdown_shape?:
+    | "page_start"
+    | "under_load_lag"
+    | "partial_site_failure"
+    | "restricted_network"
+    | "tunnel_overhead"
+    | "link_local_issue"
+    | "general_degradation"
+    | null;
 }
 
 export interface UpdateCheck {

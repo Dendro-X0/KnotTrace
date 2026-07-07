@@ -53,21 +53,22 @@ pub fn evaluate_protect(
     settings: &ProtectSettings,
 ) -> ProtectStatus {
     let trust_level = classify_trust_level(&report.environment, &report.score, report.network_context.as_ref());
+    let slowdown_shape = report.diagnosis.as_ref().map(|diagnosis| diagnosis.slowdown_shape);
     let mut alerts = Vec::new();
 
     if settings.enabled {
         if matches!(trust_level, TrustLevel::Untrusted) {
-            alerts.push(untrusted_network_alert(&report.environment, settings));
+            alerts.push(untrusted_network_alert(&report.environment, slowdown_shape, settings));
         }
 
         if matches!(report.score.grade, HealthGrade::Poor) {
-            alerts.push(degraded_connection_alert(&report.score, settings));
+            alerts.push(degraded_connection_alert(&report.score, slowdown_shape, settings));
         } else if matches!(report.score.grade, HealthGrade::Fair) {
-            alerts.push(fair_connection_alert(&report.score, settings));
+            alerts.push(fair_connection_alert(&report.score, slowdown_shape, settings));
         }
 
         if report.environment.proxy.enabled && matches!(report.score.grade, HealthGrade::Fair | HealthGrade::Poor) {
-            alerts.push(proxy_path_alert(settings));
+            alerts.push(proxy_path_alert(slowdown_shape, settings));
         }
 
         if let Some(previous) = previous_grade {
@@ -87,7 +88,12 @@ pub fn evaluate_protect(
 
         if let Some(reachability) = &report.site_reachability {
             if crate::reachability::site_access_degraded(reachability) {
-                alerts.push(site_access_alert(reachability, settings, &report.environment));
+                alerts.push(site_access_alert(
+                    reachability,
+                    slowdown_shape,
+                    settings,
+                    &report.environment,
+                ));
             }
         }
 
@@ -217,17 +223,24 @@ fn auto_protect_note(settings: &ProtectSettings) -> &'static str {
     }
 }
 
-fn untrusted_network_alert(environment: &EnvironmentSnapshot, settings: &ProtectSettings) -> ProtectAlert {
+fn untrusted_network_alert(
+    environment: &EnvironmentSnapshot,
+    slowdown_shape: Option<SlowdownShape>,
+    settings: &ProtectSettings,
+) -> ProtectAlert {
     let on_public = environment.tags.contains(&EnvironmentTag::Public);
     let auto = auto_protect_note(settings);
-    let message = if on_public {
-        format!(
+    let message = match slowdown_shape {
+        Some(SlowdownShape::RestrictedNetwork) => {
+            format!("This looks like a guest or restricted network. Complete sign-in and avoid sensitive activity until the path is trusted.{auto}")
+        }
+        Some(SlowdownShape::PageStart) => {
+            format!("This network looks untrusted and may be delaying page starts (DNS or sign-in behavior).{auto}")
+        }
+        _ if on_public => format!(
             "You appear to be on a public or cellular network.{auto} We will keep monitoring and notify you if action is needed."
-        )
-    } else {
-        format!(
-            "This network path does not look like a trusted home connection.{auto}"
-        )
+        ),
+        _ => format!("This network path does not look like a trusted home connection.{auto}"),
     };
 
     ProtectAlert {
@@ -238,35 +251,52 @@ fn untrusted_network_alert(environment: &EnvironmentSnapshot, settings: &Protect
     }
 }
 
-fn degraded_connection_alert(score: &HealthScore, settings: &ProtectSettings) -> ProtectAlert {
+fn degraded_connection_alert(
+    score: &HealthScore,
+    slowdown_shape: Option<SlowdownShape>,
+    settings: &ProtectSettings,
+) -> ProtectAlert {
+    let shape_note = slowdown_shape_note(slowdown_shape);
     ProtectAlert {
         level: AlertLevel::Critical,
         title: "Connection degraded".to_string(),
         message: format!(
-            "{} {}{}",
+            "{} {}{}{}",
             score.summary,
             score.reasons.join("; "),
+            shape_note,
             auto_protect_note(settings)
         ),
         actions: alert_actions(settings),
     }
 }
 
-fn fair_connection_alert(score: &HealthScore, settings: &ProtectSettings) -> ProtectAlert {
+fn fair_connection_alert(
+    score: &HealthScore,
+    slowdown_shape: Option<SlowdownShape>,
+    settings: &ProtectSettings,
+) -> ProtectAlert {
+    let shape_note = slowdown_shape_note(slowdown_shape);
     ProtectAlert {
         level: AlertLevel::Info,
         title: "Connection could be smoother".to_string(),
-        message: format!("{}{}", score.summary, auto_protect_note(settings)),
+        message: format!("{}{}{}", score.summary, shape_note, auto_protect_note(settings)),
         actions: alert_actions(settings),
     }
 }
 
-fn proxy_path_alert(settings: &ProtectSettings) -> ProtectAlert {
+fn proxy_path_alert(slowdown_shape: Option<SlowdownShape>, settings: &ProtectSettings) -> ProtectAlert {
+    let shape_note = match slowdown_shape {
+        Some(SlowdownShape::PartialSiteFailure) => " Sites are failing on this path — proxy routing may be the cause.",
+        Some(SlowdownShape::PageStart) => " Page starts may be delayed by proxy DNS or PAC behavior.",
+        Some(SlowdownShape::TunnelOverhead) => " Tunnel overhead may be limiting responsiveness.",
+        _ => "",
+    };
     ProtectAlert {
         level: AlertLevel::Warning,
         title: "Proxy path needs attention".to_string(),
         message: format!(
-            "A system proxy is active and connection quality is not ideal.{}",
+            "A system proxy is active and connection quality is not ideal.{shape_note}{}",
             auto_protect_note(settings)
         ),
         actions: alert_actions(settings),
@@ -316,6 +346,7 @@ fn dns_integrity_alert(integrity: &DnsIntegrityStatus, settings: &ProtectSetting
 
 fn site_access_alert(
     reachability: &SiteReachabilityStatus,
+    slowdown_shape: Option<SlowdownShape>,
     settings: &ProtectSettings,
     environment: &EnvironmentSnapshot,
 ) -> ProtectAlert {
@@ -323,6 +354,19 @@ fn site_access_alert(
         AlertLevel::Critical
     } else {
         AlertLevel::Warning
+    };
+
+    let shape_note = match slowdown_shape {
+        Some(SlowdownShape::RestrictedNetwork) => {
+            " This often happens before captive portal sign-in is complete."
+        }
+        Some(SlowdownShape::PageStart) => {
+            " DNS or sign-in behavior may be blocking initial requests."
+        }
+        Some(SlowdownShape::PartialSiteFailure) => {
+            " This looks like a path-specific failure, not a total outage."
+        }
+        _ => "",
     };
 
     let proxy_note = if environment.proxy.enabled {
@@ -340,11 +384,23 @@ fn site_access_alert(
     ProtectAlert {
         level,
         title: "Sites unreachable on current path".to_string(),
-        message: format!("{}{}{}", reachability.summary, proxy_note, auto_note),
+        message: format!("{}{}{}{}", reachability.summary, shape_note, proxy_note, auto_note),
         actions: vec![ProtectAction {
             kind: ProtectActionKind::RunCheck,
             label: "View details".to_string(),
         }],
+    }
+}
+
+fn slowdown_shape_note(shape: Option<SlowdownShape>) -> &'static str {
+    match shape {
+        Some(SlowdownShape::PageStart) => " Browsing may be slow before pages start loading.",
+        Some(SlowdownShape::UnderLoadLag) => " Latency is likely spiking under load (bufferbloat).",
+        Some(SlowdownShape::PartialSiteFailure) => " Some sites appear to fail only on this path.",
+        Some(SlowdownShape::RestrictedNetwork) => " This may be a restricted or sign-in network.",
+        Some(SlowdownShape::TunnelOverhead) => " A tunnel/proxy may be adding overhead.",
+        Some(SlowdownShape::LinkLocalIssue) => " The bottleneck looks close to your router/device.",
+        Some(SlowdownShape::GeneralDegradation) | None => "",
     }
 }
 
@@ -458,12 +514,19 @@ mod tests {
                 reasons: vec!["example".to_string()],
             },
             dns_integrity: None,
-            diagnosis: None,
+            diagnosis: Some(NetworkDiagnosis {
+                summary: "test".to_string(),
+                primary_bottleneck: Some(BottleneckCategory::Healthy),
+                slowdown_shape: SlowdownShape::GeneralDegradation,
+                confidence: DiagnosisConfidence::Low,
+                hints: Vec::new(),
+            }),
             stability: None,
             site_reachability: None,
             egress: None,
             network_context: None,
             recommendations: None,
+            proxy_path_report: None,
         }
     }
 

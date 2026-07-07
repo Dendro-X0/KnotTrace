@@ -12,6 +12,7 @@ interface StatusHeroProps {
   score?: number;
   loading?: boolean;
   dnsIntegrity?: DnsIntegrityStatus | null;
+  checkProfile?: "fast" | "full";
 }
 
 function gradeIcon(grade?: HealthGrade) {
@@ -21,7 +22,14 @@ function gradeIcon(grade?: HealthGrade) {
   return HelpCircle;
 }
 
-export function StatusHero({ grade, summary, score, loading, dnsIntegrity }: StatusHeroProps) {
+export function StatusHero({
+  grade,
+  summary,
+  score,
+  loading,
+  dnsIntegrity,
+  checkProfile,
+}: StatusHeroProps) {
   const Icon = gradeIcon(grade);
 
   if (loading) {
@@ -63,6 +71,7 @@ export function StatusHero({ grade, summary, score, loading, dnsIntegrity }: Sta
                 DNS {integrityLabel(dnsIntegrity.state)}
               </Badge>
             )}
+            {checkProfile && <Badge variant="info">{checkProfile.toUpperCase()} check</Badge>}
           </div>
           <p className="text-sm leading-relaxed">{summary}</p>
         </div>

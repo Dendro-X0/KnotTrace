@@ -59,6 +59,7 @@ pub fn save_benchmark_snapshot(
         probe_summary: probe_summary_from_report(report),
         dns_integrity_state: report.dns_integrity.as_ref().map(|status| status.state),
         primary_bottleneck: diagnosis.primary_bottleneck,
+        slowdown_shape: Some(diagnosis.slowdown_shape),
         external_speedtest,
         notes: notes.filter(|value| !value.trim().is_empty()),
     };
@@ -159,6 +160,7 @@ mod tests {
             egress: None,
             network_context: None,
             recommendations: None,
+            proxy_path_report: None,
         }
     }
 

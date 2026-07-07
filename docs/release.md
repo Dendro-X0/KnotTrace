@@ -15,7 +15,7 @@ target/release/
 ├── network-desktop.exe
 └── bundle/
     └── msi/
-        └── Network Companion_0.9.0_x64_en-US.msi
+        └── KnotTrace_1.4.0_x64_en-US.msi
 ```
 
 NSIS (`.exe`) bundles appear under `target/release/bundle/nsis/` when enabled.
@@ -46,15 +46,15 @@ Update these together:
 ```bash
 git status
 git add .
-git commit -m "Release v0.9.0"
+git commit -m "Release v1.4.0"
 git push -u origin main
 ```
 
 Tag when ready:
 
 ```bash
-git tag v0.9.0
-git push origin v0.9.0
+git tag v1.4.0
+git push origin v1.4.0
 ```
 
 ## GitHub Actions
@@ -63,7 +63,7 @@ CI and release workflows live in `.github/workflows/`. See [docs/github-ci.md](g
 
 - Running CI on push/PR
 - Publishing installer assets to a GitHub Release
-- Re-building an existing tag (e.g. `v0.9.0`) via **Actions → Release → Run workflow**
+- Re-building an existing tag (e.g. `v1.4.0`) via **Actions → Release → Run workflow**
 
 ## Notes
 

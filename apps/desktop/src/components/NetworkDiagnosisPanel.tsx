@@ -16,6 +16,16 @@ function severityVariant(severity: "info" | "warning" | "critical") {
   return "info" as const;
 }
 
+function confidenceVariant(confidence: "high" | "medium" | "low") {
+  if (confidence === "high") return "active" as const;
+  if (confidence === "medium") return "caution" as const;
+  return "info" as const;
+}
+
+function shapeLabel(shape: NetworkDiagnosis["slowdown_shape"]) {
+  return shape.replace(/_/g, " ");
+}
+
 export function NetworkDiagnosisPanel({ diagnosis }: NetworkDiagnosisPanelProps) {
   if (!diagnosis) {
     return (
@@ -32,15 +42,21 @@ export function NetworkDiagnosisPanel({ diagnosis }: NetworkDiagnosisPanelProps)
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">Network diagnosis</CardTitle>
-          {diagnosis.primary_bottleneck && diagnosis.primary_bottleneck !== "healthy" && (
-            <Badge variant="caution">{diagnosis.primary_bottleneck.replace(/_/g, " ")}</Badge>
-          )}
+          <div className="flex flex-wrap items-center gap-1">
+            <Badge variant="info">{shapeLabel(diagnosis.slowdown_shape)}</Badge>
+            <Badge variant={confidenceVariant(diagnosis.confidence)}>
+              {diagnosis.confidence} confidence
+            </Badge>
+            {diagnosis.primary_bottleneck && diagnosis.primary_bottleneck !== "healthy" && (
+              <Badge variant="caution">{diagnosis.primary_bottleneck.replace(/_/g, " ")}</Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="flex flex-col gap-3">
         <p className="text-sm leading-relaxed">{diagnosis.summary}</p>
-        <ScrollArea className="max-h-48">
-          <ul className="grid gap-2 pr-3">
+        <ScrollArea className="max-h-[min(18rem,42vh)]">
+          <ul className="grid gap-2">
             {diagnosis.hints.map((hint) => (
               <li
                 key={`${hint.category}-${hint.title}`}

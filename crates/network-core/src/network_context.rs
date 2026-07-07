@@ -1,7 +1,18 @@
 use crate::types::*;
 use std::time::Duration;
 
-const CAPTIVE_TIMEOUT: Duration = Duration::from_secs(4);
+#[derive(Debug, Clone, Copy)]
+pub struct CaptivePortalProbeOptions {
+    pub timeout: Duration,
+}
+
+impl Default for CaptivePortalProbeOptions {
+    fn default() -> Self {
+        Self {
+            timeout: Duration::from_secs(4),
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 struct CaptiveProbeTarget {
@@ -20,9 +31,11 @@ const CAPTIVE_TARGETS: &[CaptiveProbeTarget] = &[
     },
 ];
 
-pub async fn probe_captive_portal() -> CaptivePortalStatus {
+pub async fn probe_captive_portal_with_options(
+    options: CaptivePortalProbeOptions,
+) -> CaptivePortalStatus {
     let client = match reqwest::Client::builder()
-        .timeout(CAPTIVE_TIMEOUT)
+        .timeout(options.timeout)
         .redirect(reqwest::redirect::Policy::limited(5))
         .build()
     {
@@ -93,6 +106,10 @@ pub async fn probe_captive_portal() -> CaptivePortalStatus {
         redirected: false,
         summary: "Captive portal probe inconclusive.".to_string(),
     }
+}
+
+pub async fn probe_captive_portal() -> CaptivePortalStatus {
+    probe_captive_portal_with_options(CaptivePortalProbeOptions::default()).await
 }
 
 pub fn assess_network_context(

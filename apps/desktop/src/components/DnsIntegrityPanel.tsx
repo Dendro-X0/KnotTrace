@@ -42,7 +42,7 @@ export function DnsIntegrityPanel({ integrity }: DnsIntegrityPanelProps) {
 
         {integrity.details.length > 0 ? (
           <ScrollArea className="max-h-44">
-            <ul className="grid gap-2 pr-3">
+            <ul className="grid gap-2">
               {integrity.details.map((finding) => (
                 <li
                   key={finding.domain}

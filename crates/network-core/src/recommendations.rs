@@ -16,6 +16,7 @@ pub fn build_recommendations(report: &HealthReport) -> NetworkRecommendations {
     }
 
     push_path_recommendations(report, &mut items);
+    boost_recommendations_for_shape(report, &mut items);
 
     items.sort_by(|left, right| right.priority.cmp(&left.priority));
 
@@ -26,6 +27,50 @@ pub fn build_recommendations(report: &HealthReport) -> NetworkRecommendations {
     };
 
     NetworkRecommendations { items, summary }
+}
+
+fn boost_recommendations_for_shape(report: &HealthReport, items: &mut [NetworkRecommendation]) {
+    let Some(diagnosis) = &report.diagnosis else {
+        return;
+    };
+
+    for item in items.iter_mut() {
+        let bump = match diagnosis.slowdown_shape {
+            SlowdownShape::PageStart => match item.category {
+                RecommendationCategory::DnsSecurity | RecommendationCategory::CaptivePortal => 8,
+                RecommendationCategory::ProxyPath => 4,
+                _ => 0,
+            },
+            SlowdownShape::UnderLoadLag => match item.category {
+                RecommendationCategory::General => 4,
+                RecommendationCategory::Egress => -2,
+                _ => 0,
+            },
+            SlowdownShape::PartialSiteFailure => match item.category {
+                RecommendationCategory::ProxyPath | RecommendationCategory::TorPath => 8,
+                RecommendationCategory::DnsSecurity => 4,
+                _ => 0,
+            },
+            SlowdownShape::RestrictedNetwork => match item.category {
+                RecommendationCategory::CaptivePortal | RecommendationCategory::PublicNetwork => 10,
+                RecommendationCategory::VpnPrivacy => 5,
+                _ => 0,
+            },
+            SlowdownShape::TunnelOverhead => match item.category {
+                RecommendationCategory::VpnPrivacy | RecommendationCategory::TorPath => 8,
+                RecommendationCategory::ProxyPath => 4,
+                _ => 0,
+            },
+            SlowdownShape::LinkLocalIssue => match item.category {
+                RecommendationCategory::PublicNetwork => -4,
+                RecommendationCategory::Egress => -4,
+                _ => 0,
+            },
+            SlowdownShape::GeneralDegradation => 0,
+        };
+
+        item.priority = (item.priority as i16 + bump).clamp(0, 100) as u8;
+    }
 }
 
 fn push_context_recommendations(
@@ -136,18 +181,68 @@ fn push_dns_recommendations(integrity: &DnsIntegrityStatus, items: &mut Vec<Netw
 fn push_path_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecommendation>) {
     let env = &report.environment;
 
-    if env.proxy.enabled
-        && report
+    if env.proxy.enabled {
+        if let Some(path) = &report.proxy_path_report {
+            if path.likely_provider_side || path.proxy_failure_count > 0 {
+                let priority = match path.confidence {
+                    ProxyPathConfidence::High => 92,
+                    ProxyPathConfidence::Medium => 88,
+                    ProxyPathConfidence::Low => 80,
+                };
+                items.push(NetworkRecommendation {
+                    category: RecommendationCategory::ProxyPath,
+                    priority,
+                    title: if path.likely_provider_side {
+                        "Proxy provider path is impairing access".to_string()
+                    } else {
+                        "Proxy path comparison found failures".to_string()
+                    },
+                    message: format!(
+                        "{} Review the Proxy path report on the Network page. KnotTrace cannot repair upstream filtering — switch node or provider manually.",
+                        path.summary
+                    ),
+                });
+            }
+        } else if report
             .site_reachability
             .as_ref()
             .is_some_and(crate::reachability::site_access_degraded)
-    {
-        items.push(NetworkRecommendation {
-            category: RecommendationCategory::ProxyPath,
-            priority: 75,
-            title: "Proxy path may be blocking sites".to_string(),
-            message: "Verification sites failed while a proxy is active. Review Connect Assist manually — KnotTrace will not switch nodes automatically unless you enable it.".to_string(),
-        });
+        {
+            let failing_proxy_sites = report
+                .site_reachability
+                .as_ref()
+                .map(|reachability| crate::reachability::proxy_verification_failures(reachability))
+                .unwrap_or_default();
+
+            let (title, message, priority) = if !failing_proxy_sites.is_empty() {
+                let sample = failing_proxy_sites
+                    .iter()
+                    .take(2)
+                    .copied()
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                (
+                    "Proxy path is breaking major services".to_string(),
+                    format!(
+                        "High-signal sites failed while a proxy is active (example: {sample}). This strongly suggests the current proxy node is unstable, filtered, or resetting connections. Review Connect Assist manually — KnotTrace will not switch nodes automatically unless you enable it."
+                    ),
+                    85,
+                )
+            } else {
+                (
+                    "Proxy path may be blocking sites".to_string(),
+                    "Verification sites failed while a proxy is active. Review Connect Assist manually — KnotTrace will not switch nodes automatically unless you enable it.".to_string(),
+                    75,
+                )
+            };
+
+            items.push(NetworkRecommendation {
+                category: RecommendationCategory::ProxyPath,
+                priority,
+                title,
+                message,
+            });
+        }
     }
 
     if env.tor.detected && !env.tor.socks_reachable {
@@ -168,5 +263,92 @@ fn push_path_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecom
             title: "VPN tunnel may be limiting performance".to_string(),
             message: "Latency or loss is elevated while a VPN interface is active. Try another server or split tunneling if your provider supports it.".to_string(),
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+
+    fn base_report() -> HealthReport {
+        HealthReport {
+            timestamp: Utc::now(),
+            environment: EnvironmentSnapshot {
+                hostname: "host".to_string(),
+                interfaces: Vec::new(),
+                dns_servers: Vec::new(),
+                proxy: ProxySettings {
+                    enabled: true,
+                    server: Some("127.0.0.1:7890".to_string()),
+                    source: "test".to_string(),
+                },
+                tags: Vec::new(),
+                default_gateway: None,
+                active_interface: None,
+                tor: default_tor_status(),
+            },
+            probe: ProbeResult {
+                gateway: None,
+                internet: Some(LatencySample {
+                    target: "internet".to_string(),
+                    avg_ms: 40.0,
+                    loss_pct: 0.0,
+                }),
+                dns: Vec::new(),
+                duration_ms: 0,
+            },
+            score: HealthScore {
+                grade: HealthGrade::Fair,
+                score: 60,
+                summary: "test".to_string(),
+                reasons: Vec::new(),
+            },
+            dns_integrity: None,
+            diagnosis: None,
+            stability: None,
+            site_reachability: Some(SiteReachabilityStatus {
+                checked_domains: 4,
+                success_count: 1,
+                failure_count: 3,
+                results: vec![
+                    SiteReachResult {
+                        domain: "www.google.com".to_string(),
+                        success: false,
+                        status_code: None,
+                        latency_ms: Some(100.0),
+                        error: Some("reset".to_string()),
+                        error_kind: Some(SiteReachErrorKind::ConnectionReset),
+                    },
+                    SiteReachResult {
+                        domain: "example.com".to_string(),
+                        success: true,
+                        status_code: Some(200),
+                        latency_ms: Some(50.0),
+                        error: None,
+                        error_kind: None,
+                    },
+                ],
+                summary: "failed".to_string(),
+            }),
+            egress: None,
+            network_context: None,
+            recommendations: None,
+            proxy_path_report: None,
+        }
+    }
+
+    #[test]
+    fn escalates_proxy_recommendation_when_major_sites_fail() {
+        let report = base_report();
+        let recs = build_recommendations(&report);
+        let item = recs
+            .items
+            .iter()
+            .find(|item| item.category == RecommendationCategory::ProxyPath)
+            .expect("proxy recommendation should exist");
+        assert!(item.title.to_ascii_lowercase().contains("major services"));
+        assert!(item.message.to_ascii_lowercase().contains("high-signal"));
+        assert!(item.priority >= 80);
     }
 }

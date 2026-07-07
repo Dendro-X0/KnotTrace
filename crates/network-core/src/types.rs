@@ -169,6 +169,8 @@ pub struct HealthReport {
     pub network_context: Option<NetworkContextReport>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recommendations: Option<NetworkRecommendations>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proxy_path_report: Option<ProxyPathReport>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -380,6 +382,8 @@ pub struct HistoryTrendPoint {
     pub dns_integrity_confidence: Option<DnsIntegrityConfidence>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dns_integrity_mismatch_count: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub slowdown_shape: Option<SlowdownShape>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -436,6 +440,19 @@ pub struct DnsIntegritySettings {
     pub verification_domains: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SiteReachErrorKind {
+    Timeout,
+    ConnectionReset,
+    Tls,
+    HttpServer,
+    HttpBlocked,
+    Proxy,
+    Dns,
+    Unknown,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SiteReachResult {
     pub domain: String,
@@ -443,6 +460,36 @@ pub struct SiteReachResult {
     pub status_code: Option<u16>,
     pub latency_ms: Option<f64>,
     pub error: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error_kind: Option<SiteReachErrorKind>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProxyPathConfidence {
+    High,
+    Medium,
+    Low,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProxyPathDomainComparison {
+    pub domain: String,
+    pub proxy: SiteReachResult,
+    pub direct: SiteReachResult,
+    pub proxy_only_failure: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProxyPathReport {
+    pub comparisons: Vec<ProxyPathDomainComparison>,
+    pub checked_domains: u8,
+    pub proxy_failure_count: u8,
+    pub direct_failure_count: u8,
+    pub proxy_only_failure_count: u8,
+    pub confidence: ProxyPathConfidence,
+    pub likely_provider_side: bool,
+    pub summary: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -601,10 +648,43 @@ pub struct BottleneckHint {
     pub suggestions: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SlowdownShape {
+    PageStart,
+    UnderLoadLag,
+    PartialSiteFailure,
+    RestrictedNetwork,
+    TunnelOverhead,
+    LinkLocalIssue,
+    GeneralDegradation,
+}
+
+fn default_slowdown_shape() -> SlowdownShape {
+    SlowdownShape::GeneralDegradation
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DiagnosisConfidence {
+    High,
+    Medium,
+    Low,
+}
+
+fn default_diagnosis_confidence() -> DiagnosisConfidence {
+    DiagnosisConfidence::Low
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkDiagnosis {
     pub summary: String,
     pub primary_bottleneck: Option<BottleneckCategory>,
+    #[serde(default = "default_slowdown_shape")]
+    pub slowdown_shape: SlowdownShape,
+    #[serde(default = "default_diagnosis_confidence")]
+    pub confidence: DiagnosisConfidence,
+    #[serde(default)]
     pub hints: Vec<BottleneckHint>,
 }
 
@@ -635,6 +715,8 @@ pub struct BenchmarkSnapshot {
     pub probe_summary: BenchmarkProbeSummary,
     pub dns_integrity_state: Option<DnsIntegrityState>,
     pub primary_bottleneck: Option<BottleneckCategory>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub slowdown_shape: Option<SlowdownShape>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub external_speedtest: Option<ExternalSpeedtestNote>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

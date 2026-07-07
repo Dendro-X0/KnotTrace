@@ -79,7 +79,7 @@ export function ConnectPage({ state }: ConnectPageProps) {
         />
       ) : (
         <ScrollArea className="min-h-0 flex-1">
-          <ul className="grid gap-2 pr-3">
+          <ul className="grid gap-2">
             {groups.slice(0, 4).map((group) => {
               const best = group.members
                 .filter((member) => member.alive)

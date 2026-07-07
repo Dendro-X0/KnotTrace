@@ -19,6 +19,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-mobile-secrets:
+    name: Check mobile signing secrets
+    runs-on: ubuntu-latest
+    outputs:
+      android: ${{ steps.secrets.outputs.android }}
+      ios: ${{ steps.secrets.outputs.ios }}
+    steps:
+      - id: secrets
+        env:
+          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
+        run: |
+          android=false
+          ios=false
+          if [ -n "$ANDROID_KEY_BASE64" ] && [ -n "$ANDROID_KEY_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ]; then
+            android=true
+          else
+            echo "::notice::Android signing secrets not configured — skipping Build Android job. See docs/mobile-signing.md."
+          fi
+          if [ -n "$IOS_CERTIFICATE" ] && [ -n "$IOS_CERTIFICATE_PASSWORD" ] && [ -n "$IOS_MOBILE_PROVISION" ]; then
+            ios=true
+          else
+            echo "::notice::iOS signing secrets not configured — skipping Build iOS job. See docs/mobile-signing.md."
+          fi
+          echo "android=$android" >> "$GITHUB_OUTPUT"
+          echo "ios=$ios" >> "$GITHUB_OUTPUT"
+
   build-windows:
     name: Build Windows (signed updater)
     runs-on: windows-latest
@@ -228,6 +259,8 @@ jobs:
 
   build-android:
     name: Build Android (signed APK)
+    needs: check-mobile-secrets
+    if: needs.check-mobile-secrets.outputs.android == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
@@ -238,18 +271,11 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
 
-      - name: Require Android signing secrets
+      - name: Require updater signing secret
         shell: bash
         env:
-          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
-          if [ -z "$ANDROID_KEY_BASE64" ] || [ -z "$ANDROID_KEY_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ]; then
-            echo "::error::Android signing secrets are required (ANDROID_KEY_BASE64, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS)."
-            exit 1
-          fi
           if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
             echo "::error::TAURI_SIGNING_PRIVATE_KEY is not set."
             exit 1
@@ -355,6 +381,8 @@ jobs:
 
   build-ios:
     name: Build iOS (signed IPA)
+    needs: check-mobile-secrets
+    if: needs.check-mobile-secrets.outputs.ios == 'true'
     runs-on: macos-latest
     timeout-minutes: 120
     env:
@@ -365,18 +393,11 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
 
-      - name: Require iOS signing secrets
+      - name: Require updater signing secret
         shell: bash
         env:
-          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
-          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
-          if [ -z "$IOS_CERTIFICATE" ] || [ -z "$IOS_CERTIFICATE_PASSWORD" ] || [ -z "$IOS_MOBILE_PROVISION" ]; then
-            echo "::error::iOS signing secrets are required (IOS_CERTIFICATE, IOS_CERTIFICATE_PASSWORD, IOS_MOBILE_PROVISION)."
-            exit 1
-          fi
           if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
             echo "::error::TAURI_SIGNING_PRIVATE_KEY is not set."
             exit 1

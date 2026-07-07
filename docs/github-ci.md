@@ -60,9 +60,9 @@ Generate keys: `./scripts/generate-updater-keys.sh` — see [updater-signing.md]
 
 ### Mobile releases (signed, required)
 
-Android and iOS are part of the default desktop release path from v1.4.2. **Unsigned mobile builds are not published** — CI fails if signing secrets are missing.
+Android and iOS are part of the default release path from v1.4.2. **Unsigned mobile builds are not published.** If mobile signing secrets are missing, those jobs are **skipped** (not failed) so desktop installers still publish.
 
-See [mobile-signing.md](mobile-signing.md) for keystore/certificate setup.
+See [mobile-signing.md](mobile-signing.md) for keystore/certificate setup. After adding secrets, re-run **Release** for the tag via **Actions → Release → Run workflow**.
 
 | Platform | Secrets |
 |----------|---------|

@@ -12,7 +12,7 @@ This follows the same OSS posture as desktop updater signing: you control the ke
 | **iOS IPA** | Distribution cert + provisioning profile | Install blocked on device |
 | **In-app updates** | Tauri minisign (`latest.json`) | Update banner falls back to GitHub release page |
 
-Unsigned mobile builds are **not** published. Release jobs fail early if signing secrets are missing.
+Unsigned mobile builds are **not** published. Release CI **skips** Android/iOS jobs when signing secrets are missing so desktop releases still succeed.
 
 ## Android
 

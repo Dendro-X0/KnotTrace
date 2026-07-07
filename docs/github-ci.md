@@ -88,6 +88,17 @@ git push origin v0.9.1
 
 The release workflow runs automatically on tag push.
 
+If a tag push does not start a run (for example after delete/recreate on the **same commit**), use **Actions → Release → Run workflow** and enter the tag (e.g. `v1.1.1`).
+
+Or move the tag to a new commit and force-push:
+
+```bash
+git commit --allow-empty -m "chore: trigger release build"
+git tag -f v1.1.1
+git push origin main
+git push -f origin v1.1.1
+```
+
 ## Permissions
 
 For private repositories, enable **Actions → General → Workflow permissions → Read and write** so releases can be created.

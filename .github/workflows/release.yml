@@ -31,7 +31,17 @@ jobs:
       - name: Checkout tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
+
+      - name: Require updater signing secret
+        shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SIGNING_KEY" ]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY is not set. Add it under Settings → Secrets → Actions."
+            exit 1
+          fi
 
       - uses: actions/setup-node@v4
         with:

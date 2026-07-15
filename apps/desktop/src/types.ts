@@ -425,6 +425,11 @@ export interface ProtectAlert {
 
 export interface ProtectSettings {
   enabled: boolean;
+  do_not_disturb: boolean;
+  notify_digest_only: boolean;
+  quiet_hours_enabled: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
   notify_on_grade_drop: boolean;
   notify_on_untrusted_network: boolean;
   notify_on_degraded: boolean;
@@ -438,6 +443,16 @@ export interface ProtectSettings {
 export interface AutoProtectResult {
   applied: Array<{ kind: string; message: string; success: boolean }>;
   skipped_reason: string | null;
+}
+
+export interface AutoProtectLogEntry {
+  timestamp: string;
+  kind: string;
+  success: boolean;
+  message: string;
+  trigger: string;
+  check_reason: string;
+  rollback_hint: string;
 }
 
 export interface ProtectStatus {

@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { Activity, Globe, LayoutDashboard, Network, Shield } from "lucide-react";
 
+import { GlobalSearchTrigger } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ const NAV_ITEMS: Array<{
 interface SidebarProps {
   page: PageId;
   onNavigate: (page: PageId) => void;
+  onOpenSearch: () => void;
   version?: string | null;
 }
 
@@ -72,9 +74,9 @@ function NavButton({
   );
 }
 
-export function Sidebar({ page, onNavigate, version }: SidebarProps) {
+export function Sidebar({ page, onNavigate, onOpenSearch, version }: SidebarProps) {
   return (
-    <aside className="surface-panel text-sidebar-foreground flex shrink-0 flex-col gap-2 border-b border-sidebar-border py-2 sm:gap-3 sm:py-3 lg:min-h-0 lg:w-[220px] lg:border-r lg:border-b-0 lg:py-3">
+    <aside className="surface-panel text-sidebar-foreground flex shrink-0 flex-col gap-2 overflow-x-hidden border-b border-sidebar-border py-2 sm:gap-3 sm:py-3 lg:min-h-0 lg:w-[220px] lg:border-r lg:border-b-0 lg:py-3">
       <div className="px-3">
         <div className="flex items-center gap-2.5">
           <img
@@ -89,6 +91,10 @@ export function Sidebar({ page, onNavigate, version }: SidebarProps) {
             <h1 className="truncate text-sm font-semibold leading-tight">Network companion</h1>
           </div>
         </div>
+      </div>
+
+      <div className="px-2">
+        <GlobalSearchTrigger onOpen={onOpenSearch} />
       </div>
 
       <nav
@@ -106,7 +112,9 @@ export function Sidebar({ page, onNavigate, version }: SidebarProps) {
         ))}
       </nav>
 
-      <Separator className="mx-3 hidden lg:block" />
+      <div className="hidden px-3 lg:block" aria-hidden>
+        <Separator />
+      </div>
 
       <nav
         className="hidden min-h-0 flex-1 flex-col gap-0.5 px-2 lg:flex"
@@ -123,7 +131,9 @@ export function Sidebar({ page, onNavigate, version }: SidebarProps) {
         ))}
       </nav>
 
-      <Separator className="mx-3 hidden lg:block" />
+      <div className="hidden px-3 lg:block" aria-hidden>
+        <Separator />
+      </div>
 
       <div className="hidden px-2 lg:block">
         <ThemeToggle compact />

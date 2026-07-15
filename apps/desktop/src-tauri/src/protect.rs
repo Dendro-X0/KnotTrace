@@ -1,9 +1,13 @@
+use chrono::Utc;
 use network_core::{
-    apply_connect_switch, apply_dns_assist, background_check_warrants_notification,
-    discover_connect_config, evaluate_protect, get_assist_state, is_automated_check_reason,
-    load_protect_settings, recommend_connect_discovered, recommend_dns_assist, should_notify,
-    AutoProtectAction, AutoProtectResult, HealthGrade, HealthReport, ProtectSettings,
-    ProtectStatus, TrustLevel,
+    append_auto_protect_log, evaluate_protect, load_protect_settings,
+    AutoProtectAction, AutoProtectLogEntry, AutoProtectResult, HealthGrade, HealthReport,
+    ProtectSettings, ProtectStatus, TrustLevel,
+};
+use network_core::{
+    apply_connect_switch, apply_dns_assist, auto_protect_trigger,
+    background_check_warrants_notification, discover_connect_config, get_assist_state,
+    is_automated_check_reason, recommend_connect_discovered, recommend_dns_assist, should_notify,
 };
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -20,6 +24,7 @@ pub struct ProtectRuntime {
     pub last_grade: Mutex<Option<HealthGrade>>,
     pub last_notification: Mutex<Option<Instant>>,
     pub last_auto_protect: Mutex<Option<Instant>>,
+    pub pending_digest: Mutex<Vec<(String, String)>>,
 }
 
 impl ProtectRuntime {
@@ -28,6 +33,7 @@ impl ProtectRuntime {
             last_grade: Mutex::new(None),
             last_notification: Mutex::new(None),
             last_auto_protect: Mutex::new(None),
+            pending_digest: Mutex::new(Vec::new()),
         }
     }
 }
@@ -52,19 +58,17 @@ pub fn handle_protect_status(
     }
 
     if settings.enabled {
-        if let Some((title, body)) =
-            should_notify(
-                &status,
-                previous_grade,
-                report.score.grade,
-                &settings,
-                report.dns_integrity.as_ref(),
-            )
-        {
+        if let Some((title, body)) = should_notify(
+            &status,
+            previous_grade,
+            report.score.grade,
+            &settings,
+            report.dns_integrity.as_ref(),
+        ) {
             let should_show = !is_automated_check_reason(check_reason)
                 || background_check_warrants_notification(&status, report, previous_grade);
             if should_show {
-                maybe_send_notification(app, &title, &body)?;
+                maybe_send_notification(app, &settings, &title, &body)?;
             }
         }
     }
@@ -77,8 +81,11 @@ pub fn handle_protect_status(
         let report = report.clone();
         let status = status.clone();
         let settings = settings.clone();
+        let check_reason = check_reason.to_string();
         tauri::async_runtime::spawn(async move {
-            if let Ok(result) = run_auto_protect(&app, &report, &status, &settings).await {
+            if let Ok(result) =
+                run_auto_protect(&app, &report, &status, &settings, &check_reason).await
+            {
                 if !result.applied.is_empty() || result.skipped_reason.is_some() {
                     let _ = app.emit("auto-protect-result", &result);
                 }
@@ -89,11 +96,49 @@ pub fn handle_protect_status(
     Ok(())
 }
 
+pub fn toggle_do_not_disturb(app: &AppHandle) -> Result<ProtectSettings, String> {
+    let mut settings =
+        load_protect_settings(&data_dir()).map_err(|error| error.to_string())?;
+    settings.do_not_disturb = !settings.do_not_disturb;
+    save_and_publish_protect_settings(app, &settings)
+}
+
+pub fn save_and_publish_protect_settings(
+    app: &AppHandle,
+    settings: &ProtectSettings,
+) -> Result<ProtectSettings, String> {
+    network_core::save_protect_settings(&data_dir(), settings)
+        .map_err(|error| error.to_string())?;
+
+    #[cfg(desktop)]
+    crate::tray::sync_tray_do_not_disturb(app, settings.do_not_disturb);
+
+    if let Some(state) = app.try_state::<crate::state::AppState>() {
+        let report = state
+            .last_report
+            .lock()
+            .map_err(|_| "state lock poisoned".to_string())?
+            .clone();
+
+        if let Some(report) = report {
+            let previous_grade = app
+                .try_state::<ProtectRuntime>()
+                .and_then(|runtime| runtime.last_grade.lock().ok().map(|guard| *guard))
+                .flatten();
+            let status = evaluate_protect(&report, previous_grade, settings);
+            let _ = app.emit("protect-status-updated", &status);
+        }
+    }
+
+    Ok(settings.clone())
+}
+
 async fn run_auto_protect(
     app: &AppHandle,
     report: &HealthReport,
     status: &ProtectStatus,
     settings: &ProtectSettings,
+    check_reason: &str,
 ) -> Result<AutoProtectResult, String> {
     if !auto_protect_allowed(app)? {
         return Ok(AutoProtectResult {
@@ -109,6 +154,7 @@ async fn run_auto_protect(
         });
     }
 
+    let trigger = auto_protect_trigger(status, report, settings);
     let mut applied = Vec::new();
 
     if settings.auto_apply_dns {
@@ -141,6 +187,23 @@ async fn run_auto_protect(
         }
     }
 
+    for action in &applied {
+        let entry = AutoProtectLogEntry {
+            timestamp: Utc::now(),
+            kind: action.kind.clone(),
+            success: action.success,
+            message: action.message.clone(),
+            trigger: trigger.clone(),
+            check_reason: check_reason.to_string(),
+            rollback_hint: rollback_hint_for_kind(&action.kind),
+        };
+        let _ = append_auto_protect_log(&data_dir(), &entry).map_err(|error| error.to_string());
+    }
+
+    if !applied.is_empty() {
+        let _ = app.emit("auto-protect-log-updated", ());
+    }
+
     if applied.iter().any(|action| action.success) {
         mark_auto_protect(app)?;
         let _ = perform_check(app, "auto_protect_applied").await;
@@ -150,6 +213,14 @@ async fn run_auto_protect(
         applied,
         skipped_reason: None,
     })
+}
+
+fn rollback_hint_for_kind(kind: &str) -> String {
+    match kind {
+        "dns" => "Restore DNS Assist from the DNS page.".to_string(),
+        "connect" => "Switch proxy node from the Connect page.".to_string(),
+        _ => "Review the related Assist page.".to_string(),
+    }
 }
 
 fn should_run_auto_protect(
@@ -300,10 +371,66 @@ async fn try_auto_connect(report: &HealthReport, settings: &ProtectSettings) -> 
     Ok(result.message)
 }
 
-fn maybe_send_notification(app: &AppHandle, title: &str, body: &str) -> Result<(), String> {
+fn maybe_send_notification(
+    app: &AppHandle,
+    settings: &ProtectSettings,
+    title: &str,
+    body: &str,
+) -> Result<(), String> {
     let runtime = app
         .try_state::<ProtectRuntime>()
         .ok_or_else(|| "protect runtime unavailable".to_string())?;
+
+    if settings.notify_digest_only {
+        {
+            let mut pending = runtime
+                .pending_digest
+                .lock()
+                .map_err(|_| "protect runtime lock poisoned".to_string())?;
+            pending.push((title.to_string(), body.to_string()));
+        }
+
+        let cooldown_active = {
+            let last_notification = runtime
+                .last_notification
+                .lock()
+                .map_err(|_| "protect runtime lock poisoned".to_string())?;
+            last_notification
+                .as_ref()
+                .is_some_and(|instant| instant.elapsed() < NOTIFY_COOLDOWN)
+        };
+
+        if cooldown_active {
+            return Ok(());
+        }
+
+        let digest_items = {
+            let mut pending = runtime
+                .pending_digest
+                .lock()
+                .map_err(|_| "protect runtime lock poisoned".to_string())?;
+            std::mem::take(&mut *pending)
+        };
+
+        if digest_items.is_empty() {
+            return Ok(());
+        }
+
+        let (digest_title, digest_body) = format_digest_notification(&digest_items);
+        app.notification()
+            .builder()
+            .title(digest_title)
+            .body(digest_body)
+            .show()
+            .map_err(|error| error.to_string())?;
+
+        let mut last_notification = runtime
+            .last_notification
+            .lock()
+            .map_err(|_| "protect runtime lock poisoned".to_string())?;
+        *last_notification = Some(Instant::now());
+        return Ok(());
+    }
 
     let mut last_notification = runtime
         .last_notification
@@ -328,16 +455,39 @@ fn maybe_send_notification(app: &AppHandle, title: &str, body: &str) -> Result<(
     Ok(())
 }
 
+fn format_digest_notification(items: &[(String, String)]) -> (String, String) {
+    let count = items.len();
+    let title = if count == 1 {
+        items[0].0.clone()
+    } else {
+        format!("KnotTrace — {count} network updates")
+    };
+
+    let mut lines = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    for (item_title, item_body) in items {
+        if seen.insert(item_title.clone()) {
+            lines.push(format!("• {item_title}: {item_body}"));
+        }
+    }
+
+    (title, lines.join("\n"))
+}
+
 #[tauri::command]
 pub fn get_protect_settings() -> Result<ProtectSettings, String> {
     network_core::load_protect_settings(&data_dir()).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-pub fn set_protect_settings(settings: ProtectSettings) -> Result<ProtectSettings, String> {
-    network_core::save_protect_settings(&data_dir(), &settings)
-        .map_err(|error| error.to_string())?;
-    Ok(settings)
+pub fn set_protect_settings(app: tauri::AppHandle, settings: ProtectSettings) -> Result<ProtectSettings, String> {
+    save_and_publish_protect_settings(&app, &settings)
+}
+
+#[tauri::command]
+pub fn list_auto_protect_log(limit: Option<usize>) -> Result<Vec<AutoProtectLogEntry>, String> {
+    network_core::list_auto_protect_log(&data_dir(), limit.unwrap_or(20))
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]

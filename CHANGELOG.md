@@ -4,6 +4,25 @@ All notable changes to KnotTrace are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions align with `tauri.conf.json` and workspace `Cargo.toml`.
 
+## [Unreleased]
+
+## [1.5.0] - 2026-07-14
+
+### Added
+
+- **Do Not Disturb** — Protect-page toggle that keeps monitoring and auto-protect running while suppressing all OS notifications
+- **Tray Do Not Disturb** — checkable tray menu item; tooltip shows `DND` when silence is on
+- **Auto-protect audit log** — recent automatic DNS/proxy actions on the Protect page with rollback hints
+- **Notification digest** — optional coalesced OS summary instead of one toast per alert
+- **Quiet hours** — optional local time window that silences OS notifications (overnight ranges supported)
+- **Global search** — sidebar search and `Ctrl+K` / `⌘K` (also `/`) to jump pages or run a health check
+- Spec: [do-not-disturb-design.md](specs/backend/do-not-disturb-design.md)
+- Roadmap: [v1.5-silence-control-roadmap.md](specs/backend/v1.5-silence-control-roadmap.md) — silence & control theme
+
+### Fixed
+
+- Sidebar horizontal separators no longer overflow the rail (`w-full` + horizontal margin)
+
 ## [1.4.2] - 2026-07-07
 
 ### Added
@@ -207,6 +226,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.5.0]: https://github.com/Dendro-X0/network/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/Dendro-X0/network/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/Dendro-X0/network/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/Dendro-X0/network/compare/v1.3.0...v1.4.0

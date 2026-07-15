@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { invokeErrorMessage } from "@/lib/utils";
 import type {
+  AutoProtectLogEntry,
   AutoProtectResult,
   BenchmarkSnapshot,
   ConnectConfig,
@@ -74,6 +75,8 @@ export function useCompanion() {
   const [protectStatus, setProtectStatus] = useState<ProtectStatus | null>(null);
   const [protectError, setProtectError] = useState<string | null>(null);
   const [autoProtectNote, setAutoProtectNote] = useState("");
+  const [autoProtectLog, setAutoProtectLog] = useState<AutoProtectLogEntry[]>([]);
+  const [autoProtectLogError, setAutoProtectLogError] = useState<string | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [updateCheck, setUpdateCheck] = useState<UpdateCheck | null>(null);
   const [updateChecking, setUpdateChecking] = useState(false);
@@ -188,6 +191,21 @@ export function useCompanion() {
       setProtectStatus(null);
       setProtectError(
         error instanceof Error ? error.message : "Protect status unavailable.",
+      );
+    }
+  }, []);
+
+  const refreshAutoProtectLog = useCallback(async () => {
+    try {
+      const entries = await invoke<AutoProtectLogEntry[]>("list_auto_protect_log", {
+        limit: 20,
+      });
+      setAutoProtectLog(entries);
+      setAutoProtectLogError(null);
+    } catch (error) {
+      setAutoProtectLog([]);
+      setAutoProtectLogError(
+        error instanceof Error ? error.message : "Automatic action history unavailable.",
       );
     }
   }, []);
@@ -579,6 +597,7 @@ export function useCompanion() {
         loadConnectConfig(),
         refreshConnect(),
         refreshProtect(),
+        refreshAutoProtectLog(),
         refreshTrends(),
         refreshIntegritySettings(),
         refreshBenchmarks(),
@@ -606,6 +625,7 @@ export function useCompanion() {
     refreshIntegritySettings,
     refreshMonitorStatus,
     refreshProtect,
+    refreshAutoProtectLog,
     refreshThroughputSettings,
     refreshTrends,
   ]);
@@ -620,6 +640,12 @@ export function useCompanion() {
           void refreshAssist();
           void refreshConnect();
           void refreshTrends();
+          void refreshAutoProtectLog();
+        }),
+      );
+      unsubs.push(
+        await listen("auto-protect-log-updated", () => {
+          void refreshAutoProtectLog();
         }),
       );
       unsubs.push(
@@ -663,6 +689,7 @@ export function useCompanion() {
     refreshHistory,
     refreshMonitorStatus,
     refreshProtect,
+    refreshAutoProtectLog,
     refreshTrends,
   ]);
 
@@ -710,6 +737,8 @@ export function useCompanion() {
     protectStatus,
     protectError,
     autoProtectNote,
+    autoProtectLog,
+    autoProtectLogError,
     appVersion,
     updateCheck,
     updateChecking,

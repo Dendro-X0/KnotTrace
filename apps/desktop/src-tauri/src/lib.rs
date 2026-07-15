@@ -144,6 +144,7 @@ pub fn run() {
             protect::get_protect_settings,
             protect::set_protect_settings,
             protect::get_protect_status,
+            protect::list_auto_protect_log,
             throughput::get_throughput_settings,
             throughput::set_throughput_settings,
             throughput::run_throughput_test,

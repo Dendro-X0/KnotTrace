@@ -1,6 +1,7 @@
 //! Core library for Network Companion — observe-only health checks.
 
 mod assist;
+mod auto_protect_log;
 mod benchmark;
 mod clash_api;
 mod connect;
@@ -23,13 +24,16 @@ mod tor;
 mod throughput;
 mod types;
 
+pub use assist::{
+    apply_dns_assist, get_assist_state, recommend_dns_assist, restore_dns_assist, AssistError,
+};
+pub use auto_protect_log::{
+    append_auto_protect_log, list_auto_protect_log, AutoProtectLogError,
+};
 pub use benchmark::{
     delete_benchmark_snapshot, list_benchmark_snapshots, save_benchmark_snapshot, BenchmarkError,
 };
 pub use diagnosis::diagnose_network;
-pub use assist::{
-    apply_dns_assist, get_assist_state, recommend_dns_assist, restore_dns_assist, AssistError,
-};
 pub use connect::{
     apply_connect_switch, compare_proxy_paths, compare_proxy_paths_discovered,
     discover_connect_config, load_connect_config, recommend_connect,
@@ -51,8 +55,9 @@ pub use probe::{measure_tcp_latency, probe_dns_resolver, resolve_dns_addresses, 
 pub use stability::run_stability_probes;
 pub use tor::{detect_tor_status, is_tor_socks_endpoint};
 pub use protect::{
-    background_check_warrants_notification, default_protect_settings, evaluate_protect,
-    is_automated_check_reason, load_protect_settings, save_protect_settings, should_notify,
+    auto_protect_trigger, background_check_warrants_notification, default_protect_settings,
+    evaluate_protect, in_quiet_hours, is_automated_check_reason, load_protect_settings,
+    notifications_silenced, parse_hhmm_to_minutes, save_protect_settings, should_notify,
     ProtectError,
 };
 pub use reachability::{

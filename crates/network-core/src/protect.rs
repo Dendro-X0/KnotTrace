@@ -1,4 +1,5 @@
 use crate::types::*;
+use chrono::Timelike;
 use std::path::Path;
 use thiserror::Error;
 
@@ -13,6 +14,11 @@ pub enum ProtectError {
 pub fn default_protect_settings() -> ProtectSettings {
     ProtectSettings {
         enabled: true,
+        do_not_disturb: false,
+        notify_digest_only: false,
+        quiet_hours_enabled: false,
+        quiet_hours_start: "22:00".to_string(),
+        quiet_hours_end: "07:00".to_string(),
         notify_on_grade_drop: true,
         notify_on_untrusted_network: true,
         notify_on_degraded: true,
@@ -123,6 +129,46 @@ pub fn evaluate_protect(
     }
 }
 
+/// Minutes since local midnight (`0..1440`). Returns `None` for invalid `HH:MM`.
+pub fn parse_hhmm_to_minutes(value: &str) -> Option<u32> {
+    let trimmed = value.trim();
+    let (hours, minutes) = trimmed.split_once(':')?;
+    let hours: u32 = hours.parse().ok()?;
+    let minutes: u32 = minutes.parse().ok()?;
+    if hours > 23 || minutes > 59 {
+        return None;
+    }
+    Some(hours * 60 + minutes)
+}
+
+/// True when `local_minutes` falls inside the quiet window (supports overnight ranges).
+pub fn in_quiet_hours(settings: &ProtectSettings, local_minutes: u32) -> bool {
+    if !settings.quiet_hours_enabled {
+        return false;
+    }
+
+    let Some(start) = parse_hhmm_to_minutes(&settings.quiet_hours_start) else {
+        return false;
+    };
+    let Some(end) = parse_hhmm_to_minutes(&settings.quiet_hours_end) else {
+        return false;
+    };
+
+    if start == end {
+        return true;
+    }
+    if start < end {
+        local_minutes >= start && local_minutes < end
+    } else {
+        local_minutes >= start || local_minutes < end
+    }
+}
+
+/// Do Not Disturb or active quiet hours — no OS notifications.
+pub fn notifications_silenced(settings: &ProtectSettings, local_minutes: u32) -> bool {
+    settings.do_not_disturb || in_quiet_hours(settings, local_minutes)
+}
+
 pub fn should_notify(
     status: &ProtectStatus,
     previous_grade: Option<HealthGrade>,
@@ -130,7 +176,8 @@ pub fn should_notify(
     settings: &ProtectSettings,
     dns_integrity: Option<&DnsIntegrityStatus>,
 ) -> Option<(String, String)> {
-    if !settings.enabled {
+    let local_minutes = chrono::Local::now().time().num_seconds_from_midnight() / 60;
+    if !settings.enabled || notifications_silenced(settings, local_minutes) {
         return None;
     }
 
@@ -222,6 +269,53 @@ pub fn background_check_warrants_notification(
 /// Returns true for checks triggered by the background monitor or other non-manual automation.
 pub fn is_automated_check_reason(reason: &str) -> bool {
     !reason.starts_with("manual")
+}
+
+/// Describes why auto-protect ran for audit logging.
+pub fn auto_protect_trigger(
+    status: &ProtectStatus,
+    report: &HealthReport,
+    settings: &ProtectSettings,
+) -> String {
+    if settings.auto_recover_dns_integrity
+        && settings.auto_apply_dns
+        && report.dns_integrity.as_ref().is_some_and(|integrity| {
+            matches!(
+                integrity.state,
+                DnsIntegrityState::Caution | DnsIntegrityState::Suspicious
+            ) && matches!(
+                integrity.confidence,
+                DnsIntegrityConfidence::Medium | DnsIntegrityConfidence::High
+            )
+        })
+    {
+        return "dns_integrity".to_string();
+    }
+
+    if settings.auto_recover_site_access
+        && settings.auto_apply_connect
+        && report
+            .site_reachability
+            .as_ref()
+            .is_some_and(crate::reachability::site_access_degraded)
+        && report.environment.proxy.enabled
+    {
+        return "site_access".to_string();
+    }
+
+    if matches!(report.score.grade, HealthGrade::Poor) {
+        return "poor_grade".to_string();
+    }
+
+    if matches!(status.trust_level, TrustLevel::Untrusted) {
+        return "untrusted".to_string();
+    }
+
+    if matches!(status.trust_level, TrustLevel::Caution) {
+        return "caution".to_string();
+    }
+
+    "conditions_met".to_string()
 }
 
 fn classify_trust_level(
@@ -658,5 +752,86 @@ mod tests {
             &report,
             Some(HealthGrade::Good)
         ));
+    }
+
+    #[test]
+    fn do_not_disturb_suppresses_all_notifications() {
+        let report = sample_report(vec![EnvironmentTag::Public], HealthGrade::Poor);
+        let mut settings = default_protect_settings();
+        settings.do_not_disturb = true;
+        let status = evaluate_protect(&report, Some(HealthGrade::Good), &settings);
+
+        assert!(should_notify(
+            &status,
+            Some(HealthGrade::Good),
+            report.score.grade,
+            &settings,
+            None,
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn notifications_still_fire_when_do_not_disturb_is_off() {
+        let report = sample_report(vec![EnvironmentTag::Public], HealthGrade::Poor);
+        let settings = default_protect_settings();
+        let status = evaluate_protect(&report, None, &settings);
+
+        assert!(should_notify(&status, None, report.score.grade, &settings, None).is_some());
+    }
+
+    #[test]
+    fn auto_protect_trigger_prefers_dns_integrity() {
+        let mut report = sample_report(vec![EnvironmentTag::HomeLan], HealthGrade::Good);
+        report.dns_integrity = Some(DnsIntegrityStatus {
+            state: DnsIntegrityState::Suspicious,
+            confidence: DnsIntegrityConfidence::High,
+            mismatch_count: 2,
+            checked_domains: 4,
+            summary: "Likely DNS tampering".to_string(),
+            details: Vec::new(),
+        });
+        let settings = default_protect_settings();
+        let status = evaluate_protect(&report, None, &settings);
+
+        assert_eq!(
+            auto_protect_trigger(&status, &report, &settings),
+            "dns_integrity"
+        );
+    }
+
+    #[test]
+    fn quiet_hours_supports_overnight_window() {
+        let mut settings = default_protect_settings();
+        settings.quiet_hours_enabled = true;
+        settings.quiet_hours_start = "22:00".to_string();
+        settings.quiet_hours_end = "07:00".to_string();
+
+        assert!(in_quiet_hours(&settings, 22 * 60));
+        assert!(in_quiet_hours(&settings, 23 * 60 + 30));
+        assert!(in_quiet_hours(&settings, 6 * 60 + 30));
+        assert!(!in_quiet_hours(&settings, 12 * 60));
+        assert!(notifications_silenced(&settings, 23 * 60));
+        assert!(!notifications_silenced(&settings, 12 * 60));
+    }
+
+    #[test]
+    fn quiet_hours_same_day_window() {
+        let mut settings = default_protect_settings();
+        settings.quiet_hours_enabled = true;
+        settings.quiet_hours_start = "13:00".to_string();
+        settings.quiet_hours_end = "15:00".to_string();
+
+        assert!(in_quiet_hours(&settings, 14 * 60));
+        assert!(!in_quiet_hours(&settings, 12 * 60));
+        assert!(!in_quiet_hours(&settings, 16 * 60));
+    }
+
+    #[test]
+    fn parse_hhmm_rejects_invalid_values() {
+        assert_eq!(parse_hhmm_to_minutes("22:00"), Some(22 * 60));
+        assert_eq!(parse_hhmm_to_minutes("7:30"), Some(7 * 60 + 30));
+        assert_eq!(parse_hhmm_to_minutes("25:00"), None);
+        assert_eq!(parse_hhmm_to_minutes("abc"), None);
     }
 }

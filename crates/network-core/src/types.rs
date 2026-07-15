@@ -321,8 +321,34 @@ pub struct ProtectAlert {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AutoProtectLogEntry {
+    pub timestamp: DateTime<Utc>,
+    pub kind: String,
+    pub success: bool,
+    pub message: String,
+    pub trigger: String,
+    pub check_reason: String,
+    pub rollback_hint: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProtectSettings {
     pub enabled: bool,
+    /// Suppress all OS notifications while monitoring and auto-protect continue.
+    #[serde(default)]
+    pub do_not_disturb: bool,
+    /// Coalesce eligible OS notifications into one summary per cooldown window.
+    #[serde(default)]
+    pub notify_digest_only: bool,
+    /// When true, suppress OS notifications between quiet_hours_start and quiet_hours_end (local).
+    #[serde(default)]
+    pub quiet_hours_enabled: bool,
+    /// Local start time `HH:MM` (24h). Default 22:00.
+    #[serde(default = "default_quiet_hours_start")]
+    pub quiet_hours_start: String,
+    /// Local end time `HH:MM` (24h). Default 07:00. May be overnight.
+    #[serde(default = "default_quiet_hours_end")]
+    pub quiet_hours_end: String,
     pub notify_on_grade_drop: bool,
     pub notify_on_untrusted_network: bool,
     pub notify_on_degraded: bool,
@@ -358,6 +384,14 @@ fn default_auto_recover_site_access() -> bool {
 
 fn default_auto_apply_untrusted_only() -> bool {
     true
+}
+
+fn default_quiet_hours_start() -> String {
+    "22:00".to_string()
+}
+
+fn default_quiet_hours_end() -> String {
+    "07:00".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

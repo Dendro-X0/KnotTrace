@@ -50,15 +50,15 @@ Update these together:
 ```bash
 git status
 git add .
-git commit -m "Release v1.5.0"
+git commit -m "Release v1.6.0"
 git push -u origin main
 ```
 
 Tag when ready:
 
 ```bash
-git tag v1.5.0
-git push origin v1.5.0
+git tag v1.6.0
+git push origin v1.6.0
 ```
 
 ## GitHub Actions

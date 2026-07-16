@@ -11,6 +11,10 @@ mod dns_platform;
 mod egress;
 mod env;
 mod fingerprint;
+mod link_facts;
+mod link_platform;
+mod local_caps;
+mod mtu_assist;
 mod network_context;
 mod probe;
 mod process;
@@ -22,7 +26,9 @@ mod stability;
 mod store;
 mod tor;
 mod throughput;
+mod tunnel_compare;
 mod types;
+mod upstream_pool;
 
 pub use assist::{
     apply_dns_assist, get_assist_state, recommend_dns_assist, restore_dns_assist, AssistError,
@@ -45,6 +51,15 @@ pub use dns_integrity::{
     save_dns_integrity_settings, DnsIntegrityError,
 };
 pub use env::detect_environment;
+pub use link_facts::{build_link_facts_report, collect_link_facts};
+pub use local_caps::{
+    apply_local_caps_repair, collect_local_caps, get_local_caps_state, restore_local_caps_repair,
+    LocalCapsError,
+};
+pub use mtu_assist::{
+    apply_mtu_assist_repair, collect_mtu_assist, get_mtu_assist_state, restore_mtu_assist_repair,
+    MtuAssistError,
+};
 pub use egress::{egress_unstable, probe_egress, probe_egress_with_options, EgressProbeOptions};
 pub use fingerprint::environment_fingerprint;
 pub use network_context::{
@@ -72,6 +87,10 @@ pub use throughput::{
     load_throughput_settings, normalize_throughput_settings, run_throughput_probe,
     save_throughput_settings, ThroughputError,
 };
+pub use tunnel_compare::{
+    build_compare_report, probe_tunnel_path_compare, should_compare_tunnels, TunnelCompareOptions,
+};
+pub use upstream_pool::{evaluate_upstream_pool_proof, evaluate_upstream_pool_snapshot};
 pub use types::*;
 
 use thiserror::Error;
@@ -108,11 +127,11 @@ pub async fn run_health_check_with_settings(
     let integrity_settings = dns_integrity_settings
         .cloned()
         .unwrap_or_else(default_dns_integrity_settings);
-    let (reachability_options, captive_options, egress_options) = match profile {
+    let (reachability_options, captive_options, egress_options, tunnel_options) = match profile {
         CheckProfile::Fast => (
             ReachabilityProbeOptions {
                 timeout: std::time::Duration::from_secs(2),
-                max_domains_per_check: 2,
+                max_domains_per_check: 4,
             },
             CaptivePortalProbeOptions {
                 timeout: std::time::Duration::from_secs(2),
@@ -121,11 +140,19 @@ pub async fn run_health_check_with_settings(
                 timeout: std::time::Duration::from_secs(2),
                 max_endpoints_per_path: 2,
             },
+            TunnelCompareOptions {
+                timeout: std::time::Duration::from_secs(2),
+                max_domains: 2,
+            },
         ),
         CheckProfile::Full => (
-            ReachabilityProbeOptions::default(),
+            ReachabilityProbeOptions {
+                timeout: std::time::Duration::from_secs(4),
+                max_domains_per_check: 6,
+            },
             CaptivePortalProbeOptions::default(),
             EgressProbeOptions::default(),
+            TunnelCompareOptions::default(),
         ),
     };
 
@@ -143,6 +170,7 @@ pub async fn run_health_check_with_settings(
     let captive_portal_task = probe_captive_portal_with_options(captive_options);
     let egress_task = probe_egress_with_options(&environment, egress_options);
     let stability_task = run_stability_probes();
+    let tunnel_compare_task = probe_tunnel_path_compare(&environment, tunnel_options);
 
     let (
         dns_integrity_result,
@@ -151,13 +179,15 @@ pub async fn run_health_check_with_settings(
         captive_portal,
         egress,
         stability,
+        tunnel_compare,
     ) = tokio::join!(
         dns_integrity_task,
         site_reachability_task,
         proxy_path_report_task,
         captive_portal_task,
         egress_task,
-        stability_task
+        stability_task,
+        tunnel_compare_task
     );
 
     let dns_integrity = dns_integrity_result.ok();
@@ -174,7 +204,7 @@ pub async fn run_health_check_with_settings(
 
     let mut report = HealthReport {
         timestamp: chrono::Utc::now(),
-        environment,
+        environment: environment.clone(),
         probe,
         score,
         dns_integrity,
@@ -185,7 +215,19 @@ pub async fn run_health_check_with_settings(
         network_context,
         recommendations: None,
         proxy_path_report,
+        link_facts: None,
+        local_caps: None,
+        mtu_assist: None,
+        tunnel_compare,
+        upstream_pool: None,
     };
+
+    // Link facts / local caps / MTU assist are sync OS reads; keep off the async probe critical path.
+    report.link_facts = Some(crate::link_facts::collect_link_facts(&environment));
+    report.local_caps = Some(crate::local_caps::collect_local_caps(&environment, None));
+    // Snapshot-only claim; desktop monitor re-evaluates with history for pool recurrence.
+    report.upstream_pool = evaluate_upstream_pool_snapshot(&report);
+    report.mtu_assist = Some(collect_mtu_assist(&report, None));
     report.recommendations = Some(build_recommendations(&report));
     report.diagnosis = Some(diagnose_network(&report));
 

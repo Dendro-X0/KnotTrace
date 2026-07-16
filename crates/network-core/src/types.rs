@@ -171,6 +171,223 @@ pub struct HealthReport {
     pub recommendations: Option<NetworkRecommendations>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub proxy_path_report: Option<ProxyPathReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub link_facts: Option<LinkFactsReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub local_caps: Option<LocalCapsReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mtu_assist: Option<MtuAssistReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tunnel_compare: Option<TunnelPathCompareReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub upstream_pool: Option<UpstreamPoolProof>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum UpstreamPoolClaim {
+    /// Proxy off or no relevant evidence.
+    None,
+    Inconclusive,
+    ActivePathImpaired,
+    ActivePathRecurring,
+    UpstreamPoolPoor,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum UpstreamPoolConfidence {
+    High,
+    Medium,
+    Low,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpstreamPoolProof {
+    pub claim: UpstreamPoolClaim,
+    pub confidence: UpstreamPoolConfidence,
+    pub title: String,
+    pub summary: String,
+    pub evidence: Vec<String>,
+    pub not_proven: Vec<String>,
+    pub action: String,
+    pub intermittent_domains: Vec<String>,
+    pub recurring_impaired_checks: u8,
+    pub distinct_egress_ips: u8,
+    pub proxy_only_failure_domains: Vec<String>,
+    pub checks_considered: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TunnelPathKind {
+    Direct,
+    SystemProxy,
+    TorSocks,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TunnelPathSample {
+    pub kind: TunnelPathKind,
+    pub label: String,
+    pub available: bool,
+    pub egress_ip: Option<String>,
+    pub reachability: Vec<SiteReachResult>,
+    pub median_latency_ms: Option<f64>,
+    pub success_count: u8,
+    pub failure_count: u8,
+    pub note: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TunnelPathCompareReport {
+    pub paths: Vec<TunnelPathSample>,
+    pub tor_only_failures: Vec<String>,
+    pub expectation: String,
+    pub summary: String,
+    pub vpn_detected: bool,
+    pub tor_detected: bool,
+    pub tor_socks_reachable: bool,
+    pub proxy_enabled: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LocalCapsIssueKind {
+    AutotuningDisabled,
+    AutotuningRestricted,
+    AdapterPowerSaving,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalCapsIssue {
+    pub kind: LocalCapsIssueKind,
+    pub severity: AlertLevel,
+    pub title: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalCapsReport {
+    pub available: bool,
+    pub platform_note: String,
+    pub tcp_autotuning_level: Option<String>,
+    pub tcp_autotuning_ok: bool,
+    pub adapter_name: Option<String>,
+    /// `true` when Windows may power down the NIC to save energy.
+    pub adapter_power_saving: Option<bool>,
+    pub issues: Vec<LocalCapsIssue>,
+    pub summary: String,
+    pub can_repair: bool,
+    pub repair_active: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalCapsBackup {
+    pub previous_autotuning_level: String,
+    pub adapter_name: Option<String>,
+    pub previous_allow_computer_turn_off: Option<bool>,
+    pub applied_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalCapsState {
+    pub available: bool,
+    pub can_repair: bool,
+    pub repair_active: bool,
+    pub backup: Option<LocalCapsBackup>,
+    pub platform_note: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalCapsRepairResult {
+    pub kept: bool,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MtuAssistReport {
+    pub available: bool,
+    pub platform_note: String,
+    pub fragmentation_risk: bool,
+    pub tunnel_evidenced: bool,
+    pub interface_name: Option<String>,
+    pub current_mtu: Option<u16>,
+    pub recommended_mtu: Option<u16>,
+    pub estimated_path_mtu: Option<u16>,
+    pub summary: String,
+    pub can_repair: bool,
+    pub repair_active: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MtuAssistBackup {
+    pub interface_name: String,
+    pub previous_mtu: u16,
+    pub applied_mtu: u16,
+    pub applied_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MtuAssistState {
+    pub available: bool,
+    pub can_repair: bool,
+    pub repair_active: bool,
+    pub backup: Option<MtuAssistBackup>,
+    pub platform_note: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MtuAssistRepairResult {
+    pub kept: bool,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LinkDuplex {
+    Full,
+    Half,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LinkIssueKind {
+    EthernetCapped,
+    HalfDuplex,
+    PreferEthernet,
+    WifiActive,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LinkAdapterFact {
+    pub name: String,
+    pub friendly_name: Option<String>,
+    pub kind: LinkKind,
+    pub is_up: bool,
+    pub is_default_route: bool,
+    pub speed_mbps: Option<u32>,
+    pub duplex: Option<LinkDuplex>,
+    pub media: Option<String>,
+    pub raw_speed: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LinkIssue {
+    pub kind: LinkIssueKind,
+    pub severity: AlertLevel,
+    pub title: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LinkFactsReport {
+    pub active: Option<LinkAdapterFact>,
+    pub adapters: Vec<LinkAdapterFact>,
+    pub issues: Vec<LinkIssue>,
+    pub summary: String,
+    pub source: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -418,6 +635,16 @@ pub struct HistoryTrendPoint {
     pub dns_integrity_mismatch_count: Option<u8>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub slowdown_shape: Option<SlowdownShape>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proxy_enabled: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proxy_only_failure_count: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub likely_provider_side: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub egress_ip: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub upstream_claim: Option<UpstreamPoolClaim>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -556,6 +783,7 @@ pub enum BottleneckCategory {
     PublicNetwork,
     CaptivePortal,
     EgressUnstable,
+    LinkLocal,
     Healthy,
 }
 
@@ -656,6 +884,7 @@ pub enum RecommendationCategory {
     ProxyPath,
     TorPath,
     Egress,
+    LinkLocal,
     General,
 }
 

@@ -15,7 +15,7 @@ mislabels them as `home_lan`. Users need:
 1. **Observe first** — classify before acting.
 2. **Recommend by default** — proxy node switching is opt-in, not automatic.
 3. **Safe auto only** — trusted DNS apply (reversible) remains the primary automation.
-4. **Cross-platform** — Win/macOS/Linux share `network-core` probes; DNS apply stays OS-specific.
+4. **Cross-platform** — Win/macOS/Linux share `network-core` probes; DNS apply is OS-specific (`dns_platform`).
 5. **No bypass** — do not defeat captive portals, corporate policy, or geo-blocks.
 
 ## v1.3.0 scope
@@ -39,7 +39,7 @@ mislabels them as `home_lan`. Users need:
 
 - SSID/BSSID collection (privacy + platform APIs)
 - Auto VPN/Tor client control
-- Linux/macOS DNS apply (Phase C)
+- Linux/macOS DNS apply — shipped in L1 (`dns_platform` macOS/Linux backends); see [local-first-improvement-roadmap.md](./local-first-improvement-roadmap.md)
 - Client isolation / ARP probing
 
 ## Exit criteria

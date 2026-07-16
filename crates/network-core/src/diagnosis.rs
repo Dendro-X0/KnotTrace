@@ -341,15 +341,36 @@ fn push_stability_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) 
 
         if let Some(mtu) = &stability.mtu {
             if mtu.fragmentation_risk {
+                let assist = report.mtu_assist.as_ref();
+                let can_repair = assist.is_some_and(|a| a.can_repair);
+                let mut suggestions = vec![
+                    "Large file stalls with normal web browsing often point to MTU issues."
+                        .to_string(),
+                ];
+                if can_repair {
+                    suggestions.insert(
+                        0,
+                        "Open Network → MTU assist for an opt-in reversible interface clamp (never auto-applied)."
+                            .to_string(),
+                    );
+                } else if assist.is_some_and(|a| a.tunnel_evidenced) {
+                    suggestions.insert(
+                        0,
+                        "Tunnel/proxy is present — lower tunnel MTU in the VPN/Tor app, or use MTU assist when eligible."
+                            .to_string(),
+                    );
+                } else {
+                    suggestions.insert(
+                        0,
+                        "For VPN/Tor apps, try tunnel MTU around 1400 and MSS near 1360.".to_string(),
+                    );
+                }
                 hints.push(BottleneckHint {
                     category: BottleneckCategory::MtuFragmentation,
                     severity: AlertLevel::Warning,
                     title: "Low path MTU detected".to_string(),
                     message: mtu.summary.clone(),
-                    suggestions: vec![
-                        "For VPN/Tor apps, try tunnel MTU around 1400 and MSS near 1360.".to_string(),
-                        "Large file stalls with normal web browsing often point to MTU issues.".to_string(),
-                    ],
+                    suggestions,
                 });
             }
         }
@@ -386,16 +407,49 @@ fn push_path_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
             },
             suggestions: vec![
                 "Wait for Tor bootstrap to finish before judging app performance.".to_string(),
-                "Compare direct vs Tor paths with benchmark snapshots or an on-demand throughput test."
-                    .to_string(),
-                "If large transfers stall, lower tunnel MTU and verify SOCKS reachability.".to_string(),
+                "Open the Network page Tunnel compare panel for Direct vs Tor samples.".to_string(),
+                "Do not expect Tor to match Direct Mbps — anonymity has a latency cost.".to_string(),
             ],
         });
+
+        if let Some(compare) = &report.tunnel_compare {
+            if !compare.tor_socks_reachable {
+                // Strengthen copy: SOCKS down is a Tor client problem.
+                if let Some(hint) = hints.last_mut() {
+                    hint.severity = AlertLevel::Critical;
+                    hint.title = "Tor SOCKS is unreachable".to_string();
+                    hint.message = compare.expectation.clone();
+                }
+            } else if !compare.expectation.is_empty() {
+                if let Some(hint) = hints.last_mut() {
+                    hint.message = format!("{} {}", hint.message, compare.expectation);
+                }
+            }
+        }
     }
 
     if on_proxy && !on_tor {
+        if let Some(proof) = &report.upstream_pool {
+            if !matches!(proof.claim, UpstreamPoolClaim::None | UpstreamPoolClaim::Inconclusive) {
+                let severity = match proof.confidence {
+                    UpstreamPoolConfidence::High => AlertLevel::Critical,
+                    UpstreamPoolConfidence::Medium => AlertLevel::Warning,
+                    UpstreamPoolConfidence::Low => AlertLevel::Info,
+                };
+                hints.push(BottleneckHint {
+                    category: BottleneckCategory::ProxyPath,
+                    severity,
+                    title: proof.title.clone(),
+                    message: format!("{} {}", proof.summary, proof.action),
+                    suggestions: proof.evidence.clone(),
+                });
+            }
+        }
         if let Some(path_report) = &report.proxy_path_report {
-            if path_report.proxy_failure_count > 0 || path_report.likely_provider_side {
+            let already_claimed = report.upstream_pool.as_ref().is_some_and(|proof| {
+                !matches!(proof.claim, UpstreamPoolClaim::None | UpstreamPoolClaim::Inconclusive)
+            });
+            if !already_claimed && (path_report.proxy_failure_count > 0 || path_report.likely_provider_side) {
                 let severity = if path_report.likely_provider_side {
                     AlertLevel::Critical
                 } else {
@@ -411,11 +465,11 @@ fn push_path_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
                     },
                     message: path_report.summary.clone(),
                     suggestions: vec![
-                        "Review the Proxy path report on the Network page for per-domain errors."
+                        "Review Upstream pool proof on Overview/Network for claim grade and evidence."
                             .to_string(),
-                        "Switch proxy node or provider manually — KnotTrace cannot repair upstream filtering."
+                        "Do not rapidly rotate nodes — IP reputation and the same pool often stay bad."
                             .to_string(),
-                        "Open Connect Assist to compare nodes if Mihomo/sing-box is configured."
+                        "Open Connect Assist only for a single careful node change if the claim is active-path only."
                             .to_string(),
                     ],
                 });
@@ -471,20 +525,90 @@ fn push_path_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
     }
 
     if on_vpn && (degraded || report.probe.internet.as_ref().is_some_and(|sample| sample.avg_ms >= 80.0)) {
+        let expectation = report
+            .tunnel_compare
+            .as_ref()
+            .map(|compare| compare.expectation.clone())
+            .filter(|text| !text.is_empty());
         hints.push(BottleneckHint {
             category: BottleneckCategory::VpnTunnel,
             severity: AlertLevel::Warning,
             title: "VPN tunnel overhead".to_string(),
-            message: "Traffic appears to traverse a VPN interface with elevated latency or loss.".to_string(),
+            message: expectation.unwrap_or_else(|| {
+                "Traffic appears to traverse a VPN interface with elevated latency or loss.".to_string()
+            }),
             suggestions: vec![
                 "Large file stalls may be MTU-related — try a lower tunnel MTU.".to_string(),
                 "Ask IT about split tunneling if public traffic is slow.".to_string(),
+                "Review Tunnel compare on the Network page — KnotTrace does not control VPN apps."
+                    .to_string(),
             ],
         });
     }
 
     let active_kind = active_interface_kind(env);
-    if matches!(active_kind, Some(LinkKind::WiFi)) {
+    let link_facts = report.link_facts.as_ref();
+    let link_covers_wifi = link_facts.is_some_and(|facts| {
+        facts.issues.iter().any(|issue| {
+            matches!(
+                issue.kind,
+                LinkIssueKind::WifiActive | LinkIssueKind::PreferEthernet
+            )
+        })
+    });
+
+    if let Some(facts) = link_facts {
+        for issue in &facts.issues {
+            let category = match issue.kind {
+                LinkIssueKind::WifiActive => BottleneckCategory::WifiPath,
+                LinkIssueKind::PreferEthernet
+                | LinkIssueKind::EthernetCapped
+                | LinkIssueKind::HalfDuplex => BottleneckCategory::LinkLocal,
+            };
+            hints.push(BottleneckHint {
+                category,
+                severity: issue.severity,
+                title: issue.title.clone(),
+                message: issue.message.clone(),
+                suggestions: match issue.kind {
+                    LinkIssueKind::EthernetCapped => vec![
+                        "Try another Ethernet cable or switch port.".to_string(),
+                        "Confirm both ends use auto-negotiation.".to_string(),
+                    ],
+                    LinkIssueKind::HalfDuplex => {
+                        vec!["Set both NIC and switch port to auto-negotiate.".to_string()]
+                    }
+                    LinkIssueKind::PreferEthernet => vec![
+                        "Plug in Ethernet and make it the preferred interface.".to_string(),
+                        "Disable Wi-Fi temporarily to compare throughput.".to_string(),
+                    ],
+                    LinkIssueKind::WifiActive => vec![
+                        "Test on Ethernet to see if Mbps improves.".to_string(),
+                        "Check router bufferbloat with SQM/CAKE if latency spikes under load."
+                            .to_string(),
+                    ],
+                },
+            });
+        }
+    }
+
+    if let Some(caps) = &report.local_caps {
+        for issue in &caps.issues {
+            hints.push(BottleneckHint {
+                category: BottleneckCategory::LinkLocal,
+                severity: issue.severity,
+                title: issue.title.clone(),
+                message: issue.message.clone(),
+                suggestions: vec![
+                    "Open the Network page Local caps panel for an opt-in reversible repair."
+                        .to_string(),
+                    "Administrator approval may be required on Windows.".to_string(),
+                ],
+            });
+        }
+    }
+
+    if matches!(active_kind, Some(LinkKind::WiFi)) && !link_covers_wifi {
         hints.push(BottleneckHint {
             category: BottleneckCategory::WifiPath,
             severity: AlertLevel::Info,
@@ -559,7 +683,7 @@ fn classify_slowdown_shape(report: &HealthReport) -> SlowdownShape {
         return SlowdownShape::PartialSiteFailure;
     }
 
-    if gateway_issue(report) {
+    if gateway_issue(report) || link_local_issue(report) {
         return SlowdownShape::LinkLocalIssue;
     }
 
@@ -620,7 +744,31 @@ fn diagnosis_confidence(report: &HealthReport, shape: SlowdownShape) -> Diagnosi
                 DiagnosisConfidence::Medium
             }
         }
-        SlowdownShape::LinkLocalIssue => DiagnosisConfidence::High,
+        SlowdownShape::LinkLocalIssue => {
+            if report.link_facts.as_ref().is_some_and(|facts| {
+                facts.issues.iter().any(|issue| {
+                    matches!(
+                        issue.kind,
+                        LinkIssueKind::EthernetCapped
+                            | LinkIssueKind::HalfDuplex
+                            | LinkIssueKind::PreferEthernet
+                    )
+                })
+            }) || report.local_caps.as_ref().is_some_and(|caps| {
+                caps.issues.iter().any(|issue| {
+                    matches!(
+                        issue.kind,
+                        LocalCapsIssueKind::AutotuningDisabled
+                            | LocalCapsIssueKind::AutotuningRestricted
+                    )
+                })
+            }) || gateway_issue(report)
+            {
+                DiagnosisConfidence::High
+            } else {
+                DiagnosisConfidence::Medium
+            }
+        }
         SlowdownShape::TunnelOverhead => {
             if report.environment.tor.detected || report.environment.tags.contains(&EnvironmentTag::Vpn) {
                 DiagnosisConfidence::Medium
@@ -671,8 +819,8 @@ fn hint_priority(report: &HealthReport, shape: SlowdownShape, hint: &BottleneckH
             BottleneckCategory::MtuFragmentation => 45,
             _ => 0,
         },
-        SlowdownShape::LinkLocalIssue => match hint.category {
-            BottleneckCategory::Gateway => 80,
+            SlowdownShape::LinkLocalIssue => match hint.category {
+            BottleneckCategory::Gateway | BottleneckCategory::LinkLocal => 80,
             BottleneckCategory::WifiPath => 50,
             BottleneckCategory::InternetLoss => 30,
             _ => 0,
@@ -781,6 +929,31 @@ fn gateway_issue(report: &HealthReport) -> bool {
     })
 }
 
+fn link_local_issue(report: &HealthReport) -> bool {
+    let from_link = report.link_facts.as_ref().is_some_and(|facts| {
+        facts.issues.iter().any(|issue| {
+            matches!(
+                issue.severity,
+                AlertLevel::Warning | AlertLevel::Critical
+            ) && matches!(
+                issue.kind,
+                LinkIssueKind::EthernetCapped
+                    | LinkIssueKind::HalfDuplex
+                    | LinkIssueKind::PreferEthernet
+            )
+        })
+    });
+    let from_caps = report.local_caps.as_ref().is_some_and(|caps| {
+        caps.issues.iter().any(|issue| {
+            matches!(
+                issue.severity,
+                AlertLevel::Warning | AlertLevel::Critical
+            )
+        })
+    });
+    from_link || from_caps
+}
+
 fn tunnel_present(report: &HealthReport) -> bool {
     report.environment.proxy.enabled
         || report.environment.tags.contains(&EnvironmentTag::Vpn)
@@ -814,6 +987,7 @@ fn category_label(category: BottleneckCategory) -> &'static str {
         BottleneckCategory::PublicNetwork => "public network",
         BottleneckCategory::CaptivePortal => "captive portal",
         BottleneckCategory::EgressUnstable => "egress instability",
+        BottleneckCategory::LinkLocal => "local link",
         BottleneckCategory::Healthy => "healthy",
     }
 }
@@ -873,6 +1047,11 @@ mod tests {
             network_context: None,
             recommendations: None,
             proxy_path_report: None,
+            link_facts: None,
+            local_caps: None,
+            mtu_assist: None,
+            tunnel_compare: None,
+            upstream_pool: None,
         }
     }
 
@@ -1092,5 +1271,49 @@ mod tests {
             .hints
             .first()
             .is_some_and(|hint| hint.title.to_ascii_lowercase().contains("major services")));
+    }
+
+    #[test]
+    fn prioritizes_capped_ethernet_as_link_local() {
+        let mut report = sample_report(
+            HealthGrade::Fair,
+            Some(LatencySample {
+                target: "1.1.1.1".to_string(),
+                avg_ms: 30.0,
+                loss_pct: 0.0,
+            }),
+            vec![DnsProbe {
+                resolver: "system".to_string(),
+                query: "example.com".to_string(),
+                latency_ms: 20.0,
+                success: true,
+            }],
+            Vec::new(),
+        );
+        report.environment.interfaces[0].kind = LinkKind::Ethernet;
+        report.environment.interfaces[0].name = "eth0".to_string();
+        report.environment.interfaces[0].friendly_name = Some("Ethernet".to_string());
+        report.environment.active_interface = Some("eth0".to_string());
+        report.link_facts = Some(crate::link_facts::build_link_facts_report(
+            vec![LinkAdapterFact {
+                name: "eth0".to_string(),
+                friendly_name: Some("Ethernet".to_string()),
+                kind: LinkKind::Ethernet,
+                is_up: true,
+                is_default_route: true,
+                speed_mbps: Some(100),
+                duplex: Some(LinkDuplex::Full),
+                media: Some("802.3".to_string()),
+                raw_speed: Some("100 Mbps".to_string()),
+            }],
+            "test".to_string(),
+        ));
+
+        let diagnosis = diagnose_network(&report);
+        assert_eq!(diagnosis.slowdown_shape, SlowdownShape::LinkLocalIssue);
+        assert_eq!(
+            diagnosis.primary_bottleneck,
+            Some(BottleneckCategory::LinkLocal)
+        );
     }
 }

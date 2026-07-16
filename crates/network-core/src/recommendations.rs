@@ -16,6 +16,11 @@ pub fn build_recommendations(report: &HealthReport) -> NetworkRecommendations {
     }
 
     push_path_recommendations(report, &mut items);
+    push_link_recommendations(report, &mut items);
+    push_local_caps_recommendations(report, &mut items);
+    push_mtu_assist_recommendations(report, &mut items);
+    push_tunnel_compare_recommendations(report, &mut items);
+    push_upstream_pool_recommendations(report, &mut items);
     boost_recommendations_for_shape(report, &mut items);
 
     items.sort_by(|left, right| right.priority.cmp(&left.priority));
@@ -62,6 +67,7 @@ fn boost_recommendations_for_shape(report: &HealthReport, items: &mut [NetworkRe
                 _ => 0,
             },
             SlowdownShape::LinkLocalIssue => match item.category {
+                RecommendationCategory::LinkLocal | RecommendationCategory::General => 10,
                 RecommendationCategory::PublicNetwork => -4,
                 RecommendationCategory::Egress => -4,
                 _ => 0,
@@ -184,10 +190,17 @@ fn push_path_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecom
     if env.proxy.enabled {
         if let Some(path) = &report.proxy_path_report {
             if path.likely_provider_side || path.proxy_failure_count > 0 {
+                let thrash_forbidden = report.upstream_pool.as_ref().is_some_and(|proof| {
+                    matches!(
+                        proof.claim,
+                        UpstreamPoolClaim::UpstreamPoolPoor
+                            | UpstreamPoolClaim::ActivePathRecurring
+                    )
+                });
                 let priority = match path.confidence {
-                    ProxyPathConfidence::High => 92,
-                    ProxyPathConfidence::Medium => 88,
-                    ProxyPathConfidence::Low => 80,
+                    ProxyPathConfidence::High => 82,
+                    ProxyPathConfidence::Medium => 78,
+                    ProxyPathConfidence::Low => 70,
                 };
                 items.push(NetworkRecommendation {
                     category: RecommendationCategory::ProxyPath,
@@ -197,10 +210,17 @@ fn push_path_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecom
                     } else {
                         "Proxy path comparison found failures".to_string()
                     },
-                    message: format!(
-                        "{} Review the Proxy path report on the Network page. KnotTrace cannot repair upstream filtering — switch node or provider manually.",
-                        path.summary
-                    ),
+                    message: if thrash_forbidden {
+                        format!(
+                            "{} Do not rapidly switch nodes — upstream pool evidence says thrashing will not help.",
+                            path.summary
+                        )
+                    } else {
+                        format!(
+                            "{} Review Upstream pool proof. One careful node change is optional; KnotTrace will not auto-rotate exits.",
+                            path.summary
+                        )
+                    },
                 });
             }
         } else if report
@@ -264,6 +284,174 @@ fn push_path_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecom
             message: "Latency or loss is elevated while a VPN interface is active. Try another server or split tunneling if your provider supports it.".to_string(),
         });
     }
+}
+
+fn push_link_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecommendation>) {
+    let Some(facts) = &report.link_facts else {
+        return;
+    };
+
+    for issue in &facts.issues {
+        let (priority, title, message) = match issue.kind {
+            LinkIssueKind::EthernetCapped => (
+                78,
+                "Check Ethernet cable or switch port".to_string(),
+                issue.message.clone(),
+            ),
+            LinkIssueKind::HalfDuplex => (
+                76,
+                "Fix Ethernet duplex mismatch".to_string(),
+                issue.message.clone(),
+            ),
+            LinkIssueKind::PreferEthernet => (
+                72,
+                "Prefer Ethernet over Wi-Fi".to_string(),
+                issue.message.clone(),
+            ),
+            LinkIssueKind::WifiActive => (
+                40,
+                "Wi-Fi may limit throughput".to_string(),
+                issue.message.clone(),
+            ),
+        };
+        items.push(NetworkRecommendation {
+            category: RecommendationCategory::LinkLocal,
+            priority,
+            title,
+            message,
+        });
+    }
+}
+
+fn push_upstream_pool_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecommendation>) {
+    let Some(proof) = &report.upstream_pool else {
+        return;
+    };
+    if matches!(proof.claim, UpstreamPoolClaim::None) {
+        return;
+    }
+
+    let priority = match proof.claim {
+        UpstreamPoolClaim::UpstreamPoolPoor => 92,
+        UpstreamPoolClaim::ActivePathRecurring => 86,
+        UpstreamPoolClaim::ActivePathImpaired => 80,
+        UpstreamPoolClaim::Inconclusive => 35,
+        UpstreamPoolClaim::None => return,
+    };
+
+    items.push(NetworkRecommendation {
+        category: RecommendationCategory::ProxyPath,
+        priority,
+        title: proof.title.clone(),
+        message: format!("{} {}", proof.summary, proof.action),
+    });
+}
+
+fn push_tunnel_compare_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecommendation>) {
+    let Some(compare) = &report.tunnel_compare else {
+        return;
+    };
+
+    if compare.tor_detected && !compare.tor_socks_reachable {
+        items.push(NetworkRecommendation {
+            category: RecommendationCategory::TorPath,
+            priority: 88,
+            title: "Fix Tor SOCKS before blaming your ISP".to_string(),
+            message: compare.expectation.clone(),
+        });
+        return;
+    }
+
+    if compare.tor_detected {
+        items.push(NetworkRecommendation {
+            category: RecommendationCategory::TorPath,
+            priority: 50,
+            title: "Tor path is expected to be slower".to_string(),
+            message: format!(
+                "{} Open Network → Tunnel compare for Direct vs Tor samples. KnotTrace will not accelerate Tor.",
+                compare.summary
+            ),
+        });
+    }
+
+    if compare.vpn_detected {
+        items.push(NetworkRecommendation {
+            category: RecommendationCategory::VpnPrivacy,
+            priority: 48,
+            title: "VPN overhead is normal".to_string(),
+            message: compare.expectation.clone(),
+        });
+    }
+}
+
+fn push_local_caps_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecommendation>) {
+    let Some(caps) = &report.local_caps else {
+        return;
+    };
+    if !caps.available || caps.issues.is_empty() {
+        return;
+    }
+
+    let priority = if caps
+        .issues
+        .iter()
+        .any(|issue| matches!(issue.severity, AlertLevel::Warning | AlertLevel::Critical))
+    {
+        74
+    } else {
+        45
+    };
+
+    items.push(NetworkRecommendation {
+        category: RecommendationCategory::LinkLocal,
+        priority,
+        title: if caps.can_repair {
+            "Repair Windows local caps (opt-in)".to_string()
+        } else if caps.repair_active {
+            "Windows local caps repair is active".to_string()
+        } else {
+            "Review Windows TCP / NIC power settings".to_string()
+        },
+        message: format!(
+            "{} Use the Network page Local caps panel for a reversible repair — KnotTrace will not change these settings automatically.",
+            caps.summary
+        ),
+    });
+}
+
+fn push_mtu_assist_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecommendation>) {
+    let Some(assist) = &report.mtu_assist else {
+        return;
+    };
+    if !assist.fragmentation_risk {
+        return;
+    }
+
+    let priority = if assist.can_repair {
+        76
+    } else if assist.repair_active {
+        55
+    } else if assist.tunnel_evidenced {
+        48
+    } else {
+        30
+    };
+
+    items.push(NetworkRecommendation {
+        category: RecommendationCategory::LinkLocal,
+        priority,
+        title: if assist.can_repair {
+            "Opt-in MTU clamp for tunnel path".to_string()
+        } else if assist.repair_active {
+            "MTU assist clamp is active".to_string()
+        } else {
+            "Review path MTU / fragmentation risk".to_string()
+        },
+        message: format!(
+            "{} Open Network → MTU assist. KnotTrace never changes MTU automatically.",
+            assist.summary
+        ),
+    });
 }
 
 #[cfg(test)]
@@ -335,6 +523,11 @@ mod tests {
             network_context: None,
             recommendations: None,
             proxy_path_report: None,
+            link_facts: None,
+            local_caps: None,
+            mtu_assist: None,
+            tunnel_compare: None,
+            upstream_pool: None,
         }
     }
 

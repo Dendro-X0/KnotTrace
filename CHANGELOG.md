@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-07-16
+
+### Added
+
+- **DNS Assist on macOS and Linux (L1)** — apply/restore via `networksetup` (macOS) and `nmcli` / `resolvectl` (Linux), with the same backup + verify + auto-rollback flow as Windows
+- **Link facts (L2)** — negotiated speed/duplex via Windows `Get-NetAdapter`, Linux sysfs, and macOS `networksetup -getMedia`; Network page Link panel; diagnosis for capped Ethernet, half-duplex, and prefer-Ethernet-over-Wi‑Fi
+- **Windows local caps (L3)** — detect TCP receive-window auto-tuning and NIC power-saving; opt-in reversible repair on the Network page (never auto-applied)
+- **Tunnel path compare (L4)** — Direct vs system proxy vs Tor SOCKS samples with honest expectation copy (Tor is not for speed); Network Tunnel compare panel
+- **Upstream pool proof (L5)** — claim grades (active path vs pool poor) from expanded proxy verification domains + history recurrence; Overview/Network panels; Next Steps refuse node thrashing when pool claim is High
+- **MTU assist (L6)** — opt-in reversible interface MTU clamp when path fragmentation risk and tunnel/proxy are both evidenced (Windows / macOS / Linux); never Protect auto-apply
+- Specs: [local-first-improvement-roadmap.md](specs/backend/local-first-improvement-roadmap.md), [link-facts-design.md](specs/backend/link-facts-design.md), [windows-local-caps-design.md](specs/backend/windows-local-caps-design.md), [tunnel-path-compare-design.md](specs/backend/tunnel-path-compare-design.md), [upstream-pool-quality-design.md](specs/backend/upstream-pool-quality-design.md), [mtu-assist-design.md](specs/backend/mtu-assist-design.md)
+
+### Changed
+
+- **Product posture** — README / START-HERE emphasize local-first assists and honest upstream proof over implied proxy “speed improve”
+- **DNS Assist docs** — platform matrix and onboarding state apply/restore on Windows, macOS, and Linux
+- **Platform support** — documents Link facts, Local caps, Tunnel compare, Upstream pool proof, and MTU assist
+
 ## [1.5.0] - 2026-07-14
 
 ### Added
@@ -226,6 +244,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.6.0]: https://github.com/Dendro-X0/network/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/Dendro-X0/network/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/Dendro-X0/network/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/Dendro-X0/network/compare/v1.4.0...v1.4.1

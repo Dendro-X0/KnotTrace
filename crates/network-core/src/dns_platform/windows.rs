@@ -1,4 +1,5 @@
 use crate::process::hidden_command;
+use crate::types::NetworkInterface;
 
 pub fn can_apply() -> bool {
     true
@@ -6,6 +7,14 @@ pub fn can_apply() -> bool {
 
 pub fn platform_note() -> String {
     "DNS changes apply to the active Windows network adapter. Administrator approval may be required.".to_string()
+}
+
+pub fn dns_target_for_interface(iface: &NetworkInterface) -> Option<String> {
+    iface
+        .friendly_name
+        .clone()
+        .filter(|name| !name.trim().is_empty())
+        .or_else(|| Some(iface.name.clone()))
 }
 
 pub fn read_dns_config(interface_alias: &str) -> Result<(Vec<String>, bool), String> {

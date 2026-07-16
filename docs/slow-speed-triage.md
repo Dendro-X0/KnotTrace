@@ -9,7 +9,7 @@ Goal:
 3. Attach **observable signals**
 4. Recommend the **safest next action**
 
-This is not a promise that KnotTrace will detect every cause automatically. It is a guide for future detection, diagnosis text, and assist policy.
+This is not a promise that KnotTrace will detect every cause automatically. It maps symptoms to signals, diagnosis copy, and assist policy for the shipped local-first features.
 
 ## Triage principles
 
@@ -106,20 +106,23 @@ High-value signals:
 - Site reachability degraded
 - MTU fragmentation risk
 - Proxy enabled with failing verification domains
-- VPN/Tor path active
+- Upstream pool claim (active path vs pool poor)
+- VPN/Tor path active (tunnel compare)
+- Link facts (capped Ethernet / half-duplex)
 - Egress IP differs by path
 
 Confidence rules:
 
-- **High**: MTU hint plus tunnel present, or proxy path failures clustered on verification sites
-- **Medium**: site failures without MTU hint
+- **High**: MTU hint plus tunnel present, or proxy-only failures with High pool/active-path claim
+- **Medium**: site failures without MTU hint, or first impaired snapshot only
 - **Low**: only app-specific complaint
 
 Safe recommendations:
 
-- Review MTU/tunnel guidance
-- Compare direct vs proxy/VPN/Tor path behavior
-- Use Connect Assist manually if a proxy path is clearly worse
+- Open Network → MTU assist when eligible (opt-in clamp)
+- Review Upstream pool proof before thrashing nodes
+- Compare Direct vs proxy/VPN/Tor on Tunnel compare
+- Use Connect Assist only for a single careful change when claim is active-path only
 
 Safe auto-actions:
 
@@ -127,9 +130,9 @@ Safe auto-actions:
 
 Manual or opt-in actions:
 
-- Lower tunnel MTU
-- Switch proxy/VPN server
-- Adjust split tunneling
+- MTU assist apply/restore
+- Switch proxy/VPN server once (not rapid rotation when pool claim is High)
+- Adjust split tunneling / stop sending critical traffic through a poor pool
 
 ### 4. Connected to Wi-Fi, but internet is partial or blocked
 
@@ -337,24 +340,25 @@ KnotTrace should keep a three-tier action model:
 
 ### Tier 2: Safe reversible assists
 
-- Trusted DNS apply with backup/rollback
+- Trusted DNS apply with backup/rollback (Windows / macOS / Linux)
 - Re-check after an assist
 
 ### Tier 3: Recommend or require opt-in
 
-- Proxy node switching
-- MTU changes
-- Driver tuning
+- Proxy node switching (never auto-rotate for “speed”)
+- Windows local caps repair
+- MTU assist clamp
+- Driver tuning beyond Local caps
 - Router QoS/SQM changes
-- VPN server changes
+- VPN provider/server changes
 - macOS service-order changes
 
 ## Product fit
 
-This triage model supports future work in:
+This triage model supports:
 
-- diagnosis ranking
+- diagnosis ranking and Next Steps
 - recommendations prioritization
 - protect alert wording
-- platform-specific capability expansion
-- deciding what KnotTrace should automate versus explain
+- local-first assists (L1–L6)
+- deciding what KnotTrace should automate versus explain or prove

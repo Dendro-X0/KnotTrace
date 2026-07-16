@@ -71,18 +71,13 @@ pub fn get_assist_state(data_dir: &Path) -> Result<DnsAssistState, AssistError> 
 }
 
 pub fn resolve_interface_alias(environment: &EnvironmentSnapshot) -> Option<String> {
-    environment
+    let iface = environment
         .interfaces
         .iter()
         .find(|iface| iface.is_default_route)
-        .and_then(|iface| iface.friendly_name.clone())
-        .or_else(|| {
-            environment
-                .interfaces
-                .iter()
-                .find(|iface| iface.is_up)
-                .and_then(|iface| iface.friendly_name.clone())
-        })
+        .or_else(|| environment.interfaces.iter().find(|iface| iface.is_up))?;
+
+    dns_platform::dns_target_for_interface(iface)
 }
 
 pub async fn recommend_dns_assist(
@@ -316,5 +311,36 @@ mod tests {
         };
         let (should_apply, _) = evaluate_recommendation(Some(30.0), &Some(candidate));
         assert!(!should_apply);
+    }
+
+    #[test]
+    fn resolve_interface_alias_falls_back_to_device_name() {
+        let environment = EnvironmentSnapshot {
+            hostname: "test".to_string(),
+            interfaces: vec![NetworkInterface {
+                name: "wlan0".to_string(),
+                friendly_name: None,
+                kind: LinkKind::WiFi,
+                is_up: true,
+                ipv4: vec!["192.168.1.10".to_string()],
+                gateway: Some("192.168.1.1".to_string()),
+                is_default_route: true,
+            }],
+            dns_servers: vec![],
+            proxy: ProxySettings {
+                enabled: false,
+                server: None,
+                source: "none".to_string(),
+            },
+            tags: vec![],
+            default_gateway: Some("192.168.1.1".to_string()),
+            active_interface: Some("wlan0".to_string()),
+            tor: default_tor_status(),
+        };
+
+        let alias = resolve_interface_alias(&environment);
+        assert!(alias.is_some());
+        // Platform mapping may rewrite the label (e.g. macOS service name); never empty.
+        assert!(!alias.unwrap().is_empty());
     }
 }

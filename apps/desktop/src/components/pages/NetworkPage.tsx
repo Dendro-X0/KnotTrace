@@ -3,6 +3,11 @@ import { Network, Radar } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { FactList } from "@/components/shared";
 import { StabilityProbesPanel } from "@/components/StabilityProbesPanel";
+import { LinkFactsPanel } from "@/components/LinkFactsPanel";
+import { LocalCapsPanel } from "@/components/LocalCapsPanel";
+import { MtuAssistPanel } from "@/components/MtuAssistPanel";
+import { TunnelComparePanel } from "@/components/TunnelComparePanel";
+import { UpstreamPoolPanel } from "@/components/UpstreamPoolPanel";
 import { NetworkInsightsPanel } from "@/components/NetworkInsightsPanel";
 import { ProxyPathPanel } from "@/components/ProxyPathPanel";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
@@ -150,6 +155,27 @@ export function NetworkPage({ state }: NetworkPageProps) {
       </Card>
 
       <StabilityProbesPanel stability={state.report?.stability} />
+      <LinkFactsPanel loading={loading} report={state.report?.link_facts} />
+      <LocalCapsPanel
+        loading={loading}
+        report={state.report?.local_caps}
+        state={state.localCapsState}
+        applying={state.localCapsApplying}
+        restoring={state.localCapsRestoring}
+        error={state.localCapsError}
+        onApply={() => void state.applyLocalCaps()}
+        onRestore={() => void state.restoreLocalCaps()}
+      />
+      <MtuAssistPanel
+        loading={loading}
+        report={state.report?.mtu_assist}
+        state={state.mtuAssistState}
+        applying={state.mtuAssistApplying}
+        restoring={state.mtuAssistRestoring}
+        error={state.mtuAssistError}
+        onApply={() => void state.applyMtuAssist()}
+        onRestore={() => void state.restoreMtuAssist()}
+      />
       <NetworkInsightsPanel
         loading={loading}
         egress={state.report?.egress}
@@ -161,6 +187,12 @@ export function NetworkPage({ state }: NetworkPageProps) {
         proxyEnabled={env?.proxy.enabled}
         report={state.report?.proxy_path_report}
       />
+      <UpstreamPoolPanel
+        loading={loading}
+        proxyEnabled={env?.proxy.enabled}
+        proof={state.report?.upstream_pool}
+      />
+      <TunnelComparePanel loading={loading} report={state.report?.tunnel_compare} />
       <ThroughputPanel state={state} />
     </div>
   );

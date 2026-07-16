@@ -2,11 +2,31 @@ use crate::types::*;
 use std::time::{Duration, Instant};
 use tokio::task::JoinSet;
 
-pub const PROXY_VERIFICATION_DOMAINS: &[&str] = &[
-    "www.google.com",
+pub const PROXY_GENERAL_DOMAINS: &[&str] = &[
     "www.cloudflare.com",
-    "github.com",
     "www.microsoft.com",
+    "example.com",
+];
+
+/// Dev / identity sensitive hosts — intermittent proxy-only failures are high-signal.
+pub const PROXY_SENSITIVE_DOMAINS: &[&str] = &[
+    "github.com",
+    "api.github.com",
+    "www.google.com",
+    "accounts.google.com",
+    "mail.google.com",
+];
+
+/// Combined verification list (sensitive first) for proxy path probes.
+pub const PROXY_VERIFICATION_DOMAINS: &[&str] = &[
+    "github.com",
+    "api.github.com",
+    "www.google.com",
+    "accounts.google.com",
+    "mail.google.com",
+    "www.cloudflare.com",
+    "www.microsoft.com",
+    "example.com",
 ];
 
 #[derive(Debug, Clone, Copy)]
@@ -19,7 +39,7 @@ impl Default for ReachabilityProbeOptions {
     fn default() -> Self {
         Self {
             timeout: Duration::from_secs(4),
-            max_domains_per_check: 4,
+            max_domains_per_check: 6,
         }
     }
 }
@@ -266,13 +286,15 @@ fn build_proxy_path_report(
         .filter(|row| row.proxy_only_failure)
         .count() as u8;
 
-    let likely_provider_side = proxy_only_failure_count > 0
+    let likely_provider_side = (proxy_only_failure_count > 0 && direct_failure_count == 0)
         || (proxy_failure_count >= 2 && direct_failure_count == 0);
 
-    let confidence = if proxy_only_failure_count >= 2 {
+    // High confidence requires ≥2 proxy-only failures — never “pool” from one domain alone.
+    let confidence = if proxy_only_failure_count >= 2 && direct_failure_count == 0 {
         ProxyPathConfidence::High
-    } else if proxy_only_failure_count == 1 || (proxy_failure_count >= 2 && direct_failure_count == 0)
-    {
+    } else if proxy_only_failure_count == 1 && direct_failure_count == 0 {
+        ProxyPathConfidence::Medium
+    } else if proxy_failure_count >= 2 && direct_failure_count == 0 {
         ProxyPathConfidence::Medium
     } else if proxy_failure_count > 0 {
         ProxyPathConfidence::Low
@@ -322,7 +344,7 @@ fn summarize_proxy_path_report(
             .collect::<Vec<_>>()
             .join(", ");
         return format!(
-            "{proxy_only_failures} of {checked} major sites failed only on the proxy path (example: {sample}). This strongly suggests upstream proxy or VPN quality, not your local network."
+            "{proxy_only_failures} of {checked} sites failed only on the proxy path (example: {sample}). This indicates the active proxy path is impaired — not yet proof the whole upstream pool is bad."
         );
     }
 
@@ -405,7 +427,10 @@ fn build_reachability_targets(
     let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
 
     if environment.proxy.enabled {
-        for domain in PROXY_VERIFICATION_DOMAINS {
+        for domain in PROXY_SENSITIVE_DOMAINS
+            .iter()
+            .chain(PROXY_GENERAL_DOMAINS.iter())
+        {
             let normalized = domain.trim().to_ascii_lowercase();
             if normalized.is_empty() || !seen.insert(normalized.clone()) {
                 continue;
@@ -536,9 +561,9 @@ mod tests {
 
         let targets = build_reachability_targets(&domains, &env, 3);
         assert_eq!(targets.len(), 3);
-        assert_eq!(targets[0], "www.google.com");
-        assert_eq!(targets[1], "www.cloudflare.com");
-        assert_eq!(targets[2], "github.com");
+        assert_eq!(targets[0], "github.com");
+        assert_eq!(targets[1], "api.github.com");
+        assert_eq!(targets[2], "www.google.com");
 
         env.proxy.enabled = false;
         let targets_no_proxy = build_reachability_targets(&domains, &env, 3);

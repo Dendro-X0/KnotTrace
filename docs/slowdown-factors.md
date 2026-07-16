@@ -1,6 +1,6 @@
 # Slowdown Factors
 
-This document captures common **system-side** and **path-side** reasons a user's internet can feel slow on Windows, Linux, and macOS. It is meant to guide future KnotTrace detection, diagnosis, and recommendation work.
+This document captures common **system-side** and **path-side** reasons a user's internet can feel slow on Windows, Linux, and macOS. It guides KnotTrace detection, diagnosis, and recommendation work.
 
 ## How "slow" usually appears
 
@@ -56,8 +56,10 @@ Common causes:
 
 KnotTrace relevance:
 
-- Already detects proxy, VPN hints, Tor, site reachability, and egress IP
-- Should prefer recommendations over forced node changes
+- Detects proxy, VPN hints, Tor, site reachability, and egress IP
+- Tunnel compare states honest Direct vs proxy vs Tor expectations
+- Upstream pool proof grades active-path vs recurring pool impairment (no auto node hop)
+- Prefers recommendations over forced node changes
 
 ### Captive portals and guest/public Wi-Fi
 
@@ -96,8 +98,9 @@ Common causes:
 
 KnotTrace relevance:
 
-- Already surfaces MTU/fragmentation hints
-- Future work can deepen platform-specific MTU guidance
+- Surfaces path MTU / fragmentation risk from stability probes
+- **MTU assist** offers opt-in reversible interface clamp when fragmentation risk and tunnel/proxy are both evidenced (Windows / macOS / Linux)
+- Never silent or Protect auto-apply for MTU
 
 ### Bufferbloat and saturation
 
@@ -312,8 +315,11 @@ Why it matters:
 - Captive portal state
 - Guest/public network context
 - Public egress IP consistency
-- Proxy/VPN/Tor path health
-- MTU and fragmentation risk
+- Proxy/VPN/Tor path health (including tunnel compare)
+- Upstream pool claim grades (active path vs pool)
+- Link facts (negotiated speed/duplex)
+- Windows local caps (TCP auto-tuning / NIC power)
+- MTU and fragmentation risk (+ opt-in MTU assist)
 - Bufferbloat under load
 - Site reachability over the current path
 
@@ -323,21 +329,22 @@ Why it matters:
 - VPN provider/server choice
 - Wi-Fi channel planning
 - NIC driver updates
-- Manual MTU changes
+- Vendor VPN/Tor app internal MTU settings (KnotTrace clamps the OS interface only)
 - Service-order cleanup on macOS
-- Duplex or advanced offload tuning on Linux/Windows
+- Duplex or advanced offload tuning beyond Local caps
 
 ## Product direction
 
-This reference points to a future slowdown triage model:
+This reference supports KnotTrace’s local-first posture:
 
 1. **Classify the symptom** first
 2. **Locate the bottleneck layer** second
 3. **Recommend the safest reversible action** third
 
-KnotTrace should continue favoring:
+KnotTrace favors:
 
 - observe-first diagnosis
-- reversible assists
-- opt-in higher-risk changes
-- clear user guidance when the fix belongs outside the app
+- reversible local assists (DNS, Windows caps, MTU)
+- honest Tor/VPN expectations
+- proving upstream pool blame without fake speed boosts
+- clear guidance when the fix belongs outside the app

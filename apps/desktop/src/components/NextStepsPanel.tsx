@@ -27,9 +27,16 @@ interface RecurrenceInsight {
   count: number;
 }
 
+function thrashForbidden(state: CompanionState): boolean {
+  const claim = state.report?.upstream_pool?.claim;
+  return claim === "upstream_pool_poor" || claim === "active_path_recurring";
+}
+
 function buildPlan(state: CompanionState): NextStepPlan | null {
   const diagnosis = state.report?.diagnosis;
   if (!diagnosis) return null;
+
+  const noThrash = thrashForbidden(state);
 
   switch (diagnosis.slowdown_shape) {
     case "page_start":
@@ -54,13 +61,24 @@ function buildPlan(state: CompanionState): NextStepPlan | null {
         ],
       };
     case "partial_site_failure":
+      if (noThrash) {
+        return {
+          title: "Stop thrashing nodes — upstream pool looks poor",
+          summary:
+            "Proxy-only failures recur across checks or exit IPs. Review Upstream pool proof; changing nodes rapidly will not fix a weak pool.",
+          actions: [
+            { label: "Open Network page", page: "network" },
+            { label: "Review Overview claim", page: "overview" },
+          ],
+        };
+      }
       return {
         title: "Compare the current path",
         summary:
-          "Some sites appear to fail only on this route. Check proxy or tunnel behavior, then compare path-specific guidance on the Network page.",
+          "Some sites appear to fail only on this route. Check Upstream pool proof first, then consider at most one careful Connect Assist change if the claim is active-path only.",
         actions: [
-          { label: "Open Connect Assist", page: "connect" },
           { label: "Open Network page", page: "network" },
+          { label: "Open Connect Assist", page: "connect" },
         ],
       };
     case "restricted_network":
@@ -74,13 +92,24 @@ function buildPlan(state: CompanionState): NextStepPlan | null {
         ],
       };
     case "tunnel_overhead":
+      if (noThrash) {
+        return {
+          title: "Tunnel path is limited by upstream quality",
+          summary:
+            "History shows recurring proxy-path impairment. Do not rotate exits to hunt speed — review the pool claim and change provider or traffic policy instead.",
+          actions: [
+            { label: "Open Network page", page: "network" },
+            { label: "Review Overview claim", page: "overview" },
+          ],
+        };
+      }
       return {
         title: "Review tunnel overhead",
         summary:
           "A VPN, proxy, or Tor path may be adding latency or causing path-specific failures. Compare recommendations before switching anything manually.",
         actions: [
-          { label: "Open Connect Assist", page: "connect" },
           { label: "Open Network page", page: "network" },
+          { label: "Open Connect Assist", page: "connect" },
         ],
       };
     case "link_local_issue":
@@ -110,15 +139,16 @@ function buildPlan(state: CompanionState): NextStepPlan | null {
 function prioritizeActionsForRecurrence(
   actions: NextStepAction[],
   recurrence: RecurrenceInsight | null,
+  noThrash: boolean,
 ): { actions: NextStepAction[]; prioritized: boolean } {
   if (!recurrence || recurrence.count < 3) return { actions, prioritized: false };
 
   const preferredFirstPageByShape: Record<string, PageId> = {
     page_start: "dns",
-    partial_site_failure: "connect",
+    partial_site_failure: noThrash ? "network" : "connect",
     restricted_network: "protect",
     under_load_lag: "network",
-    tunnel_overhead: "connect",
+    tunnel_overhead: noThrash ? "network" : "connect",
     link_local_issue: "network",
   };
 
@@ -147,7 +177,7 @@ export function NextStepsPanel({ state }: NextStepsPanelProps) {
     return { shape: latestShape, count } satisfies RecurrenceInsight;
   })();
   const prioritizedPlan = plan
-    ? prioritizeActionsForRecurrence(plan.actions, recurrence)
+    ? prioritizeActionsForRecurrence(plan.actions, recurrence, thrashForbidden(state))
     : { actions: [], prioritized: false };
   const actions = prioritizedPlan.actions;
 

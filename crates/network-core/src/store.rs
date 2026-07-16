@@ -106,6 +106,7 @@ impl HistoryStore {
 
 fn report_to_trend_point(report: HealthReport) -> HistoryTrendPoint {
     let integrity = report.dns_integrity.as_ref();
+    let path = report.proxy_path_report.as_ref();
     HistoryTrendPoint {
         timestamp: report.timestamp,
         score: report.score.score,
@@ -126,5 +127,16 @@ fn report_to_trend_point(report: HealthReport) -> HistoryTrendPoint {
         dns_integrity_confidence: integrity.map(|status| status.confidence),
         dns_integrity_mismatch_count: integrity.map(|status| status.mismatch_count),
         slowdown_shape: report.diagnosis.as_ref().map(|diagnosis| diagnosis.slowdown_shape),
+        proxy_enabled: Some(report.environment.proxy.enabled),
+        proxy_only_failure_count: path.map(|report| report.proxy_only_failure_count),
+        likely_provider_side: path.map(|report| report.likely_provider_side),
+        egress_ip: report
+            .egress
+            .as_ref()
+            .and_then(|egress| egress.primary_ip.clone()),
+        upstream_claim: report
+            .upstream_pool
+            .as_ref()
+            .map(|proof| proof.claim),
     }
 }

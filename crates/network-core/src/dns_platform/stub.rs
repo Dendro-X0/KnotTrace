@@ -1,9 +1,19 @@
+use crate::types::NetworkInterface;
+
 pub fn can_apply() -> bool {
     false
 }
 
 pub fn platform_note() -> String {
-    "DNS assist is not available on this platform yet.".to_string()
+    "DNS assist apply/restore is not available on this platform.".to_string()
+}
+
+pub fn dns_target_for_interface(iface: &NetworkInterface) -> Option<String> {
+    iface
+        .friendly_name
+        .clone()
+        .filter(|name| !name.trim().is_empty())
+        .or_else(|| Some(iface.name.clone()))
 }
 
 pub fn read_dns_config(_interface_alias: &str) -> Result<(Vec<String>, bool), String> {

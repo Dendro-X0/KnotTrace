@@ -16,7 +16,8 @@ Native connectivity may look "up" (TCP to 1.1.1.1 works) while HTTPS to real sit
 2. **Reversible assists only** — DNS backup + proxy group switch; no permanent firewall edits.
 3. **Rate-limited automation** — 10-minute auto-protect cooldown (existing).
 4. **No bypass** — do not defeat corporate policy, CAPTCHA walls, or geo-blocks.
-5. **Windows DNS apply** — other platforms recommend until `dns_platform` expands.
+5. **DNS apply** — Windows, macOS (`networksetup`), and Linux (`nmcli` / `resolvectl`) via `dns_platform`.
+
 
 ## v1.2.0 (this release)
 

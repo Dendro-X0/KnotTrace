@@ -42,7 +42,7 @@ network/
 └── docs/                    # Onboarding, release, and triage docs
 ```
 
-Related reading: [slowdown-factors.md](./slowdown-factors.md), [slow-speed-triage.md](./slow-speed-triage.md), [architecture.md](./architecture.md).
+Related reading: [START-HERE.md](./START-HERE.md), [architecture.md](./architecture.md), [platform-support.md](./platform-support.md), [slowdown-factors.md](./slowdown-factors.md), [slow-speed-triage.md](./slow-speed-triage.md), [local-first roadmap](../specs/backend/local-first-improvement-roadmap.md).
 
 ## CLI probe (optional)
 

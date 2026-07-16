@@ -665,6 +665,11 @@ mod tests {
             network_context: None,
             recommendations: None,
             proxy_path_report: None,
+            link_facts: None,
+            local_caps: None,
+            mtu_assist: None,
+            tunnel_compare: None,
+            upstream_pool: None,
         }
     }
 

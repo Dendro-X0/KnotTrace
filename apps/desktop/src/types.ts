@@ -56,6 +56,173 @@ export interface HealthReport {
   egress?: EgressReport | null;
   network_context?: NetworkContextReport | null;
   recommendations?: NetworkRecommendations | null;
+  link_facts?: LinkFactsReport | null;
+  local_caps?: LocalCapsReport | null;
+  mtu_assist?: MtuAssistReport | null;
+  tunnel_compare?: TunnelPathCompareReport | null;
+  upstream_pool?: UpstreamPoolProof | null;
+}
+
+export type UpstreamPoolClaim =
+  | "none"
+  | "inconclusive"
+  | "active_path_impaired"
+  | "active_path_recurring"
+  | "upstream_pool_poor";
+
+export type UpstreamPoolConfidence = "high" | "medium" | "low";
+
+export interface UpstreamPoolProof {
+  claim: UpstreamPoolClaim;
+  confidence: UpstreamPoolConfidence;
+  title: string;
+  summary: string;
+  evidence: string[];
+  not_proven: string[];
+  action: string;
+  intermittent_domains: string[];
+  recurring_impaired_checks: number;
+  distinct_egress_ips: number;
+  proxy_only_failure_domains: string[];
+  checks_considered: number;
+}
+
+export type TunnelPathKind = "direct" | "system_proxy" | "tor_socks";
+
+export interface TunnelPathSample {
+  kind: TunnelPathKind;
+  label: string;
+  available: boolean;
+  egress_ip: string | null;
+  reachability: SiteReachResult[];
+  median_latency_ms: number | null;
+  success_count: number;
+  failure_count: number;
+  note: string | null;
+}
+
+export interface TunnelPathCompareReport {
+  paths: TunnelPathSample[];
+  tor_only_failures: string[];
+  expectation: string;
+  summary: string;
+  vpn_detected: boolean;
+  tor_detected: boolean;
+  tor_socks_reachable: boolean;
+  proxy_enabled: boolean;
+}
+
+export type LocalCapsIssueKind =
+  | "autotuning_disabled"
+  | "autotuning_restricted"
+  | "adapter_power_saving";
+
+export interface LocalCapsIssue {
+  kind: LocalCapsIssueKind;
+  severity: "info" | "warning" | "critical";
+  title: string;
+  message: string;
+}
+
+export interface LocalCapsReport {
+  available: boolean;
+  platform_note: string;
+  tcp_autotuning_level: string | null;
+  tcp_autotuning_ok: boolean;
+  adapter_name: string | null;
+  adapter_power_saving: boolean | null;
+  issues: LocalCapsIssue[];
+  summary: string;
+  can_repair: boolean;
+  repair_active: boolean;
+}
+
+export interface LocalCapsBackup {
+  previous_autotuning_level: string;
+  adapter_name: string | null;
+  previous_allow_computer_turn_off: boolean | null;
+  applied_at: string;
+}
+
+export interface LocalCapsState {
+  available: boolean;
+  can_repair: boolean;
+  repair_active: boolean;
+  backup: LocalCapsBackup | null;
+  platform_note: string;
+}
+
+export interface LocalCapsRepairResult {
+  kept: boolean;
+  message: string;
+}
+
+export interface MtuAssistReport {
+  available: boolean;
+  platform_note: string;
+  fragmentation_risk: boolean;
+  tunnel_evidenced: boolean;
+  interface_name: string | null;
+  current_mtu: number | null;
+  recommended_mtu: number | null;
+  estimated_path_mtu: number | null;
+  summary: string;
+  can_repair: boolean;
+  repair_active: boolean;
+}
+
+export interface MtuAssistBackup {
+  interface_name: string;
+  previous_mtu: number;
+  applied_mtu: number;
+  applied_at: string;
+}
+
+export interface MtuAssistState {
+  available: boolean;
+  can_repair: boolean;
+  repair_active: boolean;
+  backup: MtuAssistBackup | null;
+  platform_note: string;
+}
+
+export interface MtuAssistRepairResult {
+  kept: boolean;
+  message: string;
+}
+
+export type LinkDuplex = "full" | "half" | "unknown";
+export type LinkIssueKind =
+  | "ethernet_capped"
+  | "half_duplex"
+  | "prefer_ethernet"
+  | "wifi_active";
+
+export interface LinkAdapterFact {
+  name: string;
+  friendly_name: string | null;
+  kind: string;
+  is_up: boolean;
+  is_default_route: boolean;
+  speed_mbps: number | null;
+  duplex: LinkDuplex | null;
+  media: string | null;
+  raw_speed: string | null;
+}
+
+export interface LinkIssue {
+  kind: LinkIssueKind;
+  severity: "info" | "warning" | "critical";
+  title: string;
+  message: string;
+}
+
+export interface LinkFactsReport {
+  active: LinkAdapterFact | null;
+  adapters: LinkAdapterFact[];
+  issues: LinkIssue[];
+  summary: string;
+  source: string;
 }
 
 export type EgressConfidence = "high" | "medium" | "low" | "unknown";
@@ -268,6 +435,7 @@ export type BottleneckCategory =
   | "public_network"
   | "captive_portal"
   | "egress_unstable"
+  | "link_local"
   | "healthy";
 
 export interface BottleneckHint {
@@ -481,6 +649,11 @@ export interface HistoryTrendPoint {
     | "link_local_issue"
     | "general_degradation"
     | null;
+  proxy_enabled?: boolean | null;
+  proxy_only_failure_count?: number | null;
+  likely_provider_side?: boolean | null;
+  egress_ip?: string | null;
+  upstream_claim?: UpstreamPoolClaim | null;
 }
 
 export interface UpdateCheck {

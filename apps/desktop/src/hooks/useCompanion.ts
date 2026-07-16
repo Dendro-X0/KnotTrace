@@ -14,7 +14,11 @@ import type {
   DnsIntegritySettings,
   HealthReport,
   HistoryTrendPoint,
+  LocalCapsRepairResult,
+  LocalCapsState,
   MonitorStatus,
+  MtuAssistRepairResult,
+  MtuAssistState,
   PageId,
   ProxyPathComparison,
   ProtectAction,
@@ -45,6 +49,14 @@ export function useCompanion() {
   const [dnsError, setDnsError] = useState<string | null>(null);
   const [dnsApplying, setDnsApplying] = useState(false);
   const [dnsRestoring, setDnsRestoring] = useState(false);
+  const [localCapsState, setLocalCapsState] = useState<LocalCapsState | null>(null);
+  const [localCapsError, setLocalCapsError] = useState<string | null>(null);
+  const [localCapsApplying, setLocalCapsApplying] = useState(false);
+  const [localCapsRestoring, setLocalCapsRestoring] = useState(false);
+  const [mtuAssistState, setMtuAssistState] = useState<MtuAssistState | null>(null);
+  const [mtuAssistError, setMtuAssistError] = useState<string | null>(null);
+  const [mtuAssistApplying, setMtuAssistApplying] = useState(false);
+  const [mtuAssistRestoring, setMtuAssistRestoring] = useState(false);
   const [integritySettings, setIntegritySettings] = useState<DnsIntegritySettings | null>(null);
   const [integritySettingsError, setIntegritySettingsError] = useState<string | null>(null);
   const [integritySettingsSaving, setIntegritySettingsSaving] = useState(false);
@@ -150,6 +162,32 @@ export function useCompanion() {
         error instanceof Error ? error.message : "DNS assist is unavailable right now.",
       );
       setDnsError(error instanceof Error ? error.message : "DNS assist is unavailable right now.");
+    }
+  }, []);
+
+  const refreshLocalCaps = useCallback(async () => {
+    try {
+      const state = await invoke<LocalCapsState>("get_local_caps_state");
+      setLocalCapsState(state);
+      setLocalCapsError(null);
+    } catch (error) {
+      setLocalCapsState(null);
+      setLocalCapsError(
+        error instanceof Error ? error.message : "Local caps status unavailable.",
+      );
+    }
+  }, []);
+
+  const refreshMtuAssist = useCallback(async () => {
+    try {
+      const state = await invoke<MtuAssistState>("get_mtu_assist_state");
+      setMtuAssistState(state);
+      setMtuAssistError(null);
+    } catch (error) {
+      setMtuAssistState(null);
+      setMtuAssistError(
+        error instanceof Error ? error.message : "MTU assist status unavailable.",
+      );
     }
   }, []);
 
@@ -301,6 +339,8 @@ export function useCompanion() {
         refreshHistory(),
         refreshMonitorStatus(),
         refreshAssist(),
+        refreshLocalCaps(),
+        refreshMtuAssist(),
         refreshConnect(),
         refreshProtect(),
         refreshTrends(),
@@ -314,6 +354,8 @@ export function useCompanion() {
     }
   }, [
     refreshAssist,
+    refreshLocalCaps,
+    refreshMtuAssist,
     refreshBenchmarks,
     refreshConnect,
     refreshHistory,
@@ -495,6 +537,74 @@ export function useCompanion() {
     }
   }, [refreshAssist, runCheck]);
 
+  const applyLocalCaps = useCallback(async () => {
+    setLocalCapsApplying(true);
+    try {
+      const result = await invoke<LocalCapsRepairResult>("apply_local_caps");
+      setLocalCapsError(result.kept ? null : result.message);
+      await runCheck();
+      await refreshLocalCaps();
+    } catch (error) {
+      setLocalCapsError(
+        error instanceof Error ? error.message : "Could not apply local caps repair.",
+      );
+      await refreshLocalCaps();
+    } finally {
+      setLocalCapsApplying(false);
+    }
+  }, [refreshLocalCaps, runCheck]);
+
+  const restoreLocalCaps = useCallback(async () => {
+    setLocalCapsRestoring(true);
+    try {
+      await invoke<string>("restore_local_caps");
+      setLocalCapsError(null);
+      await runCheck();
+      await refreshLocalCaps();
+    } catch (error) {
+      setLocalCapsError(
+        error instanceof Error ? error.message : "Could not restore local caps.",
+      );
+      await refreshLocalCaps();
+    } finally {
+      setLocalCapsRestoring(false);
+    }
+  }, [refreshLocalCaps, runCheck]);
+
+  const applyMtuAssist = useCallback(async () => {
+    setMtuAssistApplying(true);
+    try {
+      const result = await invoke<MtuAssistRepairResult>("apply_mtu_assist");
+      setMtuAssistError(result.kept ? null : result.message);
+      await runCheck();
+      await refreshMtuAssist();
+    } catch (error) {
+      setMtuAssistError(
+        error instanceof Error ? error.message : "Could not apply MTU clamp.",
+      );
+      await refreshMtuAssist();
+    } finally {
+      setMtuAssistApplying(false);
+    }
+  }, [refreshMtuAssist, runCheck]);
+
+  const restoreMtuAssist = useCallback(async () => {
+    setMtuAssistRestoring(true);
+    try {
+      await invoke<string>("restore_mtu_assist");
+      setMtuAssistError(null);
+      await runCheck();
+      await refreshMtuAssist();
+    } catch (error) {
+      setMtuAssistError(
+        error instanceof Error ? error.message : "Could not restore MTU.",
+      );
+      await refreshMtuAssist();
+    } finally {
+      setMtuAssistRestoring(false);
+    }
+  }, [refreshMtuAssist, runCheck]);
+
   const saveConnectConfig = useCallback(async () => {
     setConnectSaving(true);
     try {
@@ -594,6 +704,8 @@ export function useCompanion() {
         refreshHistory(),
         refreshMonitorStatus(),
         refreshAssist(),
+        refreshLocalCaps(),
+        refreshMtuAssist(),
         loadConnectConfig(),
         refreshConnect(),
         refreshProtect(),
@@ -619,6 +731,8 @@ export function useCompanion() {
     checkForUpdates,
     loadAppInfo,
     refreshAssist,
+    refreshLocalCaps,
+    refreshMtuAssist,
     refreshBenchmarks,
     refreshConnect,
     refreshHistory,
@@ -638,6 +752,7 @@ export function useCompanion() {
         await listen<AutoProtectResult>("auto-protect-result", (event) => {
           applyAutoProtectResult(event.payload);
           void refreshAssist();
+          void refreshLocalCaps();
           void refreshConnect();
           void refreshTrends();
           void refreshAutoProtectLog();
@@ -671,6 +786,8 @@ export function useCompanion() {
           void refreshHistory();
           void refreshMonitorStatus();
           void refreshAssist();
+          void refreshLocalCaps();
+          void refreshMtuAssist();
           void refreshConnect();
           void refreshProtect();
           void refreshTrends();
@@ -684,6 +801,8 @@ export function useCompanion() {
   }, [
     applyAutoProtectResult,
     refreshAssist,
+    refreshLocalCaps,
+    refreshMtuAssist,
     refreshBenchmarks,
     refreshConnect,
     refreshHistory,
@@ -711,6 +830,14 @@ export function useCompanion() {
     dnsError,
     dnsApplying,
     dnsRestoring,
+    localCapsState,
+    localCapsError,
+    localCapsApplying,
+    localCapsRestoring,
+    mtuAssistState,
+    mtuAssistError,
+    mtuAssistApplying,
+    mtuAssistRestoring,
     integritySettings,
     integritySettingsError,
     integritySettingsSaving,
@@ -749,6 +876,10 @@ export function useCompanion() {
     setMonitorEnabled,
     applyRecommendedDns,
     restoreDns,
+    applyLocalCaps,
+    restoreLocalCaps,
+    applyMtuAssist,
+    restoreMtuAssist,
     saveIntegritySettings,
     saveBenchmark,
     deleteBenchmark,

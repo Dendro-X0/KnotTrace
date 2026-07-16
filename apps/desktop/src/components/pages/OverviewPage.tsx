@@ -7,6 +7,7 @@ import { NetworkDiagnosisPanel } from "@/components/NetworkDiagnosisPanel";
 import { NextStepsPanel } from "@/components/NextStepsPanel";
 import { StatusHero } from "@/components/StatusHero";
 import { TrendCharts } from "@/components/TrendCharts";
+import { UpstreamPoolPanel } from "@/components/UpstreamPoolPanel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -104,6 +105,12 @@ export function OverviewPage({ state }: OverviewPageProps) {
                 <NetworkDiagnosisPanel diagnosis={state.report?.diagnosis} />
               </div>
               <div className="grid min-h-0 gap-3">
+                <UpstreamPoolPanel
+                  loading={loading}
+                  proxyEnabled={state.report?.environment.proxy.enabled}
+                  proof={state.report?.upstream_pool}
+                  compact
+                />
                 <NextStepsPanel state={state} />
                 <BenchmarkPanel
                   snapshots={state.benchmarkSnapshots}

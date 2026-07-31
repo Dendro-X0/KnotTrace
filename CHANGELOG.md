@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-07-31
+
 ### Added
 
 - **Wi‑Fi signal facts (L7)** — SSID, signal %, channel/band/radio on Link panel; weak-signal diagnosis and recommendations
@@ -250,6 +252,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.7.0]: https://github.com/Dendro-X0/network/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/Dendro-X0/network/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/Dendro-X0/network/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/Dendro-X0/network/compare/v1.4.1...v1.4.2

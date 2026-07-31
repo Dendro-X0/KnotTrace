@@ -5,6 +5,7 @@ import { FactList } from "@/components/shared";
 import { StabilityProbesPanel } from "@/components/StabilityProbesPanel";
 import { LinkFactsPanel } from "@/components/LinkFactsPanel";
 import { LocalCapsPanel } from "@/components/LocalCapsPanel";
+import { LocalRepairPanel } from "@/components/LocalRepairPanel";
 import { MtuAssistPanel } from "@/components/MtuAssistPanel";
 import { TunnelComparePanel } from "@/components/TunnelComparePanel";
 import { UpstreamPoolPanel } from "@/components/UpstreamPoolPanel";
@@ -156,6 +157,13 @@ export function NetworkPage({ state }: NetworkPageProps) {
 
       <StabilityProbesPanel stability={state.report?.stability} />
       <LinkFactsPanel loading={loading} report={state.report?.link_facts} />
+      <LocalRepairPanel
+        loading={loading}
+        report={state.report?.local_repair}
+        runningAction={state.localRepairRunning}
+        error={state.localRepairError}
+        onRun={(action) => void state.runLocalRepair(action)}
+      />
       <LocalCapsPanel
         loading={loading}
         report={state.report?.local_caps}

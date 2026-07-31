@@ -12,7 +12,7 @@ Product direction: fix what is on the machine (DNS, link, OS caps, MTU) first; t
 | **DNS Assist** | Recommend and apply a faster DNS resolver (Windows, macOS, Linux) |
 | **Connect** | Discover Mihomo/sing-box API and switch proxy nodes (manual / Protect opt-in) |
 | **Protect** | Trust level, shape-aware alerts, notifications, opt-in auto-apply |
-| **Network** | Environment, Link, Local caps (Windows), MTU assist, Tunnel compare, proxy path + upstream pool proof, probes, throughput |
+| **Network** | Environment, Link (+ Wi‑Fi signal), Local repair, Local caps (Windows), MTU assist, Tunnel compare, proxy path + upstream pool proof, probes, throughput |
 
 **Default posture:** observe first. The background monitor runs full health checks; manual checks use a faster profile. DNS, Connect, MTU, and local-caps changes stay manual unless you enable Protect auto-apply (DNS/proxy only — **never** MTU or local caps). Proxy path / upstream pool proof is detect-only — it does not switch nodes for you.
 

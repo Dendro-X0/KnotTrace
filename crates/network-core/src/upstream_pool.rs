@@ -354,6 +354,7 @@ mod tests {
             link_facts: None,
             local_caps: None,
             mtu_assist: None,
+            local_repair: None,
             tunnel_compare: None,
             upstream_pool: None,
         }

@@ -1,9 +1,9 @@
 use crate::process::hidden_command;
-use crate::types::{LinkAdapterFact, LinkDuplex, NetworkInterface};
-use super::parsers::parse_speed_mbps;
+use crate::types::{LinkAdapterFact, LinkDuplex, LinkKind, NetworkInterface};
+use super::parsers::{parse_netsh_wlan_interfaces, parse_speed_mbps};
 
 pub fn platform_source() -> &'static str {
-    "windows_netadapter"
+    "windows_netadapter+wlan"
 }
 
 pub fn enrich_adapters(interfaces: &[NetworkInterface]) -> Result<Vec<LinkAdapterFact>, String> {
@@ -13,7 +13,7 @@ pub fn enrich_adapters(interfaces: &[NetworkInterface]) -> Result<Vec<LinkAdapte
 
     let output = run_powershell(script)?;
     if output.trim().is_empty() {
-        return Ok(fallback_from_env(interfaces));
+        return Ok(merge_wifi(fallback_from_env(interfaces)));
     }
 
     let value: serde_json::Value = serde_json::from_str(&output)
@@ -60,40 +60,112 @@ pub fn enrich_adapters(interfaces: &[NetworkInterface]) -> Result<Vec<LinkAdapte
             (None, None, None, iface.is_up)
         };
 
-        facts.push(LinkAdapterFact {
-            name: iface.name.clone(),
-            friendly_name: iface.friendly_name.clone(),
-            kind: iface.kind,
-            is_up: status_up || iface.is_up,
-            is_default_route: iface.is_default_route,
-            speed_mbps: raw_speed.as_deref().and_then(parse_speed_mbps),
+        facts.push(base_fact(
+            iface,
+            status_up || iface.is_up,
+            raw_speed.as_deref().and_then(parse_speed_mbps),
             duplex,
             media,
             raw_speed,
-        });
+        ));
     }
 
-    if facts.is_empty() {
-        Ok(fallback_from_env(interfaces))
+    let facts = if facts.is_empty() {
+        fallback_from_env(interfaces)
     } else {
-        Ok(facts)
+        facts
+    };
+    Ok(merge_wifi(facts))
+}
+
+fn merge_wifi(mut facts: Vec<LinkAdapterFact>) -> Vec<LinkAdapterFact> {
+    let output = hidden_command("netsh")
+        .args(["wlan", "show", "interfaces"])
+        .output()
+        .ok();
+    let Some(output) = output else {
+        return facts;
+    };
+    if !output.status.success() {
+        return facts;
+    }
+    let text = String::from_utf8_lossy(&output.stdout);
+    let wifi_rows = parse_netsh_wlan_interfaces(&text);
+    if wifi_rows.is_empty() {
+        return facts;
+    }
+
+    for fact in &mut facts {
+        if fact.kind != LinkKind::WiFi {
+            continue;
+        }
+        let alias = fact
+            .friendly_name
+            .as_deref()
+            .filter(|name| !name.is_empty())
+            .unwrap_or(fact.name.as_str());
+        let Some(wifi) = wifi_rows.iter().find(|row| {
+            row.name.eq_ignore_ascii_case(alias) || row.name.eq_ignore_ascii_case(&fact.name)
+        }) else {
+            // Single associated interface: apply to first Wi-Fi fact.
+            if wifi_rows.len() == 1 {
+                apply_wifi(fact, &wifi_rows[0]);
+            }
+            continue;
+        };
+        apply_wifi(fact, wifi);
+    }
+    facts
+}
+
+fn apply_wifi(fact: &mut LinkAdapterFact, wifi: &super::parsers::WifiInterfaceSnapshot) {
+    fact.wifi_ssid = wifi.ssid.clone();
+    fact.wifi_signal_percent = wifi.signal_percent;
+    fact.wifi_signal_dbm = wifi.signal_dbm;
+    fact.wifi_channel = wifi.channel;
+    fact.wifi_band = wifi.band;
+    fact.wifi_radio = wifi.radio.clone();
+    if fact.speed_mbps.is_none() {
+        fact.speed_mbps = wifi.receive_rate_mbps;
+    }
+    if fact.raw_speed.is_none() {
+        if let Some(rate) = wifi.receive_rate_mbps {
+            fact.raw_speed = Some(format!("{rate} Mbps"));
+        }
+    }
+}
+
+fn base_fact(
+    iface: &NetworkInterface,
+    is_up: bool,
+    speed_mbps: Option<u32>,
+    duplex: Option<LinkDuplex>,
+    media: Option<String>,
+    raw_speed: Option<String>,
+) -> LinkAdapterFact {
+    LinkAdapterFact {
+        name: iface.name.clone(),
+        friendly_name: iface.friendly_name.clone(),
+        kind: iface.kind,
+        is_up,
+        is_default_route: iface.is_default_route,
+        speed_mbps,
+        duplex,
+        media,
+        raw_speed,
+        wifi_ssid: None,
+        wifi_signal_percent: None,
+        wifi_signal_dbm: None,
+        wifi_channel: None,
+        wifi_band: None,
+        wifi_radio: None,
     }
 }
 
 fn fallback_from_env(interfaces: &[NetworkInterface]) -> Vec<LinkAdapterFact> {
     interfaces
         .iter()
-        .map(|iface| LinkAdapterFact {
-            name: iface.name.clone(),
-            friendly_name: iface.friendly_name.clone(),
-            kind: iface.kind,
-            is_up: iface.is_up,
-            is_default_route: iface.is_default_route,
-            speed_mbps: None,
-            duplex: None,
-            media: None,
-            raw_speed: None,
-        })
+        .map(|iface| base_fact(iface, iface.is_up, None, None, None, None))
         .collect()
 }
 

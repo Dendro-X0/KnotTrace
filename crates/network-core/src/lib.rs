@@ -14,6 +14,7 @@ mod fingerprint;
 mod link_facts;
 mod link_platform;
 mod local_caps;
+mod local_repair;
 mod mtu_assist;
 mod network_context;
 mod probe;
@@ -60,6 +61,7 @@ pub use mtu_assist::{
     apply_mtu_assist_repair, collect_mtu_assist, get_mtu_assist_state, restore_mtu_assist_repair,
     MtuAssistError,
 };
+pub use local_repair::{collect_local_repair, run_local_repair_action};
 pub use egress::{egress_unstable, probe_egress, probe_egress_with_options, EgressProbeOptions};
 pub use fingerprint::environment_fingerprint;
 pub use network_context::{
@@ -218,6 +220,7 @@ pub async fn run_health_check_with_settings(
         link_facts: None,
         local_caps: None,
         mtu_assist: None,
+        local_repair: None,
         tunnel_compare,
         upstream_pool: None,
     };
@@ -228,6 +231,7 @@ pub async fn run_health_check_with_settings(
     // Snapshot-only claim; desktop monitor re-evaluates with history for pool recurrence.
     report.upstream_pool = evaluate_upstream_pool_snapshot(&report);
     report.mtu_assist = Some(collect_mtu_assist(&report, None));
+    report.local_repair = Some(collect_local_repair(&report));
     report.recommendations = Some(build_recommendations(&report));
     report.diagnosis = Some(diagnose_network(&report));
 

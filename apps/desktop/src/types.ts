@@ -59,6 +59,7 @@ export interface HealthReport {
   link_facts?: LinkFactsReport | null;
   local_caps?: LocalCapsReport | null;
   mtu_assist?: MtuAssistReport | null;
+  local_repair?: LocalRepairReport | null;
   tunnel_compare?: TunnelPathCompareReport | null;
   upstream_pool?: UpstreamPoolProof | null;
 }
@@ -191,12 +192,38 @@ export interface MtuAssistRepairResult {
   message: string;
 }
 
+export type LocalRepairActionKind = "flush_dns" | "renew_dhcp" | "restart_adapter";
+
+export interface LocalRepairAction {
+  kind: LocalRepairActionKind;
+  title: string;
+  message: string;
+  recommended: boolean;
+  available: boolean;
+}
+
+export interface LocalRepairReport {
+  available: boolean;
+  platform_note: string;
+  actions: LocalRepairAction[];
+  summary: string;
+  local_problem_likely: boolean;
+}
+
+export interface LocalRepairResult {
+  kind: LocalRepairActionKind;
+  success: boolean;
+  message: string;
+}
+
 export type LinkDuplex = "full" | "half" | "unknown";
 export type LinkIssueKind =
   | "ethernet_capped"
   | "half_duplex"
   | "prefer_ethernet"
-  | "wifi_active";
+  | "wifi_active"
+  | "wifi_weak_signal";
+export type WifiBand = "band_2_4" | "band_5" | "band_6" | "unknown";
 
 export interface LinkAdapterFact {
   name: string;
@@ -208,6 +235,12 @@ export interface LinkAdapterFact {
   duplex: LinkDuplex | null;
   media: string | null;
   raw_speed: string | null;
+  wifi_ssid?: string | null;
+  wifi_signal_percent?: number | null;
+  wifi_signal_dbm?: number | null;
+  wifi_channel?: number | null;
+  wifi_band?: WifiBand | null;
+  wifi_radio?: string | null;
 }
 
 export interface LinkIssue {

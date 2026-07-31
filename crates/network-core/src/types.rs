@@ -178,6 +178,8 @@ pub struct HealthReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mtu_assist: Option<MtuAssistReport>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub local_repair: Option<LocalRepairReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tunnel_compare: Option<TunnelPathCompareReport>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub upstream_pool: Option<UpstreamPoolProof>,
@@ -345,6 +347,40 @@ pub struct MtuAssistRepairResult {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+pub enum LocalRepairActionKind {
+    FlushDns,
+    RenewDhcp,
+    RestartAdapter,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalRepairAction {
+    pub kind: LocalRepairActionKind,
+    pub title: String,
+    pub message: String,
+    pub recommended: bool,
+    pub available: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalRepairReport {
+    pub available: bool,
+    pub platform_note: String,
+    pub actions: Vec<LocalRepairAction>,
+    pub summary: String,
+    /// True when gateway/local probes suggest a local repair is worth trying.
+    pub local_problem_likely: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalRepairResult {
+    pub kind: LocalRepairActionKind,
+    pub success: bool,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum LinkDuplex {
     Full,
     Half,
@@ -358,6 +394,19 @@ pub enum LinkIssueKind {
     HalfDuplex,
     PreferEthernet,
     WifiActive,
+    WifiWeakSignal,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WifiBand {
+    #[serde(rename = "band_2_4")]
+    Band24,
+    #[serde(rename = "band_5")]
+    Band5,
+    #[serde(rename = "band_6")]
+    Band6,
+    Unknown,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -371,6 +420,18 @@ pub struct LinkAdapterFact {
     pub duplex: Option<LinkDuplex>,
     pub media: Option<String>,
     pub raw_speed: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wifi_ssid: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wifi_signal_percent: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wifi_signal_dbm: Option<i16>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wifi_channel: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wifi_band: Option<WifiBand>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wifi_radio: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

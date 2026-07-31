@@ -1,4 +1,4 @@
-mod parsers;
+pub mod parsers;
 
 #[cfg(windows)]
 mod windows;

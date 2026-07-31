@@ -73,6 +73,36 @@ export function LinkFactsPanel({ loading, report }: LinkFactsPanelProps) {
                   label: "Media",
                   value: active?.media ?? "Not reported",
                 },
+                ...(active?.kind === "wifi"
+                  ? [
+                      {
+                        label: "SSID",
+                        value: active.wifi_ssid ?? "Not reported",
+                      },
+                      {
+                        label: "Signal",
+                        value:
+                          active.wifi_signal_percent != null
+                            ? `${active.wifi_signal_percent}%`
+                            : active.wifi_signal_dbm != null
+                              ? `${active.wifi_signal_dbm} dBm`
+                              : "Not reported",
+                      },
+                      {
+                        label: "Channel / band",
+                        value: [
+                          active.wifi_channel != null ? `ch ${active.wifi_channel}` : null,
+                          active.wifi_band ? formatTag(active.wifi_band) : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ") || "Not reported",
+                      },
+                      {
+                        label: "Radio",
+                        value: active.wifi_radio ?? "Not reported",
+                      },
+                    ]
+                  : []),
                 { label: "Source", value: report.source },
               ]}
             />

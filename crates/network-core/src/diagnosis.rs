@@ -563,7 +563,8 @@ fn push_path_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
                 LinkIssueKind::WifiActive => BottleneckCategory::WifiPath,
                 LinkIssueKind::PreferEthernet
                 | LinkIssueKind::EthernetCapped
-                | LinkIssueKind::HalfDuplex => BottleneckCategory::LinkLocal,
+                | LinkIssueKind::HalfDuplex
+                | LinkIssueKind::WifiWeakSignal => BottleneckCategory::LinkLocal,
             };
             hints.push(BottleneckHint {
                 category,
@@ -585,6 +586,12 @@ fn push_path_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
                     LinkIssueKind::WifiActive => vec![
                         "Test on Ethernet to see if Mbps improves.".to_string(),
                         "Check router bufferbloat with SQM/CAKE if latency spikes under load."
+                            .to_string(),
+                    ],
+                    LinkIssueKind::WifiWeakSignal => vec![
+                        "Move closer to the access point or switch band/channel on the router."
+                            .to_string(),
+                        "Use Ethernet when possible; weak signal is a radio limit, not an ISP plan issue."
                             .to_string(),
                     ],
                 },
@@ -752,6 +759,7 @@ fn diagnosis_confidence(report: &HealthReport, shape: SlowdownShape) -> Diagnosi
                         LinkIssueKind::EthernetCapped
                             | LinkIssueKind::HalfDuplex
                             | LinkIssueKind::PreferEthernet
+                            | LinkIssueKind::WifiWeakSignal
                     )
                 })
             }) || report.local_caps.as_ref().is_some_and(|caps| {
@@ -940,6 +948,7 @@ fn link_local_issue(report: &HealthReport) -> bool {
                 LinkIssueKind::EthernetCapped
                     | LinkIssueKind::HalfDuplex
                     | LinkIssueKind::PreferEthernet
+                    | LinkIssueKind::WifiWeakSignal
             )
         })
     });
@@ -1050,6 +1059,7 @@ mod tests {
             link_facts: None,
             local_caps: None,
             mtu_assist: None,
+            local_repair: None,
             tunnel_compare: None,
             upstream_pool: None,
         }
@@ -1305,6 +1315,12 @@ mod tests {
                 duplex: Some(LinkDuplex::Full),
                 media: Some("802.3".to_string()),
                 raw_speed: Some("100 Mbps".to_string()),
+                wifi_ssid: None,
+                wifi_signal_percent: None,
+                wifi_signal_dbm: None,
+                wifi_channel: None,
+                wifi_band: None,
+                wifi_radio: None,
             }],
             "test".to_string(),
         ));

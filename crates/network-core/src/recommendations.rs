@@ -19,6 +19,7 @@ pub fn build_recommendations(report: &HealthReport) -> NetworkRecommendations {
     push_link_recommendations(report, &mut items);
     push_local_caps_recommendations(report, &mut items);
     push_mtu_assist_recommendations(report, &mut items);
+    push_local_repair_recommendations(report, &mut items);
     push_tunnel_compare_recommendations(report, &mut items);
     push_upstream_pool_recommendations(report, &mut items);
     boost_recommendations_for_shape(report, &mut items);
@@ -313,6 +314,11 @@ fn push_link_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecom
                 "Wi-Fi may limit throughput".to_string(),
                 issue.message.clone(),
             ),
+            LinkIssueKind::WifiWeakSignal => (
+                74,
+                "Wi-Fi signal is weak".to_string(),
+                issue.message.clone(),
+            ),
         };
         items.push(NetworkRecommendation {
             category: RecommendationCategory::LinkLocal,
@@ -454,6 +460,33 @@ fn push_mtu_assist_recommendations(report: &HealthReport, items: &mut Vec<Networ
     });
 }
 
+fn push_local_repair_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecommendation>) {
+    let Some(repair) = &report.local_repair else {
+        return;
+    };
+    if !repair.available {
+        return;
+    }
+    let recommended = repair.actions.iter().filter(|action| action.recommended).count();
+    if recommended == 0 && !repair.local_problem_likely {
+        return;
+    }
+
+    items.push(NetworkRecommendation {
+        category: RecommendationCategory::LinkLocal,
+        priority: if repair.local_problem_likely { 78 } else { 40 },
+        title: if repair.local_problem_likely {
+            "Try local network repair actions".to_string()
+        } else {
+            "Local repair tools available".to_string()
+        },
+        message: format!(
+            "{} Open Network → Local repair. These actions fix local stack glitches — not ISP or Steam CDN outages.",
+            repair.summary
+        ),
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -526,6 +559,7 @@ mod tests {
             link_facts: None,
             local_caps: None,
             mtu_assist: None,
+            local_repair: None,
             tunnel_compare: None,
             upstream_pool: None,
         }

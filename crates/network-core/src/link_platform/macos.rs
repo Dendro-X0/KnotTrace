@@ -33,6 +33,12 @@ pub fn enrich_adapters(interfaces: &[NetworkInterface]) -> Result<Vec<LinkAdapte
             duplex,
             media,
             raw_speed,
+            wifi_ssid: None,
+            wifi_signal_percent: None,
+            wifi_signal_dbm: None,
+            wifi_channel: None,
+            wifi_band: None,
+            wifi_radio: None,
         });
     }
 

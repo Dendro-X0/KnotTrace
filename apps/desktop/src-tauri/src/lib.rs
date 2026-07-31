@@ -3,6 +3,7 @@ mod benchmark;
 mod connect;
 mod dns_integrity;
 mod local_caps;
+mod local_repair;
 mod mtu_assist;
 mod monitor;
 mod protect;
@@ -142,6 +143,7 @@ pub fn run() {
             mtu_assist::get_mtu_assist_state,
             mtu_assist::apply_mtu_assist,
             mtu_assist::restore_mtu_assist,
+            local_repair::run_local_repair,
             connect::get_connect_config,
             connect::set_connect_config,
             connect::discover_connect,

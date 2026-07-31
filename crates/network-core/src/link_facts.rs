@@ -20,6 +20,12 @@ pub fn collect_link_facts(environment: &EnvironmentSnapshot) -> LinkFactsReport 
                 duplex: None,
                 media: None,
                 raw_speed: None,
+                wifi_ssid: None,
+                wifi_signal_percent: None,
+                wifi_signal_dbm: None,
+                wifi_channel: None,
+                wifi_band: None,
+                wifi_radio: None,
             })
             .collect(),
     };
@@ -85,16 +91,44 @@ fn derive_issues(adapters: &[LinkAdapterFact], active: Option<&LinkAdapterFact>)
                     message: "An Ethernet adapter is up, but the default route still uses Wi-Fi. Prefer wired for large transfers and stable latency.".to_string(),
                 });
             } else {
+                let signal_note = match (active.wifi_signal_percent, active.wifi_ssid.as_deref()) {
+                    (Some(pct), Some(ssid)) => format!(" Associated with `{ssid}` at {pct}% signal."),
+                    (Some(pct), None) => format!(" Signal about {pct}%."),
+                    (None, Some(ssid)) => format!(" Associated with `{ssid}`."),
+                    _ => String::new(),
+                };
                 issues.push(LinkIssue {
                     kind: LinkIssueKind::WifiActive,
                     severity: AlertLevel::Info,
                     title: "Active path uses Wi-Fi".to_string(),
                     message: match active.speed_mbps {
                         Some(speed) => format!(
-                            "Wi-Fi link reports about {speed} Mbps. Real throughput is often lower; try Ethernet to compare."
+                            "Wi-Fi link reports about {speed} Mbps.{signal_note} Real throughput is often lower; try Ethernet to compare."
                         ),
-                        None => "Wi-Fi often caps real-world throughput below ISP plan speeds.".to_string(),
+                        None => format!(
+                            "Wi-Fi often caps real-world throughput below ISP plan speeds.{signal_note}"
+                        ),
                     },
+                });
+            }
+
+            if crate::link_platform::parsers::wifi_signal_is_weak(
+                active.wifi_signal_percent,
+                active.wifi_signal_dbm,
+            ) {
+                let detail = match (active.wifi_signal_percent, active.wifi_signal_dbm) {
+                    (Some(pct), Some(dbm)) => format!("{pct}% / {dbm} dBm"),
+                    (Some(pct), None) => format!("{pct}%"),
+                    (None, Some(dbm)) => format!("{dbm} dBm"),
+                    _ => "weak".to_string(),
+                };
+                issues.push(LinkIssue {
+                    kind: LinkIssueKind::WifiWeakSignal,
+                    severity: AlertLevel::Warning,
+                    title: "Wi-Fi signal looks weak".to_string(),
+                    message: format!(
+                        "Signal is {detail}. Move closer to the AP, reduce interference, or use Ethernet — KnotTrace cannot boost radio power."
+                    ),
                 });
             }
         }
@@ -158,6 +192,12 @@ mod tests {
             duplex,
             media: None,
             raw_speed: speed.map(|mbps| format!("{mbps} Mbps")),
+            wifi_ssid: None,
+            wifi_signal_percent: None,
+            wifi_signal_dbm: None,
+            wifi_channel: None,
+            wifi_band: None,
+            wifi_radio: None,
         }
     }
 

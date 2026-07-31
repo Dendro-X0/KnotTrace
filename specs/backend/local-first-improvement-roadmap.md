@@ -147,8 +147,10 @@ Silence/control (v1.5) can remain; it does not replace local outcome work.
 | **L4** | Tor/VPN compare UX | **Done (code)** — Direct / System proxy / Tor SOCKS compare + expectation copy; Network Tunnel compare panel |
 | **L5** | Upstream proof slices | **Done (code)** — domains A + claim grades + history recurrence C; Overview/Network panels; thrash-forbidden Next Steps (slices D–E deferred) |
 | **L6** | Opt-in MTU | **Done (code)** — fragmentation + tunnel eligibility; backup/restore MTU assist on Win/macOS/Linux; Network panel |
+| **L7** | Wi‑Fi signal (B) | **Done (code)** — SSID/signal/channel/band on Link facts; weak-signal diagnosis |
+| **L8** | Offline local repair (A) | **Done (code)** — flush DNS / renew DHCP / restart adapter; Network Local repair panel |
 
-Preferred coding order: **L0 → L1 → L2 → L4** (value without proxy theater), then L3/L5/L6 as capacity allows.
+Preferred coding order historically: **L0 → L1 → L2 → L4**, then L3/L5/L6; **L7–L8** add visible local repair value.
 
 ## Claim language
 

@@ -35,6 +35,8 @@ You can turn off any automatic behavior on the **Protect** page.
 - **Tunnel compare** — Direct vs system proxy vs Tor with honest expectations (Tor is not for speed)
 - **Upstream pool proof** — claim grades from differential reachability + history recurrence; no node thrashing advice when the pool looks poor
 - **MTU assist** — opt-in interface MTU clamp when fragmentation risk and tunnel/proxy align
+- **Wi‑Fi signal** — SSID / signal % / channel on Link; weak-signal warnings
+- **Local repair** — flush DNS, renew DHCP, restart adapter (works when internet is down)
 
 ### Also in v1.5.x
 

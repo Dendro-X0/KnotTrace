@@ -16,6 +16,8 @@ import type {
   HistoryTrendPoint,
   LocalCapsRepairResult,
   LocalCapsState,
+  LocalRepairActionKind,
+  LocalRepairResult,
   MonitorStatus,
   MtuAssistRepairResult,
   MtuAssistState,
@@ -57,6 +59,8 @@ export function useCompanion() {
   const [mtuAssistError, setMtuAssistError] = useState<string | null>(null);
   const [mtuAssistApplying, setMtuAssistApplying] = useState(false);
   const [mtuAssistRestoring, setMtuAssistRestoring] = useState(false);
+  const [localRepairRunning, setLocalRepairRunning] = useState<LocalRepairActionKind | null>(null);
+  const [localRepairError, setLocalRepairError] = useState<string | null>(null);
   const [integritySettings, setIntegritySettings] = useState<DnsIntegritySettings | null>(null);
   const [integritySettingsError, setIntegritySettingsError] = useState<string | null>(null);
   const [integritySettingsSaving, setIntegritySettingsSaving] = useState(false);
@@ -605,6 +609,24 @@ export function useCompanion() {
     }
   }, [refreshMtuAssist, runCheck]);
 
+  const runLocalRepair = useCallback(
+    async (action: LocalRepairActionKind) => {
+      setLocalRepairRunning(action);
+      try {
+        const result = await invoke<LocalRepairResult>("run_local_repair", { action });
+        setLocalRepairError(result.success ? null : result.message);
+        await runCheck();
+      } catch (error) {
+        setLocalRepairError(
+          error instanceof Error ? error.message : "Local repair action failed.",
+        );
+      } finally {
+        setLocalRepairRunning(null);
+      }
+    },
+    [runCheck],
+  );
+
   const saveConnectConfig = useCallback(async () => {
     setConnectSaving(true);
     try {
@@ -838,6 +860,8 @@ export function useCompanion() {
     mtuAssistError,
     mtuAssistApplying,
     mtuAssistRestoring,
+    localRepairRunning,
+    localRepairError,
     integritySettings,
     integritySettingsError,
     integritySettingsSaving,
@@ -880,6 +904,7 @@ export function useCompanion() {
     restoreLocalCaps,
     applyMtuAssist,
     restoreMtuAssist,
+    runLocalRepair,
     saveIntegritySettings,
     saveBenchmark,
     deleteBenchmark,

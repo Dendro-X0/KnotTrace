@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+### Added
+
+- **Wi‑Fi signal facts (L7)** — SSID, signal %, channel/band/radio on Link panel; weak-signal diagnosis and recommendations
+- **Local repair companion (L8)** — opt-in Flush DNS / Renew DHCP / Restart adapter on Network (works when internet is down); never Protect auto-apply
+- Specs: [wifi-signal-design.md](specs/backend/wifi-signal-design.md), [offline-local-repair-design.md](specs/backend/offline-local-repair-design.md)
+
 ## [1.6.0] - 2026-07-16
 
 ### Added

@@ -27,6 +27,7 @@ Single source of truth for network logic. No UI dependencies.
 | `link_facts` | Negotiated link speed/duplex and Wi‑Fi vs Ethernet issues |
 | `local_caps` | Windows TCP auto-tuning / NIC power detect + opt-in repair |
 | `mtu_assist` | Opt-in interface MTU clamp when fragmentation + tunnel evidenced |
+| `local_repair` | Opt-in flush DNS / renew DHCP / restart adapter (offline-capable) |
 | `tunnel_compare` | Direct / proxy / Tor path samples + expectation copy |
 | `upstream_pool` | Claim grades for active-path vs recurring upstream-pool impairment |
 | `egress` | Public IP probes and path consistency |

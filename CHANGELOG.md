@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-08-06
+
+### Fixed
+
+- **Update banner** — IPC now uses snake_case so versions and **Install update** / **Get update** work; empty “vundefined” and dead Get update clicks
+- **Update check errors** — surface GitHub reachability failures (proxy/VPN) instead of failing silently
+- **GitHub diagnosis** — single-host GitHub/API failures under proxy or VPN emit an explicit bottleneck (git HTTPS / port 443), not only majority site-failure cases
+- Specs: [updater-github-diagnosis-investigation.md](specs/backend/updater-github-diagnosis-investigation.md), [updater-github-diagnosis-design.md](specs/backend/updater-github-diagnosis-design.md)
+
 ## [1.7.0] - 2026-07-31
 
 ### Added
@@ -252,6 +261,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.7.1]: https://github.com/Dendro-X0/network/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/Dendro-X0/network/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/Dendro-X0/network/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/Dendro-X0/network/compare/v1.4.2...v1.5.0

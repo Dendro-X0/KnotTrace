@@ -8,9 +8,15 @@ interface UpdateBannerProps {
   checking?: boolean;
   installing?: boolean;
   progress?: UpdateProgress | null;
+  error?: string | null;
   onCheck: () => void;
   onInstall: () => void;
   onOpenRelease: () => void;
+}
+
+function displayVersion(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : "unknown";
 }
 
 export function UpdateBanner({
@@ -18,11 +24,12 @@ export function UpdateBanner({
   checking,
   installing,
   progress,
+  error,
   onCheck,
   onInstall,
   onOpenRelease,
 }: UpdateBannerProps) {
-  if (!update?.available) {
+  if (!update?.available && !error) {
     return null;
   }
 
@@ -31,16 +38,30 @@ export function UpdateBanner({
       ? Math.min(100, Math.round((progress.downloaded / progress.total) * 100))
       : null;
 
+  if (!update?.available) {
+    return (
+      <div className="border-destructive/30 bg-destructive/10 flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2">
+        <p className="text-destructive min-w-0 text-xs">{error}</p>
+        <Button size="sm" variant="secondary" disabled={checking} onClick={onCheck}>
+          {checking ? "Checking..." : "Check again"}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="border-primary/30 bg-primary/10 flex flex-col gap-2 rounded-xl border px-3 py-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-medium">Update available: v{update.latest_version}</p>
+          <p className="text-sm font-medium">
+            Update available: v{displayVersion(update.latest_version)}
+          </p>
           <p className="text-muted-foreground text-xs">
             {update.can_install_in_app
-              ? `You are on v${update.current_version}. KnotTrace can install this update and restart.`
-              : `You are on v${update.current_version}. Download the installer from GitHub.`}
+              ? `You are on v${displayVersion(update.current_version)}. KnotTrace can install this update and restart.`
+              : `You are on v${displayVersion(update.current_version)}. Download the installer from GitHub.`}
           </p>
+          {error ? <p className="text-destructive mt-1 text-xs">{error}</p> : null}
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="secondary" disabled={checking || installing} onClick={onCheck}>

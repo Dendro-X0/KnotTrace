@@ -426,7 +426,11 @@ fn build_reachability_targets(
     let mut targets: Vec<String> = Vec::new();
     let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
 
-    if environment.proxy.enabled {
+    // Proxy HTTP path or VPN tunnel: prefer sensitive hosts (GitHub/Google) so
+    // selective filtering is visible even when most of the internet still works.
+    let prefer_sensitive = environment.proxy.enabled
+        || environment.tags.contains(&crate::types::EnvironmentTag::Vpn);
+    if prefer_sensitive {
         for domain in PROXY_SENSITIVE_DOMAINS
             .iter()
             .chain(PROXY_GENERAL_DOMAINS.iter())
@@ -568,6 +572,11 @@ mod tests {
         env.proxy.enabled = false;
         let targets_no_proxy = build_reachability_targets(&domains, &env, 3);
         assert_eq!(targets_no_proxy, vec!["github.com".to_string(), "example.com".to_string()]);
+
+        env.tags = vec![crate::types::EnvironmentTag::Vpn];
+        let targets_vpn = build_reachability_targets(&domains, &env, 3);
+        assert_eq!(targets_vpn[0], "github.com");
+        assert_eq!(targets_vpn[1], "api.github.com");
     }
 
     #[test]

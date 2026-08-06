@@ -12,6 +12,7 @@ pub fn diagnose_network(report: &HealthReport) -> NetworkDiagnosis {
     push_dns_hints(report, &mut hints);
     push_integrity_hints(report, &mut hints);
     push_reachability_hints(report, &mut hints);
+    push_github_access_hints(report, &mut hints);
     push_context_hints(report, &mut hints);
     push_egress_hints(report, &mut hints);
     push_stability_hints(report, &mut hints);
@@ -238,6 +239,161 @@ fn push_reachability_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint
         severity,
         title: "Sites blocked or failing on this path".to_string(),
         message: reachability.summary.clone(),
+        suggestions,
+    });
+}
+
+const GITHUB_HOSTS: &[&str] = &["github.com", "api.github.com"];
+
+fn github_host_failed(domain: &str) -> bool {
+    GITHUB_HOSTS
+        .iter()
+        .any(|host| domain.eq_ignore_ascii_case(host))
+}
+
+/// True when GitHub HTTPS probes fail — even if most other sites still work.
+fn github_access_impaired(report: &HealthReport) -> bool {
+    if let Some(path) = &report.proxy_path_report {
+        if path.comparisons.iter().any(|row| {
+            github_host_failed(&row.domain) && (!row.proxy.success || !row.direct.success)
+        }) {
+            return true;
+        }
+    }
+
+    report.site_reachability.as_ref().is_some_and(|reachability| {
+        reachability
+            .results
+            .iter()
+            .any(|result| github_host_failed(&result.domain) && !result.success)
+    })
+}
+
+fn push_github_access_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
+    if !github_access_impaired(report) {
+        return;
+    }
+
+    let on_vpn = report.environment.tags.contains(&EnvironmentTag::Vpn);
+    let proxy_on = report.environment.proxy.enabled;
+
+    let mut proxy_only = false;
+    let mut both_fail = false;
+    let mut failed_hosts: Vec<&str> = Vec::new();
+
+    if let Some(path) = &report.proxy_path_report {
+        for row in &path.comparisons {
+            if !github_host_failed(&row.domain) {
+                continue;
+            }
+            if !failed_hosts
+                .iter()
+                .any(|host| host.eq_ignore_ascii_case(&row.domain))
+            {
+                failed_hosts.push(GITHUB_HOSTS
+                    .iter()
+                    .find(|host| row.domain.eq_ignore_ascii_case(host))
+                    .copied()
+                    .unwrap_or("github.com"));
+            }
+            if row.proxy_only_failure {
+                proxy_only = true;
+            }
+            if !row.proxy.success && !row.direct.success {
+                both_fail = true;
+            }
+        }
+    }
+
+    if failed_hosts.is_empty() {
+        if let Some(reachability) = &report.site_reachability {
+            for result in &reachability.results {
+                if result.success || !github_host_failed(&result.domain) {
+                    continue;
+                }
+                if !failed_hosts
+                    .iter()
+                    .any(|host| host.eq_ignore_ascii_case(&result.domain))
+                {
+                    failed_hosts.push(
+                        GITHUB_HOSTS
+                            .iter()
+                            .find(|host| result.domain.eq_ignore_ascii_case(host))
+                            .copied()
+                            .unwrap_or("github.com"),
+                    );
+                }
+            }
+        }
+    }
+
+    if failed_hosts.is_empty() {
+        failed_hosts.push("github.com");
+    }
+
+    let sample = failed_hosts.join(", ");
+    let (category, title, message, mut suggestions) = if proxy_only && proxy_on {
+        (
+            BottleneckCategory::ProxyPath,
+            "Proxy path is blocking GitHub".to_string(),
+            format!(
+                "{sample} failed over the active proxy while the direct path worked. git push, clone, and GitHub API calls over HTTPS (port 443) will fail on this node — this is path filtering, not a general “slow internet” issue."
+            ),
+            vec![
+                "Try another proxy node in Connect Assist, or briefly disable the system proxy to confirm.".to_string(),
+                "Corporate proxies often need an allowlist for github.com and api.github.com.".to_string(),
+            ],
+        )
+    } else if on_vpn {
+        (
+            BottleneckCategory::VpnTunnel,
+            "VPN path cannot reach GitHub".to_string(),
+            format!(
+                "{sample} is unreachable on the current VPN/tunnel path. Tools that talk to GitHub over HTTPS (git, gh, IDE sync) will time out on port 443 until the tunnel or exit node changes."
+            ),
+            vec![
+                "Switch VPN server/exit, or disconnect the VPN briefly to test native reachability.".to_string(),
+                "If you also use a local proxy (Clash/sing-box), check that GitHub is not forced onto a broken outbound.".to_string(),
+            ],
+        )
+    } else if both_fail || proxy_on {
+        (
+            BottleneckCategory::ProxyPath,
+            "GitHub HTTPS is unreachable on this path".to_string(),
+            format!(
+                "{sample} failed HTTPS checks. Expect git and GitHub API failures until the proxy/VPN or network path can open github.com:443."
+            ),
+            vec![
+                "Compare direct vs proxy on the Network page if a system proxy is enabled.".to_string(),
+                "Retry after changing proxy node or disabling VPN briefly.".to_string(),
+            ],
+        )
+    } else {
+        (
+            BottleneckCategory::SiteAccess,
+            "GitHub is unreachable from this network".to_string(),
+            format!(
+                "{sample} failed HTTPS checks while other sites may still work. git push/pull over HTTPS will fail until this path can reach GitHub on port 443."
+            ),
+            vec![
+                "Check local firewall, DNS, and whether a VPN/proxy is required on this network.".to_string(),
+                "Re-run a health check after changing network path.".to_string(),
+            ],
+        )
+    };
+
+    if both_fail {
+        suggestions.push(
+            "Both proxy and direct probes failed — the block is wider than a single bad proxy node."
+                .to_string(),
+        );
+    }
+
+    hints.push(BottleneckHint {
+        category,
+        severity: AlertLevel::Critical,
+        title,
+        message,
         suggestions,
     });
 }
@@ -929,6 +1085,7 @@ fn reachability_degraded(report: &HealthReport) -> bool {
         .site_reachability
         .as_ref()
         .is_some_and(crate::reachability::site_access_degraded)
+        || github_access_impaired(report)
 }
 
 fn gateway_issue(report: &HealthReport) -> bool {
@@ -1228,6 +1385,71 @@ mod tests {
         let diagnosis = diagnose_network(&report);
         assert_eq!(diagnosis.primary_bottleneck, Some(BottleneckCategory::CaptivePortal));
         assert!(diagnosis.summary.contains("restricted or guest network"));
+    }
+
+    #[test]
+    fn github_only_failure_under_vpn_is_diagnosed() {
+        let mut report = sample_report(
+            HealthGrade::Fair,
+            Some(LatencySample {
+                target: "internet".to_string(),
+                avg_ms: 40.0,
+                loss_pct: 0.0,
+            }),
+            vec![DnsProbe {
+                resolver: "system".to_string(),
+                query: "example.com".to_string(),
+                latency_ms: 20.0,
+                success: true,
+            }],
+            vec![EnvironmentTag::Vpn],
+        );
+        report.site_reachability = Some(SiteReachabilityStatus {
+            checked_domains: 4,
+            success_count: 3,
+            failure_count: 1,
+            results: vec![
+                SiteReachResult {
+                    domain: "github.com".to_string(),
+                    success: false,
+                    status_code: None,
+                    latency_ms: Some(21000.0),
+                    error: Some("Could not connect to server".to_string()),
+                    error_kind: Some(SiteReachErrorKind::Timeout),
+                },
+                SiteReachResult {
+                    domain: "example.com".to_string(),
+                    success: true,
+                    status_code: Some(200),
+                    latency_ms: Some(40.0),
+                    error: None,
+                    error_kind: None,
+                },
+                SiteReachResult {
+                    domain: "cloudflare.com".to_string(),
+                    success: true,
+                    status_code: Some(200),
+                    latency_ms: Some(35.0),
+                    error: None,
+                    error_kind: None,
+                },
+                SiteReachResult {
+                    domain: "microsoft.com".to_string(),
+                    success: true,
+                    status_code: Some(200),
+                    latency_ms: Some(50.0),
+                    error: None,
+                    error_kind: None,
+                },
+            ],
+            summary: "1 of 4 verification sites failed".to_string(),
+        });
+
+        let diagnosis = diagnose_network(&report);
+        assert_eq!(diagnosis.slowdown_shape, SlowdownShape::PartialSiteFailure);
+        assert!(diagnosis.hints.iter().any(|hint| {
+            hint.title.contains("GitHub") && hint.category == BottleneckCategory::VpnTunnel
+        }));
     }
 
     #[test]

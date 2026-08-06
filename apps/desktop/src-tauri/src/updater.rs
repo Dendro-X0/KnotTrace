@@ -4,6 +4,7 @@ use tauri_plugin_updater::UpdaterExt;
 
 const GITHUB_REPO: &str = "Dendro-X0/KnotTrace";
 const USER_AGENT: &str = "KnotTrace-Updater";
+const RELEASES_LATEST_URL: &str = "https://github.com/Dendro-X0/KnotTrace/releases/latest";
 
 #[derive(Debug, Serialize)]
 pub struct AppInfo {
@@ -11,8 +12,8 @@ pub struct AppInfo {
     pub version: String,
 }
 
+/// Field names must stay snake_case — the React UI reads `latest_version`, etc.
 #[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct UpdateCheck {
     pub available: bool,
     pub current_version: String,
@@ -23,7 +24,6 @@ pub struct UpdateCheck {
 }
 
 #[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct UpdateProgressEvent {
     pub phase: String,
     pub downloaded: u64,
@@ -59,7 +59,7 @@ pub async fn check_for_updates(app: tauri::AppHandle) -> Result<UpdateCheck, Str
                     available: true,
                     current_version: current,
                     latest_version: Some(update.version.clone()),
-                    release_url: None,
+                    release_url: Some(release_tag_url(&update.version)),
                     notes: update.body.clone(),
                     can_install_in_app: true,
                 });
@@ -150,18 +150,45 @@ pub async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
 
 async fn fallback_github_check(current: &str) -> Result<UpdateCheck, String> {
     let url = format!("https://api.github.com/repos/{GITHUB_REPO}/releases/latest");
-    let client = reqwest::Client::builder()
+    let mut builder = reqwest::Client::builder()
         .user_agent(USER_AGENT)
-        .timeout(std::time::Duration::from_secs(12))
-        .build()
-        .map_err(|error| error.to_string())?;
+        .timeout(std::time::Duration::from_secs(12));
+
+    if let Ok(environment) = network_core::detect_environment() {
+        if environment.proxy.enabled {
+            if let Some(proxy_server) = environment.proxy.server.as_deref() {
+                let proxy_url = if proxy_server.contains("://") {
+                    proxy_server.to_string()
+                } else {
+                    format!("http://{proxy_server}")
+                };
+                match reqwest::Proxy::all(&proxy_url) {
+                    Ok(proxy) => {
+                        builder = builder.proxy(proxy);
+                    }
+                    Err(error) => {
+                        tracing::warn!(
+                            target = "knottrace::updater",
+                            "ignoring invalid system proxy for update check: {error}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    let client = builder.build().map_err(|error| error.to_string())?;
 
     let response = client
         .get(url)
         .header("Accept", "application/vnd.github+json")
         .send()
         .await
-        .map_err(|error| format!("Could not reach GitHub: {error}"))?;
+        .map_err(|error| {
+            format!(
+                "Could not reach GitHub for updates (proxy/VPN may be blocking api.github.com): {error}"
+            )
+        })?;
 
     if !response.status().is_success() {
         return Err(format!(
@@ -193,10 +220,23 @@ async fn fallback_github_check(current: &str) -> Result<UpdateCheck, String> {
         available,
         current_version: current.to_string(),
         latest_version: Some(latest),
-        release_url: Some(release.html_url),
+        release_url: Some(if release.html_url.is_empty() {
+            RELEASES_LATEST_URL.to_string()
+        } else {
+            release.html_url
+        }),
         notes: release.body,
         can_install_in_app: false,
     })
+}
+
+fn release_tag_url(version: &str) -> String {
+    let trimmed = version.trim().trim_start_matches('v');
+    if trimmed.is_empty() {
+        RELEASES_LATEST_URL.to_string()
+    } else {
+        format!("https://github.com/{GITHUB_REPO}/releases/tag/v{trimmed}")
+    }
 }
 
 fn version_is_newer(latest: &str, current: &str) -> bool {
@@ -219,5 +259,36 @@ mod tests {
         assert!(version_is_newer("1.0.1", "1.0.0"));
         assert!(!version_is_newer("1.0.0", "1.0.0"));
         assert!(!version_is_newer("0.9.9", "1.0.0"));
+    }
+
+    #[test]
+    fn update_check_serializes_snake_case_for_ui() {
+        let payload = UpdateCheck {
+            available: true,
+            current_version: "1.6.0".to_string(),
+            latest_version: Some("1.7.0".to_string()),
+            release_url: Some(RELEASES_LATEST_URL.to_string()),
+            notes: None,
+            can_install_in_app: true,
+        };
+        let json = serde_json::to_string(&payload).expect("serialize");
+        assert!(json.contains("\"latest_version\":\"1.7.0\""));
+        assert!(json.contains("\"current_version\":\"1.6.0\""));
+        assert!(json.contains("\"can_install_in_app\":true"));
+        assert!(json.contains("\"release_url\""));
+        assert!(!json.contains("latestVersion"));
+        assert!(!json.contains("canInstallInApp"));
+    }
+
+    #[test]
+    fn release_tag_url_normalizes_version() {
+        assert_eq!(
+            release_tag_url("1.7.0"),
+            "https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.7.0"
+        );
+        assert_eq!(
+            release_tag_url("v1.7.0"),
+            "https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.7.0"
+        );
     }
 }

@@ -94,6 +94,7 @@ export function useCompanion() {
   const [autoProtectLog, setAutoProtectLog] = useState<AutoProtectLogEntry[]>([]);
   const [autoProtectLogError, setAutoProtectLogError] = useState<string | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const [updateCheck, setUpdateCheck] = useState<UpdateCheck | null>(null);
   const [updateChecking, setUpdateChecking] = useState(false);
   const [updateInstalling, setUpdateInstalling] = useState(false);
@@ -302,25 +303,39 @@ export function useCompanion() {
 
   const checkForUpdates = useCallback(async () => {
     setUpdateChecking(true);
+    setUpdateError(null);
     try {
       const result = await invoke<UpdateCheck>("check_for_updates");
       setUpdateCheck(result);
-    } catch {
+    } catch (error) {
       setUpdateCheck(null);
+      setUpdateError(
+        invokeErrorMessage(
+          error,
+          "Could not check for updates (GitHub may be blocked by proxy/VPN).",
+        ),
+      );
     } finally {
       setUpdateChecking(false);
     }
   }, []);
 
   const openUpdateRelease = useCallback(async () => {
-    const url = updateCheck?.release_url;
-    if (!url) return;
-    const { openUrl } = await import("@tauri-apps/plugin-opener");
-    await openUrl(url);
+    const url =
+      updateCheck?.release_url?.trim() ||
+      "https://github.com/Dendro-X0/KnotTrace/releases/latest";
+    try {
+      const { openUrl } = await import("@tauri-apps/plugin-opener");
+      await openUrl(url);
+      setUpdateError(null);
+    } catch (error) {
+      setUpdateError(invokeErrorMessage(error, "Could not open the GitHub release page."));
+    }
   }, [updateCheck?.release_url]);
 
   const installUpdate = useCallback(async () => {
     setUpdateInstalling(true);
+    setUpdateError(null);
     setUpdateProgress({ phase: "started", downloaded: 0, total: null });
     try {
       await invoke("install_update");
@@ -329,7 +344,7 @@ export function useCompanion() {
     } catch (error) {
       setUpdateInstalling(false);
       setUpdateProgress(null);
-      throw error;
+      setUpdateError(invokeErrorMessage(error, "Update install failed."));
     }
   }, []);
 
@@ -895,6 +910,7 @@ export function useCompanion() {
     updateChecking,
     updateInstalling,
     updateProgress,
+    updateError,
     bootstrapping,
     runCheck,
     setMonitorEnabled,

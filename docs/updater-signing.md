@@ -82,7 +82,7 @@ https://github.com/Dendro-X0/KnotTrace/releases/latest/download/latest.json
 2. If a newer version exists, the banner offers **Install update**.
 3. Download → verify signature → install → restart (passive mode on Windows).
 
-If signing is misconfigured, the app falls back to opening the GitHub release page.
+If signing is misconfigured, the app falls back to the GitHub Releases API / release page. The update IPC payload uses **snake_case** field names (`latest_version`, `can_install_in_app`, `release_url`) for the React UI. Fallback update checks reuse the detected system proxy when present; if GitHub is unreachable, the banner shows the error instead of a blank “vundefined” state.
 
 ## 4. Android (mobile)
 

@@ -36,6 +36,7 @@ export function App() {
           checking={state.updateChecking}
           installing={state.updateInstalling}
           progress={state.updateProgress}
+          error={state.updateError}
           onCheck={() => void state.checkForUpdates()}
           onInstall={() => void state.installUpdate()}
           onOpenRelease={() => void state.openUpdateRelease()}

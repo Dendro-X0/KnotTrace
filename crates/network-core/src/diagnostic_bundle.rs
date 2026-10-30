@@ -11,8 +11,6 @@ Absence of integrity indicators does not mean the path is safe from surveillance
 
 const NOT_CHECKED: &[&str] = &[
     "Listening services / high-risk ports (Band 3)",
-    "Trusted root certificate deltas (Band 3)",
-    "Gateway / ARP identity churn (Band 3)",
     "Process ↔ egress correlation (opt-in later)",
     "SSID (omitted unless include_ssid)",
     "Hostname (always omitted from export)",
@@ -50,6 +48,23 @@ pub fn build_diagnostic_bundle(
                 not_checked.push(item.clone());
             }
         }
+    }
+    if let Some(board) = &report.integrity {
+        for item in &board.not_checked {
+            if !not_checked.iter().any(|existing| existing == item) {
+                not_checked.push(item.clone());
+            }
+        }
+        // Drop legacy Band 3 ARP/cert honesty lines when snapshots observed.
+        if board.gateway_arp.as_ref().is_some_and(|s| s.observed) {
+            not_checked.retain(|s| !s.contains("ARP"));
+        }
+        if board.cert_store.as_ref().is_some_and(|s| s.observed) {
+            not_checked.retain(|s| !s.contains("Trusted root") && !s.contains("certificate delta"));
+        }
+    } else {
+        not_checked.push("Trusted root certificate deltas (Band 3)".to_string());
+        not_checked.push("Gateway / ARP identity churn (Band 3)".to_string());
     }
 
     DiagnosticBundle {

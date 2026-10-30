@@ -80,7 +80,7 @@ pub use network_context::{
     probe_captive_portal_with_options, CaptivePortalProbeOptions,
 };
 pub use path_break::classify_path_break;
-pub use integrity_board::assess_integrity_board;
+pub use integrity_board::{assess_integrity_board, enrich_integrity_board};
 pub use probe::{measure_tcp_latency, probe_dns_resolver, resolve_dns_addresses, run_quick_probe};
 pub use stability::run_stability_probes;
 pub use tor::{detect_tor_status, is_tor_socks_endpoint};

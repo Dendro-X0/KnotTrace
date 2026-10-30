@@ -8,14 +8,34 @@ use std::net::Ipv4Addr;
 pub const INTEGRITY_DISCLAIMER: &str = "We found indicators consistent with exposure, forced routing, or interception. Absence of indicators does not mean you are unobserved.";
 
 const HIGH_RISK_PORTS: &[u16] = &[21, 23, 135, 139, 445, 3389, 5900, 5985, 5986, 5600];
+const NOT_CHECKED_PROCESS: &str = "Process ↔ egress correlation";
+const NOT_CHECKED_COVERT: &str = "Covert kernel / firmware / ISP taps";
+const NOT_CHECKED_ARP: &str = "Gateway / ARP identity churn over time";
+const NOT_CHECKED_CERT: &str = "Trusted root certificate store deltas";
 
 pub fn assess_integrity_board(report: &HealthReport) -> IntegrityBoardReport {
-    assess_integrity_board_with_listeners(report, scan_listeners())
+    assess_integrity_board_with_parts(
+        report,
+        scan_listeners(),
+        snapshot_gateway_arp(report.environment.default_gateway.as_deref()),
+        snapshot_cert_store(),
+    )
 }
 
+/// Test/helper entry that skips live ARP/cert OS probes.
+#[allow(dead_code)]
 pub fn assess_integrity_board_with_listeners(
     report: &HealthReport,
     listeners: Option<ListenerScanSummary>,
+) -> IntegrityBoardReport {
+    assess_integrity_board_with_parts(report, listeners, None, None)
+}
+
+pub fn assess_integrity_board_with_parts(
+    report: &HealthReport,
+    listeners: Option<ListenerScanSummary>,
+    gateway_arp: Option<GatewayArpSnapshot>,
+    cert_store: Option<CertStoreSnapshot>,
 ) -> IntegrityBoardReport {
     let mut indicators = Vec::new();
     push_proxy_indicator(report, &mut indicators);
@@ -42,6 +62,108 @@ pub fn assess_integrity_board_with_listeners(
         }
     }
 
+    finalize_board(indicators, listeners, gateway_arp, cert_store)
+}
+
+/// Apply Band 3D history deltas (ARP MAC churn, cert-store fingerprint change).
+pub fn enrich_integrity_board(report: &mut HealthReport, history: &[HealthReport]) {
+    let Some(board) = report.integrity.as_mut() else {
+        return;
+    };
+
+    if let (Some(current), Some(mac)) = (
+        board.gateway_arp.clone(),
+        board.gateway_arp.as_ref().and_then(|s| s.mac.clone()),
+    ) {
+        if current.observed {
+            for prior in history.iter().filter_map(|r| r.integrity.as_ref()) {
+                let Some(prev) = &prior.gateway_arp else {
+                    continue;
+                };
+                if !prev.observed || prev.gateway_ip != current.gateway_ip {
+                    continue;
+                }
+                let Some(prev_mac) = &prev.mac else {
+                    continue;
+                };
+                if prev_mac != &mac {
+                    board.indicators.push(IntegrityIndicator {
+                        kind: IntegrityIndicatorKind::GatewayArpChurn,
+                        severity: AlertLevel::Warning,
+                        title: "Gateway ARP identity changed".to_string(),
+                        message: format!(
+                            "Default gateway {} previously resolved to MAC {}, now {}. Router swap, network move, or ARP spoofing are all possible — treat as an indicator only.",
+                            current.gateway_ip, prev_mac, mac
+                        ),
+                        evidence: format!(
+                            "gateway={} previous_mac={} current_mac={}",
+                            current.gateway_ip, prev_mac, mac
+                        ),
+                    });
+                    break;
+                }
+            }
+        }
+    }
+
+    if let Some(current) = board.cert_store.clone() {
+        if current.observed {
+            let prior_cert = history.iter().find_map(|r| {
+                r.integrity.as_ref().and_then(|b| {
+                    b.cert_store
+                        .as_ref()
+                        .filter(|c| c.observed)
+                        .cloned()
+                })
+            });
+            if let Some(prev) = prior_cert {
+                if prev.fingerprint != current.fingerprint || prev.root_count != current.root_count
+                {
+                    board.indicators.push(IntegrityIndicator {
+                        kind: IntegrityIndicatorKind::CertStoreDelta,
+                        severity: AlertLevel::Warning,
+                        title: "Trusted root store changed".to_string(),
+                        message: format!(
+                            "LocalMachine trusted roots were {} (fingerprint {}), now {} ({}). New enterprise/MITM roots or OS updates can both cause this — indicator only.",
+                            prev.root_count,
+                            truncate_fp(&prev.fingerprint),
+                            current.root_count,
+                            truncate_fp(&current.fingerprint)
+                        ),
+                        evidence: format!(
+                            "previous_count={} previous_fp={} current_count={} current_fp={}",
+                            prev.root_count,
+                            prev.fingerprint,
+                            current.root_count,
+                            current.fingerprint
+                        ),
+                    });
+                }
+            }
+        }
+    }
+
+    let listeners = board.listeners.clone();
+    let gateway_arp = board.gateway_arp.clone();
+    let cert_store = board.cert_store.clone();
+    let indicators = board.indicators.clone();
+    *board = finalize_board(indicators, listeners, gateway_arp, cert_store);
+}
+
+fn truncate_fp(fp: &str) -> String {
+    if fp.len() <= 12 {
+        fp.to_string()
+    } else {
+        format!("{}…", &fp[..12])
+    }
+}
+
+fn finalize_board(
+    indicators: Vec<IntegrityIndicator>,
+    listeners: Option<ListenerScanSummary>,
+    gateway_arp: Option<GatewayArpSnapshot>,
+    cert_store: Option<CertStoreSnapshot>,
+) -> IntegrityBoardReport {
     let indicator_count = indicators.len().min(u8::MAX as usize) as u8;
     let level = classify_level(&indicators);
     let confidence = if listeners.as_ref().map(|l| l.scanned).unwrap_or(false)
@@ -57,7 +179,7 @@ pub fn assess_integrity_board_with_listeners(
     let (title, summary) = if indicator_count == 0 {
         (
             "No integrity indicators in this check".to_string(),
-            "No proxy, DNS integrity, captive, TLS-intercept-hint, or high-risk listener indicators fired. This is not a clean bill of health.".to_string(),
+            "No proxy, DNS integrity, captive, TLS-intercept-hint, high-risk listener, ARP-churn, or cert-delta indicators fired. This is not a clean bill of health.".to_string(),
         )
     } else {
         (
@@ -73,6 +195,17 @@ pub fn assess_integrity_board_with_listeners(
         )
     };
 
+    let mut not_checked = vec![
+        NOT_CHECKED_PROCESS.to_string(),
+        NOT_CHECKED_COVERT.to_string(),
+    ];
+    if !gateway_arp.as_ref().is_some_and(|s| s.observed) {
+        not_checked.insert(0, NOT_CHECKED_ARP.to_string());
+    }
+    if !cert_store.as_ref().is_some_and(|s| s.observed) {
+        not_checked.insert(0, NOT_CHECKED_CERT.to_string());
+    }
+
     IntegrityBoardReport {
         indicator_count,
         level,
@@ -81,14 +214,270 @@ pub fn assess_integrity_board_with_listeners(
         disclaimer: INTEGRITY_DISCLAIMER.to_string(),
         indicators,
         listeners,
-        not_checked: vec![
-            "Trusted root certificate store deltas".to_string(),
-            "Gateway / ARP identity churn over time".to_string(),
-            "Process ↔ egress correlation".to_string(),
-            "Covert kernel / firmware / ISP taps".to_string(),
-        ],
+        gateway_arp,
+        cert_store,
+        not_checked,
         confidence,
     }
+}
+
+fn snapshot_gateway_arp(gateway_ip: Option<&str>) -> Option<GatewayArpSnapshot> {
+    let Some(ip) = gateway_ip.filter(|s| !s.is_empty()) else {
+        return Some(GatewayArpSnapshot {
+            gateway_ip: String::new(),
+            mac: None,
+            source: "no_default_gateway".to_string(),
+            observed: false,
+        });
+    };
+
+    #[cfg(windows)]
+    {
+        return Some(snapshot_gateway_arp_windows(ip));
+    }
+    #[cfg(target_os = "linux")]
+    {
+        return Some(snapshot_gateway_arp_linux(ip));
+    }
+    #[cfg(target_os = "macos")]
+    {
+        return Some(snapshot_gateway_arp_macos(ip));
+    }
+    #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
+    {
+        let _ = ip;
+        Some(GatewayArpSnapshot {
+            gateway_ip: ip.to_string(),
+            mac: None,
+            source: "unsupported_os".to_string(),
+            observed: false,
+        })
+    }
+}
+
+fn snapshot_cert_store() -> Option<CertStoreSnapshot> {
+    #[cfg(windows)]
+    {
+        return Some(snapshot_cert_store_windows());
+    }
+    #[cfg(not(windows))]
+    {
+        Some(CertStoreSnapshot {
+            root_count: 0,
+            fingerprint: String::new(),
+            source: "cert_store_not_implemented".to_string(),
+            observed: false,
+        })
+    }
+}
+
+fn normalize_mac(raw: &str) -> Option<String> {
+    let hex: String = raw
+        .chars()
+        .filter(|c| c.is_ascii_hexdigit())
+        .map(|c| c.to_ascii_lowercase())
+        .collect();
+    if hex.len() != 12 {
+        return None;
+    }
+    Some(
+        hex.as_bytes()
+            .chunks(2)
+            .map(|c| std::str::from_utf8(c).unwrap_or("00"))
+            .collect::<Vec<_>>()
+            .join(":"),
+    )
+}
+
+fn fingerprint_thumbprints(thumbs: &[String]) -> String {
+    let mut sorted = thumbs.to_vec();
+    sorted.sort();
+    let joined = sorted.join("|");
+    let mut hash: u64 = 5381;
+    for b in joined.bytes() {
+        hash = hash.wrapping_mul(33).wrapping_add(u64::from(b));
+    }
+    format!("{:016x}:{}", hash, sorted.len())
+}
+
+#[cfg(windows)]
+fn snapshot_gateway_arp_windows(gateway_ip: &str) -> GatewayArpSnapshot {
+    let ps = format!(
+        "$n = Get-NetNeighbor -IPAddress '{gateway_ip}' -ErrorAction SilentlyContinue | Select-Object -First 1; if ($n) {{ $n.LinkLayerAddress }} else {{ '' }}"
+    );
+    let output = hidden_command("powershell")
+        .args(["-NoProfile", "-Command", &ps])
+        .output();
+
+    if let Ok(out) = output {
+        if out.status.success() {
+            let text = String::from_utf8_lossy(&out.stdout);
+            if let Some(mac) = text.lines().find_map(|line| normalize_mac(line.trim())) {
+                return GatewayArpSnapshot {
+                    gateway_ip: gateway_ip.to_string(),
+                    mac: Some(mac),
+                    source: "powershell Get-NetNeighbor".to_string(),
+                    observed: true,
+                };
+            }
+        }
+    }
+
+    // Fallback: arp -a
+    let arp = hidden_command("arp").args(["-a"]).output();
+    if let Ok(out) = arp {
+        if out.status.success() {
+            let text = String::from_utf8_lossy(&out.stdout);
+            if let Some(mac) = parse_arp_a_for_ip(&text, gateway_ip) {
+                return GatewayArpSnapshot {
+                    gateway_ip: gateway_ip.to_string(),
+                    mac: Some(mac),
+                    source: "arp -a".to_string(),
+                    observed: true,
+                };
+            }
+        }
+    }
+
+    GatewayArpSnapshot {
+        gateway_ip: gateway_ip.to_string(),
+        mac: None,
+        source: "Get-NetNeighbor+arp".to_string(),
+        observed: false,
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn snapshot_gateway_arp_linux(gateway_ip: &str) -> GatewayArpSnapshot {
+    match std::fs::read_to_string("/proc/net/arp") {
+        Ok(text) => {
+            if let Some(mac) = parse_proc_net_arp(&text, gateway_ip) {
+                GatewayArpSnapshot {
+                    gateway_ip: gateway_ip.to_string(),
+                    mac: Some(mac),
+                    source: "/proc/net/arp".to_string(),
+                    observed: true,
+                }
+            } else {
+                GatewayArpSnapshot {
+                    gateway_ip: gateway_ip.to_string(),
+                    mac: None,
+                    source: "/proc/net/arp".to_string(),
+                    observed: false,
+                }
+            }
+        }
+        Err(_) => GatewayArpSnapshot {
+            gateway_ip: gateway_ip.to_string(),
+            mac: None,
+            source: "/proc/net/arp".to_string(),
+            observed: false,
+        },
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn snapshot_gateway_arp_macos(gateway_ip: &str) -> GatewayArpSnapshot {
+    let output = hidden_command("arp").args(["-n", gateway_ip]).output();
+    match output {
+        Ok(out) if out.status.success() => {
+            let text = String::from_utf8_lossy(&out.stdout);
+            if let Some(mac) = text.split_whitespace().find_map(|tok| normalize_mac(tok)) {
+                GatewayArpSnapshot {
+                    gateway_ip: gateway_ip.to_string(),
+                    mac: Some(mac),
+                    source: "arp -n".to_string(),
+                    observed: true,
+                }
+            } else {
+                GatewayArpSnapshot {
+                    gateway_ip: gateway_ip.to_string(),
+                    mac: None,
+                    source: "arp -n".to_string(),
+                    observed: false,
+                }
+            }
+        }
+        _ => GatewayArpSnapshot {
+            gateway_ip: gateway_ip.to_string(),
+            mac: None,
+            source: "arp -n".to_string(),
+            observed: false,
+        },
+    }
+}
+
+#[cfg(windows)]
+fn snapshot_cert_store_windows() -> CertStoreSnapshot {
+    let ps = "(Get-ChildItem Cert:\\LocalMachine\\Root -ErrorAction SilentlyContinue | ForEach-Object { $_.Thumbprint }) -join \"`n\"";
+    let output = hidden_command("powershell")
+        .args(["-NoProfile", "-Command", ps])
+        .output();
+
+    match output {
+        Ok(out) if out.status.success() => {
+            let text = String::from_utf8_lossy(&out.stdout);
+            let thumbs: Vec<String> = text
+                .lines()
+                .map(|l| l.trim().to_ascii_uppercase())
+                .filter(|l| !l.is_empty() && l.chars().all(|c| c.is_ascii_hexdigit()))
+                .collect();
+            if thumbs.is_empty() {
+                return CertStoreSnapshot {
+                    root_count: 0,
+                    fingerprint: String::new(),
+                    source: "Cert:\\LocalMachine\\Root".to_string(),
+                    observed: false,
+                };
+            }
+            let root_count = thumbs.len().min(u16::MAX as usize) as u16;
+            let fingerprint = fingerprint_thumbprints(&thumbs);
+            CertStoreSnapshot {
+                root_count,
+                fingerprint,
+                source: "Cert:\\LocalMachine\\Root".to_string(),
+                observed: true,
+            }
+        }
+        _ => CertStoreSnapshot {
+            root_count: 0,
+            fingerprint: String::new(),
+            source: "Cert:\\LocalMachine\\Root".to_string(),
+            observed: false,
+        },
+    }
+}
+
+#[cfg_attr(not(windows), allow(dead_code))]
+fn parse_arp_a_for_ip(text: &str, gateway_ip: &str) -> Option<String> {
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if !trimmed.starts_with(gateway_ip) {
+            continue;
+        }
+        for tok in trimmed.split_whitespace() {
+            if let Some(mac) = normalize_mac(tok) {
+                return Some(mac);
+            }
+        }
+    }
+    None
+}
+
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn parse_proc_net_arp(text: &str, gateway_ip: &str) -> Option<String> {
+    for line in text.lines().skip(1) {
+        let mut parts = line.split_whitespace();
+        let ip = parts.next()?;
+        if ip != gateway_ip {
+            continue;
+        }
+        let _hw_type = parts.next()?;
+        let _flags = parts.next()?;
+        let mac = parts.next()?;
+        return normalize_mac(mac);
+    }
+    None
 }
 
 fn push_proxy_indicator(report: &HealthReport, indicators: &mut Vec<IntegrityIndicator>) {
@@ -617,5 +1006,87 @@ mod tests {
         // 127 loopback filtered; 445 on 0.0.0.0 kept
         assert_eq!(summary.high_risk.len(), 1);
         assert_eq!(summary.high_risk[0].port, 445);
+    }
+
+    #[test]
+    fn normalizes_mac_and_parses_arp_tables() {
+        assert_eq!(
+            normalize_mac("AA-BB-CC-DD-EE-FF").as_deref(),
+            Some("aa:bb:cc:dd:ee:ff")
+        );
+        let arp_a = "Interface: 192.168.1.10\n  192.168.1.1           aa-bb-cc-dd-ee-ff     dynamic\n";
+        assert_eq!(
+            parse_arp_a_for_ip(arp_a, "192.168.1.1").as_deref(),
+            Some("aa:bb:cc:dd:ee:ff")
+        );
+        let proc = "IP address       HW type     Flags       HW address            Mask     Device\n\
+192.168.1.1      0x1         0x2         aa:bb:cc:dd:ee:ff     *        eth0\n";
+        assert_eq!(
+            parse_proc_net_arp(proc, "192.168.1.1").as_deref(),
+            Some("aa:bb:cc:dd:ee:ff")
+        );
+    }
+
+    #[test]
+    fn enrich_detects_arp_churn_and_cert_delta() {
+        let mut current = base_report();
+        current.environment.default_gateway = Some("192.168.1.1".to_string());
+        let mut board = assess_integrity_board_with_parts(
+            &current,
+            Some(empty_listeners()),
+            Some(GatewayArpSnapshot {
+                gateway_ip: "192.168.1.1".to_string(),
+                mac: Some("aa:bb:cc:dd:ee:ff".to_string()),
+                source: "test".to_string(),
+                observed: true,
+            }),
+            Some(CertStoreSnapshot {
+                root_count: 60,
+                fingerprint: "abcd:60".to_string(),
+                source: "test".to_string(),
+                observed: true,
+            }),
+        );
+        assert!(!board.not_checked.iter().any(|s| s.contains("ARP")));
+        assert!(!board.not_checked.iter().any(|s| s.contains("Trusted root")));
+
+        let mut prior = base_report();
+        prior.integrity = Some(IntegrityBoardReport {
+            indicator_count: 0,
+            level: IntegrityBoardLevel::None,
+            title: "t".to_string(),
+            summary: "s".to_string(),
+            disclaimer: INTEGRITY_DISCLAIMER.to_string(),
+            indicators: vec![],
+            listeners: None,
+            gateway_arp: Some(GatewayArpSnapshot {
+                gateway_ip: "192.168.1.1".to_string(),
+                mac: Some("11:22:33:44:55:66".to_string()),
+                source: "test".to_string(),
+                observed: true,
+            }),
+            cert_store: Some(CertStoreSnapshot {
+                root_count: 55,
+                fingerprint: "old:55".to_string(),
+                source: "test".to_string(),
+                observed: true,
+            }),
+            not_checked: vec![],
+            confidence: IntegrityBoardConfidence::Low,
+        });
+
+        current.integrity = Some(board);
+        enrich_integrity_board(&mut current, &[prior]);
+        board = current.integrity.unwrap();
+        assert!(board
+            .indicators
+            .iter()
+            .any(|i| i.kind == IntegrityIndicatorKind::GatewayArpChurn));
+        assert!(board
+            .indicators
+            .iter()
+            .any(|i| i.kind == IntegrityIndicatorKind::CertStoreDelta));
+        assert!(board.indicator_count >= 2);
+        assert_eq!(board.level, IntegrityBoardLevel::Caution);
     }
 }

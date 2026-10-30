@@ -22,11 +22,19 @@ async function visible(page, text) {
 }
 
 async function palette(page, query) {
+  await page.keyboard.press("Escape").catch(() => {});
+  await sleep(150);
   await page.keyboard.press("Control+K");
   await sleep(350);
   await page.keyboard.type(query, { delay: 15 });
   await sleep(250);
   await page.keyboard.press("Enter");
+}
+
+async function assertVisible(page, label, text) {
+  const ok = await visible(page, text);
+  console.log(label, text, ok);
+  if (!ok) throw new Error(`Missing visible text: ${text} (${label})`);
 }
 
 const browser = await chromium.connectOverCDP(CDP);
@@ -39,7 +47,10 @@ if (!page) throw new Error("No KnotTrace page attached to CDP");
 
 console.log("PAGE", page.url(), await page.title());
 await page.waitForSelector("body", { timeout: 15000 });
-await sleep(2000);
+await sleep(1000);
+
+await palette(page, "Overview");
+await sleep(1500);
 
 const overviewMarkers = [
   "Path break",
@@ -50,31 +61,44 @@ const overviewMarkers = [
   "Diagnostic export",
 ];
 for (const marker of overviewMarkers) {
-  console.log("OVERVIEW", marker, await visible(page, marker));
+  const loc = page.getByText(marker, { exact: false }).first();
+  await loc.scrollIntoViewIfNeeded().catch(() => {});
+  await assertVisible(page, "OVERVIEW", marker);
 }
 
 await palette(page, "Run health check");
 console.log("TRIGGERED health check");
 await sleep(8000);
 
+await palette(page, "Overview");
+await sleep(1200);
+
 const explain = page.getByRole("button", { name: /^Explain$/ });
 if (await explain.count()) {
+  await explain.first().scrollIntoViewIfNeeded();
   await explain.first().click();
   console.log("CLICKED Explain locally");
   await sleep(1500);
+} else {
+  throw new Error("Explain button not found on Overview");
 }
 
 const copyJson = page.getByRole("button", { name: /Copy JSON/i });
 if (await copyJson.count()) {
+  await copyJson.first().scrollIntoViewIfNeeded();
   await copyJson.first().click();
   console.log("CLICKED Copy JSON");
   await sleep(500);
+} else {
+  console.log("Copy JSON not shown yet (optional after explain)");
 }
 
 await palette(page, "Network");
 await sleep(1500);
 for (const marker of ["Path break", "Integrity", "Egress timeline", "Tunnel compare"]) {
-  console.log("NETWORK", marker, await visible(page, marker));
+  const loc = page.getByText(marker, { exact: false }).first();
+  await loc.scrollIntoViewIfNeeded().catch(() => {});
+  await assertVisible(page, "NETWORK", marker);
 }
 
 await browser.close();

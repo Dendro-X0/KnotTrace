@@ -108,7 +108,9 @@ export type IntegrityIndicatorKind =
   | "captive_portal"
   | "tls_intercept_hint"
   | "high_risk_listener"
-  | "path_forced_routing";
+  | "path_forced_routing"
+  | "gateway_arp_churn"
+  | "cert_store_delta";
 
 export interface IntegrityIndicator {
   kind: IntegrityIndicatorKind;
@@ -132,6 +134,20 @@ export interface ListenerScanSummary {
   summary: string;
 }
 
+export interface GatewayArpSnapshot {
+  gateway_ip: string;
+  mac?: string | null;
+  source: string;
+  observed: boolean;
+}
+
+export interface CertStoreSnapshot {
+  root_count: number;
+  fingerprint: string;
+  source: string;
+  observed: boolean;
+}
+
 export interface IntegrityBoardReport {
   indicator_count: number;
   level: IntegrityBoardLevel;
@@ -140,6 +156,8 @@ export interface IntegrityBoardReport {
   disclaimer: string;
   indicators: IntegrityIndicator[];
   listeners?: ListenerScanSummary | null;
+  gateway_arp?: GatewayArpSnapshot | null;
+  cert_store?: CertStoreSnapshot | null;
   not_checked: string[];
   confidence: IntegrityBoardConfidence;
 }

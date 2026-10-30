@@ -268,6 +268,8 @@ pub enum IntegrityIndicatorKind {
     TlsInterceptHint,
     HighRiskListener,
     PathForcedRouting,
+    GatewayArpChurn,
+    CertStoreDelta,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -297,6 +299,23 @@ pub struct ListenerScanSummary {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GatewayArpSnapshot {
+    pub gateway_ip: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mac: Option<String>,
+    pub source: String,
+    pub observed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CertStoreSnapshot {
+    pub root_count: u16,
+    pub fingerprint: String,
+    pub source: String,
+    pub observed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrityBoardReport {
     pub indicator_count: u8,
     pub level: IntegrityBoardLevel,
@@ -306,6 +325,10 @@ pub struct IntegrityBoardReport {
     pub indicators: Vec<IntegrityIndicator>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub listeners: Option<ListenerScanSummary>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gateway_arp: Option<GatewayArpSnapshot>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cert_store: Option<CertStoreSnapshot>,
     pub not_checked: Vec<String>,
     pub confidence: IntegrityBoardConfidence,
 }

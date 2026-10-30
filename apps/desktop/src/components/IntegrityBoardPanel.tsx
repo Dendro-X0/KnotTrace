@@ -79,6 +79,18 @@ export function IntegrityBoardPanel({ loading, report, compact }: IntegrityBoard
         {!compact && report.listeners?.scanned && (
           <p className="text-muted-foreground text-xs">{report.listeners.summary}</p>
         )}
+        {!compact && report.gateway_arp?.observed && (
+          <p className="text-muted-foreground text-xs">
+            Gateway ARP {report.gateway_arp.gateway_ip}
+            {report.gateway_arp.mac ? ` · ${report.gateway_arp.mac}` : ""} · {report.gateway_arp.source}
+          </p>
+        )}
+        {!compact && report.cert_store?.observed && (
+          <p className="text-muted-foreground text-xs">
+            Trusted roots {report.cert_store.root_count} · fp {report.cert_store.fingerprint.slice(0, 16)}
+            … · {report.cert_store.source}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

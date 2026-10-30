@@ -353,6 +353,8 @@ mod tests {
                 disclaimer: INTEGRITY_DISCLAIMER.to_string(),
                 indicators: vec![],
                 listeners: None,
+                gateway_arp: None,
+                cert_store: None,
                 not_checked: vec![],
                 confidence: IntegrityBoardConfidence::Low,
             }),
@@ -453,6 +455,8 @@ mod tests {
             disclaimer: INTEGRITY_DISCLAIMER.to_string(),
             indicators: vec![],
             listeners: None,
+            gateway_arp: None,
+            cert_store: None,
             not_checked: vec![],
             confidence: IntegrityBoardConfidence::High,
         });

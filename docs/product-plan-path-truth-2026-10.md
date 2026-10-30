@@ -1,7 +1,7 @@
 # Product plan — KnotTrace “Path Truth” network utility
 
 **Date (UTC):** 2026-10-28  
-**Status:** Path Truth Bands **1–5 + 4A/4B + 3D shipped** (ARP/cert snapshots + history deltas)  
+**Status:** Path Truth Bands **1–5 + 4A/4B + 3D + CLI shipped**  
 **Repo:** KnotTrace (`network`) only  
 **Audience:** Maintainer
 
@@ -11,8 +11,8 @@ GOAL:     High-performance, versatile tool to diagnose and resolve network issue
 POSTURE:  Observe-first · indicators with confidence · reversible assists (opt-in)
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
-DONE:     Band 1–5 · 4A/4B · 3D ARP/cert · GUI click-smoke (CDP) green 2026-10-30
-NEXT:     CLI check --json; release bump when ready
+DONE:     Band 1–5 · 4A/4B · 3D ARP/cert · CLI check --json · GUI smoke 2026-10-30
+NEXT:     Release bump when ready
 ```
 
 ---
@@ -134,7 +134,7 @@ Keep the existing KnotTrace split; grow capabilities inside it:
 |-------|------|
 | **`network-core` (Rust)** | Probes, diagnosis, integrity, assists — no UI; high performance; unit-tested |
 | **`apps/desktop` (Tauri)** | Overview / Network / Protect / Assist / AI explain |
-| **Optional later** | Headless CLI (`check --json`) for power users and local agents |
+| **Headless CLI** | `network-probe check --json` for power users and local agents — [cli-check-design.md](../specs/backend/cli-check-design.md) |
 
 **Performance:** Fast vs full check profiles; lightweight background monitor; throughput and long egress timelines **manual / opt-in only**.
 
@@ -175,7 +175,8 @@ Chartered. Execute in order; do not skip ahead without maintainer OK.
 - [../specs/backend/integrity-board-design.md](../specs/backend/integrity-board-design.md) — Band 3 design  
 - [../specs/backend/ai-explain-design.md](../specs/backend/ai-explain-design.md) — Band 4 design  
 - [../specs/backend/egress-timeline-design.md](../specs/backend/egress-timeline-design.md) — Band 5 design  
+- [../specs/backend/cli-check-design.md](../specs/backend/cli-check-design.md) — headless `check --json`  
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier integrity/path-break sketch  
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 shipped direction  
 
-_Last updated: 2026-10-30T09:25:00Z_
+_Last updated: 2026-10-30T09:35:00Z_

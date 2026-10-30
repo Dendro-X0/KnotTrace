@@ -35,12 +35,13 @@ cd apps/desktop && npm run tauri build
 ### L3 runtime smoke (no GUI)
 
 ```bash
-cargo run -p network-core --bin network-probe --quiet > report.json
-cargo run -p network-core --bin network-probe --quiet -- --explain > explain.json
+cargo run -p network-core --bin network-probe --quiet -- check --json > report.json
+cargo run -p network-core --bin network-probe --quiet -- check --json --explain > explain.json
+cargo run -p network-core --bin network-probe --quiet -- check --json --bundle > bundle.json
 cd apps/desktop && npx tsc --noEmit
 ```
 
-Confirm `report.json` has `path_break` + `integrity.disclaimer`, and `explain.json` has `schema_version: knottrace.local_explain.v1`.
+Confirm `report.json` has `path_break` + `integrity.disclaimer`, `explain.json` has `schema_version: knottrace.local_explain.v1`, and `bundle.json` has `knottrace.diagnostic_bundle.v1`.
 
 ### L3 GUI click-smoke (WebView2 CDP)
 
@@ -68,10 +69,13 @@ network/
 
 Related reading: [START-HERE.md](./START-HERE.md), [architecture.md](./architecture.md), [platform-support.md](./platform-support.md), [slowdown-factors.md](./slowdown-factors.md), [slow-speed-triage.md](./slow-speed-triage.md), [local-first roadmap](../specs/backend/local-first-improvement-roadmap.md).
 
-## CLI probe (optional)
+## CLI probe (headless)
 
 ```bash
-cargo run -p network-core --bin network-probe
+cargo run -p network-core --bin network-probe -- check --json
+cargo run -p network-core --bin network-probe -- check --json --fast
+cargo run -p network-core --bin network-probe -- check --json --explain
+cargo run -p network-core --bin network-probe -- check --json --bundle
 ```
 
-Runs a one-shot health check from the terminal without the desktop UI.
+One-shot Path Truth check without the desktop UI. Prefer `check --json` for agents; bare `network-probe` still pretty-prints a full report (legacy).

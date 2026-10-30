@@ -2,6 +2,7 @@
 
 mod ai_explain;
 mod assist;
+mod cli_args;
 mod auto_protect_log;
 mod benchmark;
 mod clash_api;
@@ -40,6 +41,7 @@ pub use ai_explain::{
     build_cloud_system_prompt, explain_from_bundle, explain_locally, parse_cloud_action_ids,
     sanitize_cloud_markdown, ALLOWED_ACTION_IDS, CLOUD_HARDENING_ADDENDUM, CLOUD_USER_PROMPT,
 };
+pub use cli_args::{parse_args, usage, CliCommand, CliOutput, JsonStyle, ParseError};
 pub use assist::{
     apply_dns_assist, get_assist_state, recommend_dns_assist, restore_dns_assist, AssistError,
 };

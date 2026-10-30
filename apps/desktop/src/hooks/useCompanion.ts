@@ -9,6 +9,8 @@ import type {
   BenchmarkSnapshot,
   ConnectConfig,
   ConnectRecommendation,
+  AiExplainSettings,
+  CloudExplainResult,
   DiagnosticBundle,
   DnsAssistRecommendation,
   LocalExplainReport,
@@ -448,6 +450,33 @@ export function useCompanion() {
 
   const explainLocally = useCallback(async () => {
     return invoke<LocalExplainReport>("explain_locally_report");
+  }, []);
+
+  const getAiExplainSettings = useCallback(async () => {
+    return invoke<AiExplainSettings>("get_ai_explain_settings");
+  }, []);
+
+  const setAiExplainSettings = useCallback(
+    async (update: {
+      cloudEnabled: boolean;
+      provider: AiExplainSettings["provider"];
+      baseUrl: string;
+      model: string;
+      includeSsid: boolean;
+      consentAck: boolean;
+      apiKey?: string | null;
+    }) => {
+      return invoke<AiExplainSettings>("set_ai_explain_settings", { update });
+    },
+    [],
+  );
+
+  const clearAiExplainKey = useCallback(async () => {
+    return invoke<AiExplainSettings>("clear_ai_explain_key");
+  }, []);
+
+  const explainWithCloud = useCallback(async () => {
+    return invoke<CloudExplainResult>("explain_with_cloud");
   }, []);
 
   const deleteBenchmark = useCallback(
@@ -938,6 +967,10 @@ export function useCompanion() {
     saveBenchmark,
     exportDiagnosticBundle,
     explainLocally,
+    getAiExplainSettings,
+    setAiExplainSettings,
+    clearAiExplainKey,
+    explainWithCloud,
     deleteBenchmark,
     saveThroughputSettings,
     runThroughputTest,

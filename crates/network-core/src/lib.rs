@@ -36,7 +36,10 @@ mod tunnel_compare;
 mod types;
 mod upstream_pool;
 
-pub use ai_explain::{explain_from_bundle, explain_locally};
+pub use ai_explain::{
+    build_cloud_system_prompt, explain_from_bundle, explain_locally, parse_cloud_action_ids,
+    sanitize_cloud_markdown, ALLOWED_ACTION_IDS, CLOUD_HARDENING_ADDENDUM, CLOUD_USER_PROMPT,
+};
 pub use assist::{
     apply_dns_assist, get_assist_state, recommend_dns_assist, restore_dns_assist, AssistError,
 };

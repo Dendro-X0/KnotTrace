@@ -1,6 +1,6 @@
 # AI explain — opt-in (Path Truth Band 4)
 
-Status: **4A implemented** (local explain) · **4B design only** (cloud opt-in not chartered)  
+Status: **4A + 4B implemented** (local template + opt-in OpenAI-compatible cloud)  
 Product plan: [product-plan-path-truth-2026-10.md](../../docs/product-plan-path-truth-2026-10.md) §4.1–4.3, §8 order 4  
 Depends on: [diagnostic-bundle-design.md](./diagnostic-bundle-design.md) (Band 2), [integrity-board-design.md](./integrity-board-design.md) (Band 3)
 
@@ -229,14 +229,16 @@ Forbidden in UI and prompts:
 - “AI fixed your network.”  
 - “Guaranteed faster speeds.”
 
-## Open decisions (maintainer)
+## Open decisions (maintainer) — locked for 4B
 
-Record answers before 4B impl:
+| # | Decision | Choice |
+|---|----------|--------|
+| 1 | Provider | **User-supplied OpenAI-compatible only** (no KnotTrace-brokered endpoint) |
+| 2 | Key storage | **Separate local file** under data dir (`ai_explain_api_key.txt`); never in settings JSON or clipboard export |
+| 3 | Reply retention | **Memory-only** in UI session (no on-disk reply cache in v1) |
+| 4 | SSID default | **`false`** |
 
-1. **Provider default:** user-supplied OpenAI-compatible only vs ship a KnotTrace-brokered endpoint (broker = out of scope unless new infra charter).  
-2. **Key storage:** OS credential store vs local encrypted file.  
-3. **Reply retention:** memory-only vs optional on-disk cache.  
-4. **SSID default:** keep false (recommended).
+Consent version string: `knottrace.ai_explain.consent.v1`
 
 ## Acceptance
 
@@ -255,10 +257,14 @@ Record answers before 4B impl:
 - [x] Overview `LocalExplainPanel` (navigate-only action chips)  
 - [x] L1: `cargo test -p network-core --lib ai_explain`  
 - [x] L3 (runtime): `network-probe --explain` returns `knottrace.local_explain.v1` with action_ids + disclaimer caveat  
-- [ ] L3 (GUI): Overview Explain locally click — blocked here by missing Windows `RC.EXE` for `tauri dev`  
+- [ ] L3 (GUI): Overview Explain locally / cloud click-smoke  
 
-- [ ] Maintainer answers open decisions (before 4B code)  
-- [ ] 4B implementation chartered (separate session)  
+### 4B implementation
+
+- [x] Open decisions locked (user OpenAI-compat; local key file; memory replies; SSID off)  
+- [x] Settings + consent + `explain_with_cloud` + Overview `CloudExplainPanel`  
+- [x] L1: action_id parse + HTML sanitize tests  
+
 
 ## Doc links
 

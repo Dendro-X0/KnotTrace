@@ -8,6 +8,7 @@ import { PathBreakPanel } from "@/components/PathBreakPanel";
 import { DiagnosticBundlePanel } from "@/components/DiagnosticBundlePanel";
 import { IntegrityBoardPanel } from "@/components/IntegrityBoardPanel";
 import { LocalExplainPanel } from "@/components/LocalExplainPanel";
+import { CloudExplainPanel } from "@/components/CloudExplainPanel";
 import { EgressTimelinePanel } from "@/components/EgressTimelinePanel";
 import { NextStepsPanel } from "@/components/NextStepsPanel";
 import { StatusHero } from "@/components/StatusHero";
@@ -112,6 +113,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
                 <IntegrityBoardPanel loading={loading} report={state.report?.integrity} compact />
                 <EgressTimelinePanel loading={loading} report={state.report?.egress_timeline} compact />
                 <LocalExplainPanel state={state} />
+                <CloudExplainPanel state={state} />
                 <DiagnosticBundlePanel state={state} />
               </div>
               <div className="grid min-h-0 gap-3">

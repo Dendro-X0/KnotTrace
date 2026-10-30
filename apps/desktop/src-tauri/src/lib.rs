@@ -1,3 +1,4 @@
+mod ai_explain;
 mod assist;
 mod benchmark;
 mod connect;
@@ -135,6 +136,10 @@ pub fn run() {
             benchmark::get_network_diagnosis,
             benchmark::export_diagnostic_bundle,
             benchmark::explain_locally_report,
+            ai_explain::get_ai_explain_settings,
+            ai_explain::set_ai_explain_settings,
+            ai_explain::clear_ai_explain_key,
+            ai_explain::explain_with_cloud,
             assist::recommend_dns,
             assist::get_dns_assist_state,
             assist::apply_dns,

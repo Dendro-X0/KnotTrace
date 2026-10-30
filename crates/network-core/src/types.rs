@@ -389,6 +389,56 @@ pub struct LocalExplainReport {
     pub source: String,
 }
 
+pub const AI_EXPLAIN_CONSENT_VERSION: &str = "knottrace.ai_explain.consent.v1";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AiExplainProvider {
+    None,
+    OpenaiCompat,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiExplainSettings {
+    pub cloud_enabled: bool,
+    pub provider: AiExplainProvider,
+    pub base_url: String,
+    pub model: String,
+    pub api_key_present: bool,
+    pub include_ssid: bool,
+    pub consent_version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_consent_at: Option<DateTime<Utc>>,
+}
+
+impl Default for AiExplainSettings {
+    fn default() -> Self {
+        Self {
+            cloud_enabled: false,
+            provider: AiExplainProvider::None,
+            base_url: String::new(),
+            model: String::new(),
+            api_key_present: false,
+            include_ssid: false,
+            consent_version: String::new(),
+            last_consent_at: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CloudExplainResult {
+    pub ok: bool,
+    pub provider: String,
+    pub model: String,
+    pub plain_markdown: String,
+    pub parsed_actions: Vec<String>,
+    pub rejected_actions: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+    pub received_at: DateTime<Utc>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiagnosticBundleOptions {
     #[serde(default)]

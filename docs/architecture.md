@@ -32,7 +32,8 @@ Single source of truth for network logic. No UI dependencies.
 | `path_break` | Path Truth Band 1: active path + hop + environment class (synthesizes existing signals) |
 | `diagnostic_bundle` | Path Truth Band 2: redacted AI-ready JSON export (no cloud) |
 | `integrity_board` | Path Truth Band 3: exposure/integrity indicators + listener scan (never “safe”) |
-| `ai_explain` | Path Truth Band 4A: on-device local explain template (no cloud) |
+| `ai_explain` | Path Truth Band 4: local explain template + cloud prompt/action helpers |
+| desktop `ai_explain` | Band 4B: settings, API key file, OpenAI-compatible HTTPS explain |
 | `egress_timeline` | Path Truth Band 5: public IP stability/churn from local history |
 | `upstream_pool` | Claim grades for active-path vs recurring upstream-pool impairment |
 | `egress` | Public IP probes and path consistency |

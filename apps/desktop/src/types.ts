@@ -202,6 +202,30 @@ export interface LocalExplainReport {
   source: string;
 }
 
+export type AiExplainProvider = "none" | "openai_compat";
+
+export interface AiExplainSettings {
+  cloud_enabled: boolean;
+  provider: AiExplainProvider;
+  base_url: string;
+  model: string;
+  api_key_present: boolean;
+  include_ssid: boolean;
+  consent_version: string;
+  last_consent_at?: string | null;
+}
+
+export interface CloudExplainResult {
+  ok: boolean;
+  provider: string;
+  model: string;
+  plain_markdown: string;
+  parsed_actions: string[];
+  rejected_actions: string[];
+  error?: string | null;
+  received_at: string;
+}
+
 export interface DiagnosticBundle {
   schema_version: string;
   exported_at: string;

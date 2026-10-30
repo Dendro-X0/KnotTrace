@@ -1,10 +1,84 @@
-//! Path Truth Band 4A — on-device local explain (no cloud, no LLM).
+//! Path Truth Band 4 — on-device local explain (4A) + cloud prompt helpers (4B).
 
 use crate::diagnostic_bundle::build_diagnostic_bundle;
 use crate::integrity_board::INTEGRITY_DISCLAIMER;
 use crate::types::*;
+use std::collections::BTreeSet;
 
 pub const LOCAL_EXPLAIN_SCHEMA: &str = "knottrace.local_explain.v1";
+
+pub const CLOUD_HARDENING_ADDENDUM: &str = "Reply in markdown with sections: Summary, Likely cause, \
+What to do next, What was not checked. Each \"What to do next\" bullet must end with \
+(action_id: <id>) using only action_id values present in the bundle recommendations. \
+If unsure, say so; do not fabricate probe rows or claim the user is unmonitored.";
+
+pub const CLOUD_USER_PROMPT: &str = "Explain this KnotTrace diagnostic bundle for a non-expert. \
+Use only the JSON facts. Map next steps to action_id values from the bundle.";
+
+pub const ALLOWED_ACTION_IDS: &[&str] = &[
+    "open_dns_assist",
+    "open_connect",
+    "open_network",
+    "open_protect",
+    "review_mtu",
+    "review_local_caps",
+    "manual_out_of_scope",
+];
+
+pub fn build_cloud_system_prompt(bundle: &DiagnosticBundle) -> String {
+    format!("{}\n\n{}", bundle.ai_prompt_template, CLOUD_HARDENING_ADDENDUM)
+}
+
+/// Extract allowlisted `(action_id: …)` tokens from model markdown.
+pub fn parse_cloud_action_ids(markdown: &str) -> (Vec<String>, Vec<String>) {
+    let allow: BTreeSet<&str> = ALLOWED_ACTION_IDS.iter().copied().collect();
+    let mut parsed = Vec::new();
+    let mut rejected = Vec::new();
+    let mut seen = BTreeSet::new();
+
+    for raw in extract_action_id_tokens(markdown) {
+        let id = raw.trim().to_string();
+        if allow.contains(id.as_str()) {
+            if seen.insert(id.clone()) {
+                parsed.push(id);
+            }
+        } else if !id.is_empty() && seen.insert(format!("rejected:{id}")) {
+            rejected.push(id);
+        }
+    }
+    (parsed, rejected)
+}
+
+fn extract_action_id_tokens(markdown: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let lower = markdown;
+    let mut rest = lower;
+    while let Some(start) = rest.find("(action_id:") {
+        let after = &rest[start + "(action_id:".len()..];
+        if let Some(end) = after.find(')') {
+            out.push(after[..end].trim().to_string());
+            rest = &after[end + 1..];
+        } else {
+            break;
+        }
+    }
+    out
+}
+
+pub fn sanitize_cloud_markdown(input: &str) -> String {
+    // Strip crude HTML tags; keep markdown text.
+    let mut out = String::with_capacity(input.len());
+    let mut in_tag = false;
+    for ch in input.chars() {
+        match ch {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            _ if !in_tag => out.push(ch),
+            _ => {}
+        }
+    }
+    out
+}
 
 pub fn explain_locally(report: &HealthReport) -> LocalExplainReport {
     let bundle = build_diagnostic_bundle(report, DiagnosticBundleOptions::default());
@@ -387,5 +461,22 @@ mod tests {
             .caveats
             .iter()
             .any(|c| c.contains("does not mean you are unobserved")));
+    }
+
+    #[test]
+    fn parses_allowlisted_action_ids() {
+        let md = "### What to do next\n- Check DNS (action_id: open_dns_assist)\n- Hack (action_id: erase_disk)\n";
+        let (parsed, rejected) = parse_cloud_action_ids(md);
+        assert_eq!(parsed, vec!["open_dns_assist".to_string()]);
+        assert_eq!(rejected, vec!["erase_disk".to_string()]);
+    }
+
+    #[test]
+    fn sanitizes_html_from_cloud_markdown() {
+        let clean = sanitize_cloud_markdown("Hello <script>x</script> world");
+        assert!(!clean.contains('<'));
+        assert!(!clean.contains('>'));
+        assert!(clean.contains("Hello"));
+        assert!(clean.contains("world"));
     }
 }

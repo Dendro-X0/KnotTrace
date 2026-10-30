@@ -44,6 +44,18 @@ Confirm `report.json` has `path_break` + `integrity.disclaimer`, and `explain.js
 
 Full Overview click-smoke needs `npm run tauri dev` (Windows: Visual Studio **RC.EXE** / Windows SDK on `PATH`).
 
+### L3 runtime smoke (no GUI)
+
+```bash
+cargo run -p network-core --bin network-probe --quiet > report.json
+cargo run -p network-core --bin network-probe --quiet -- --explain > explain.json
+cd apps/desktop && npx tsc --noEmit
+```
+
+Confirm `report.json` has `path_break` + `integrity.disclaimer`, and `explain.json` has `schema_version: knottrace.local_explain.v1`.
+
+Full Overview click-smoke needs `npm run tauri dev` (Windows: Visual Studio **RC.EXE** / Windows SDK on `PATH`).
+
 ## Project layout
 
 ```

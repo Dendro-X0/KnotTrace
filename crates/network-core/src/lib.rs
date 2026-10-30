@@ -17,6 +17,7 @@ mod local_caps;
 mod local_repair;
 mod mtu_assist;
 mod network_context;
+mod path_break;
 mod probe;
 mod process;
 mod protect;
@@ -68,6 +69,7 @@ pub use network_context::{
     assess_network_context, is_untrusted_context, probe_captive_portal,
     probe_captive_portal_with_options, CaptivePortalProbeOptions,
 };
+pub use path_break::classify_path_break;
 pub use probe::{measure_tcp_latency, probe_dns_resolver, resolve_dns_addresses, run_quick_probe};
 pub use stability::run_stability_probes;
 pub use tor::{detect_tor_status, is_tor_socks_endpoint};
@@ -223,6 +225,7 @@ pub async fn run_health_check_with_settings(
         local_repair: None,
         tunnel_compare,
         upstream_pool: None,
+        path_break: None,
     };
 
     // Link facts / local caps / MTU assist are sync OS reads; keep off the async probe critical path.
@@ -232,6 +235,7 @@ pub async fn run_health_check_with_settings(
     report.upstream_pool = evaluate_upstream_pool_snapshot(&report);
     report.mtu_assist = Some(collect_mtu_assist(&report, None));
     report.local_repair = Some(collect_local_repair(&report));
+    report.path_break = Some(classify_path_break(&report));
     report.recommendations = Some(build_recommendations(&report));
     report.diagnosis = Some(diagnose_network(&report));
 

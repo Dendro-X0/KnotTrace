@@ -29,6 +29,7 @@ Single source of truth for network logic. No UI dependencies.
 | `mtu_assist` | Opt-in interface MTU clamp when fragmentation + tunnel evidenced |
 | `local_repair` | Opt-in flush DNS / renew DHCP / restart adapter (offline-capable) |
 | `tunnel_compare` | Direct / proxy / Tor path samples + expectation copy |
+| `path_break` | Path Truth Band 1: active path + hop + environment class (synthesizes existing signals) |
 | `upstream_pool` | Claim grades for active-path vs recurring upstream-pool impairment |
 | `egress` | Public IP probes and path consistency |
 | `network_context` | Guest/public network and captive portal classification |
@@ -61,7 +62,7 @@ Thin Tauri command layer + React dashboard.
 | `throughput` | Throughput settings and on-demand test |
 | `dns_integrity` | Integrity settings |
 
-Frontend state centralizes in `useCompanion.ts`; pages live under `components/pages/`. Notable Network/Overview panels: `LinkFactsPanel`, `LocalCapsPanel`, `MtuAssistPanel`, `TunnelComparePanel`, `UpstreamPoolPanel`, `ProxyPathPanel`, `NetworkDiagnosisPanel`, `NextStepsPanel`, `TrendCharts`.
+Frontend state centralizes in `useCompanion.ts`; pages live under `components/pages/`. Notable Network/Overview panels: `LinkFactsPanel`, `LocalCapsPanel`, `MtuAssistPanel`, `PathBreakPanel`, `TunnelComparePanel`, `UpstreamPoolPanel`, `ProxyPathPanel`, `NetworkDiagnosisPanel`, `NextStepsPanel`, `TrendCharts`.
 
 Scrolling uses a single `ScrollArea` component with the `.app-scroll` CSS class for consistent thin scrollbars.
 
@@ -75,6 +76,7 @@ Background monitor / manual check
         │                              │
         │                              ├──► link_facts / local_caps / mtu_assist
         │                              ├──► tunnel_compare / proxy_path_report
+        │                              ├──► path_break (path + hop + environment)
         │                              ├──► upstream_pool (snapshot; + history on desktop)
         │                              ├──► diagnosis + recommendations
         │                              ├──► protect evaluation
@@ -98,6 +100,7 @@ Design notes and roadmap: [`specs/backend/`](../specs/backend/).
 | [link-facts-design.md](../specs/backend/link-facts-design.md) | Link speed / duplex (L2) |
 | [windows-local-caps-design.md](../specs/backend/windows-local-caps-design.md) | TCP / NIC power (L3) |
 | [tunnel-path-compare-design.md](../specs/backend/tunnel-path-compare-design.md) | Tor/VPN expectations (L4) |
+| [path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) | Path Truth Band 1 path/hop classifier |
 | [upstream-pool-quality-design.md](../specs/backend/upstream-pool-quality-design.md) | Pool claim grades (L5) |
 | [mtu-assist-design.md](../specs/backend/mtu-assist-design.md) | Opt-in MTU clamp (L6) |
 | [slow-speed-diagnosis-v1.3.x.md](../specs/backend/slow-speed-diagnosis-v1.3.x.md) | Symptom shapes, confidence, proxy path |

@@ -62,6 +62,49 @@ export interface HealthReport {
   local_repair?: LocalRepairReport | null;
   tunnel_compare?: TunnelPathCompareReport | null;
   upstream_pool?: UpstreamPoolProof | null;
+  path_break?: PathBreakReport | null;
+}
+
+export type PathBreakPath =
+  | "direct"
+  | "system_proxy"
+  | "vpn_tunnel"
+  | "tor_socks";
+
+export type PathBreakHop =
+  | "none"
+  | "local"
+  | "dns"
+  | "tcp"
+  | "tls"
+  | "http"
+  | "unknown";
+
+export type PathEnvironmentClass =
+  | "home_lan"
+  | "guest_wifi"
+  | "public_hotspot"
+  | "captive_portal"
+  | "corporate_proxy"
+  | "vpn_only"
+  | "tor"
+  | "filtered_region"
+  | "unknown";
+
+export type PathBreakConfidence = "high" | "medium" | "low";
+
+export interface PathBreakReport {
+  local_ok: boolean;
+  local_issues: string[];
+  active_path: PathBreakPath;
+  paths_present: PathBreakPath[];
+  break_hop: PathBreakHop;
+  environment_class: PathEnvironmentClass;
+  confidence: PathBreakConfidence;
+  title: string;
+  summary: string;
+  evidence: string[];
+  not_checked: string[];
 }
 
 export type UpstreamPoolClaim =

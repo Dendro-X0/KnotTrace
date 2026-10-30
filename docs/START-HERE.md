@@ -8,11 +8,11 @@ Product direction: fix what is on the machine (DNS, link, OS caps, MTU) first; t
 
 | Page | Purpose |
 |------|---------|
-| **Overview** | Health score, fast/full check badge, diagnosis shapes, upstream pool claim, next steps, trends, benchmark snapshots |
+| **Overview** | Health score, fast/full check badge, diagnosis shapes, path-break (path + hop), upstream pool claim, next steps, trends, benchmark snapshots |
 | **DNS Assist** | Recommend and apply a faster DNS resolver (Windows, macOS, Linux) |
 | **Connect** | Discover Mihomo/sing-box API and switch proxy nodes (manual / Protect opt-in) |
 | **Protect** | Trust level, shape-aware alerts, notifications, opt-in auto-apply |
-| **Network** | Environment, Link (+ Wi‑Fi signal), Local repair, Local caps (Windows), MTU assist, Tunnel compare, proxy path + upstream pool proof, probes, throughput |
+| **Network** | Environment, Link (+ Wi‑Fi signal), Local repair, Local caps (Windows), MTU assist, Path break, Tunnel compare, proxy path + upstream pool proof, probes, throughput |
 
 **Default posture:** observe first. The background monitor runs full health checks; manual checks use a faster profile. DNS, Connect, MTU, and local-caps changes stay manual unless you enable Protect auto-apply (DNS/proxy only — **never** MTU or local caps). Proxy path / upstream pool proof is detect-only — it does not switch nodes for you.
 
@@ -48,6 +48,9 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [platform-support.md](./platform-support.md) — what works on each OS
 - [slowdown-factors.md](./slowdown-factors.md) — cross-platform slowdown research
 - [slow-speed-triage.md](./slow-speed-triage.md) — symptom-to-signal triage matrix
+- [product-plan-path-truth-2026-10.md](./product-plan-path-truth-2026-10.md) — **product plan** Path Truth (Band 1 core shipped; AI/integrity later; independent of Obscur)
+- [../specs/backend/path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) — Path Truth Band 1 design
+- [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier security / integrity / path-break sketch (superseded in scope by Path Truth plan)
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 local-first bands
 - [../specs/backend/](../specs/backend/) — design specs
 - [github-ci.md](./github-ci.md) — GitHub Actions CI and release publishing

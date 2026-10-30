@@ -183,6 +183,66 @@ pub struct HealthReport {
     pub tunnel_compare: Option<TunnelPathCompareReport>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub upstream_pool: Option<UpstreamPoolProof>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path_break: Option<PathBreakReport>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PathBreakPath {
+    Direct,
+    SystemProxy,
+    VpnTunnel,
+    TorSocks,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PathBreakHop {
+    None,
+    Local,
+    Dns,
+    Tcp,
+    Tls,
+    Http,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PathEnvironmentClass {
+    HomeLan,
+    GuestWifi,
+    PublicHotspot,
+    CaptivePortal,
+    CorporateProxy,
+    VpnOnly,
+    Tor,
+    FilteredRegion,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PathBreakConfidence {
+    High,
+    Medium,
+    Low,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PathBreakReport {
+    pub local_ok: bool,
+    pub local_issues: Vec<String>,
+    pub active_path: PathBreakPath,
+    pub paths_present: Vec<PathBreakPath>,
+    pub break_hop: PathBreakHop,
+    pub environment_class: PathEnvironmentClass,
+    pub confidence: PathBreakConfidence,
+    pub title: String,
+    pub summary: String,
+    pub evidence: Vec<String>,
+    pub not_checked: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

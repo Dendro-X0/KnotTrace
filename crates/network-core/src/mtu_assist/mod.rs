@@ -315,6 +315,7 @@ mod tests {
             local_repair: None,
             tunnel_compare: None,
             upstream_pool: None,
+            path_break: None,
         }
     }
 

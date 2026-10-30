@@ -10,6 +10,7 @@ import { MtuAssistPanel } from "@/components/MtuAssistPanel";
 import { TunnelComparePanel } from "@/components/TunnelComparePanel";
 import { UpstreamPoolPanel } from "@/components/UpstreamPoolPanel";
 import { NetworkInsightsPanel } from "@/components/NetworkInsightsPanel";
+import { PathBreakPanel } from "@/components/PathBreakPanel";
 import { ProxyPathPanel } from "@/components/ProxyPathPanel";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
 import { Badge } from "@/components/ui/badge";
@@ -190,6 +191,7 @@ export function NetworkPage({ state }: NetworkPageProps) {
         networkContext={state.report?.network_context}
         recommendations={state.report?.recommendations}
       />
+      <PathBreakPanel loading={loading} report={state.report?.path_break} />
       <ProxyPathPanel
         loading={loading}
         proxyEnabled={env?.proxy.enabled}

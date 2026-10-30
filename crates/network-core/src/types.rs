@@ -499,18 +499,10 @@ pub struct CloudExplainResult {
     pub received_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DiagnosticBundleOptions {
     #[serde(default)]
     pub include_ssid: bool,
-}
-
-impl Default for DiagnosticBundleOptions {
-    fn default() -> Self {
-        Self {
-            include_ssid: false,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

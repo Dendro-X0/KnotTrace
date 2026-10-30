@@ -1,7 +1,12 @@
 //! Redacted diagnostic bundle for Path Truth Band 2 (AI-ready JSON, no cloud).
 
+use crate::assist::load_backup as load_dns_backup;
+use crate::auto_protect_log::list_auto_protect_log;
+use crate::local_caps::load_backup as load_local_caps_backup;
+use crate::mtu_assist::load_backup as load_mtu_backup;
 use crate::types::*;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
+use std::path::Path;
 
 pub const AI_PROMPT_TEMPLATE: &str = "You are helping a user understand KnotTrace network diagnostics. \
 Use ONLY the structured facts in the attached JSON bundle. Do not invent probe results, scores, \
@@ -11,7 +16,7 @@ Absence of integrity indicators does not mean the path is safe from surveillance
 
 const NOT_CHECKED: &[&str] = &[
     "Listening services / high-risk ports (Band 3)",
-    "Process ↔ egress correlation (opt-in later)",
+    "Process ↔ egress correlation (Protect opt-in; omitted unless enabled on device)",
     "SSID (omitted unless include_ssid)",
     "Hostname (always omitted from export)",
     "Cloud AI transfer (Band 4 — not used by this export)",
@@ -20,6 +25,14 @@ const NOT_CHECKED: &[&str] = &[
 pub fn build_diagnostic_bundle(
     report: &HealthReport,
     options: DiagnosticBundleOptions,
+) -> DiagnosticBundle {
+    build_diagnostic_bundle_with_dir(report, options, None)
+}
+
+pub fn build_diagnostic_bundle_with_dir(
+    report: &HealthReport,
+    options: DiagnosticBundleOptions,
+    data_dir: Option<&Path>,
 ) -> DiagnosticBundle {
     let mut redaction_notes = vec![
         "Hostname omitted.".to_string(),
@@ -126,10 +139,64 @@ pub fn build_diagnostic_bundle(
         }),
         recommendations: map_recommendations(report),
         integrity_flags: collect_integrity_flags(report),
-        config_timeline: Vec::new(),
+        config_timeline: data_dir
+            .map(build_config_timeline)
+            .unwrap_or_default(),
         not_checked,
         ai_prompt_template: AI_PROMPT_TEMPLATE.to_string(),
     }
+}
+
+/// Local config-change timeline from assist backups + recent auto-protect log.
+pub fn build_config_timeline(data_dir: &Path) -> Vec<String> {
+    let mut events: Vec<(DateTime<Utc>, String)> = Vec::new();
+
+    if let Ok(Some(backup)) = load_dns_backup(data_dir) {
+        events.push((
+            backup.applied_at,
+            format!(
+                "DNS Assist applied on {} → {} (restore available)",
+                backup.interface_alias, backup.applied_resolver
+            ),
+        ));
+    }
+    if let Ok(Some(backup)) = load_local_caps_backup(data_dir) {
+        events.push((
+            backup.applied_at,
+            format!(
+                "Local caps repair applied (autotuning was {})",
+                backup.previous_autotuning_level
+            ),
+        ));
+    }
+    if let Ok(Some(backup)) = load_mtu_backup(data_dir) {
+        events.push((
+            backup.applied_at,
+            format!(
+                "MTU assist on {} {}→{} (restore available)",
+                backup.interface_name, backup.previous_mtu, backup.applied_mtu
+            ),
+        ));
+    }
+    if let Ok(entries) = list_auto_protect_log(data_dir, 12) {
+        for entry in entries {
+            let status = if entry.success { "ok" } else { "skipped" };
+            events.push((
+                entry.timestamp,
+                format!(
+                    "Auto-protect {}: {} ({})",
+                    entry.kind, entry.message, status
+                ),
+            ));
+        }
+    }
+
+    events.sort_by(|a, b| b.0.cmp(&a.0));
+    events
+        .into_iter()
+        .take(12)
+        .map(|(at, detail)| format!("{} · {}", at.to_rfc3339(), detail))
+        .collect()
 }
 
 fn action_id_for(category: RecommendationCategory) -> &'static str {
@@ -440,5 +507,28 @@ mod tests {
     fn probe_table_includes_dns_row() {
         let bundle = build_diagnostic_bundle(&sample_report(), DiagnosticBundleOptions::default());
         assert!(bundle.probe_table.iter().any(|row| row.stage == "dns"));
+    }
+
+    #[test]
+    fn config_timeline_reads_dns_backup() {
+        let dir = std::env::temp_dir().join(format!(
+            "knottrace-timeline-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let backup = DnsBackup {
+            interface_alias: "Ethernet".to_string(),
+            previous_servers: vec!["192.168.1.1".to_string()],
+            use_dhcp: true,
+            applied_resolver: "1.1.1.1".to_string(),
+            applied_at: Utc::now(),
+        };
+        crate::assist::save_backup(&dir, &backup).unwrap();
+        let timeline = build_config_timeline(&dir);
+        assert!(timeline.iter().any(|line| line.contains("DNS Assist")));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

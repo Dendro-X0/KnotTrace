@@ -1,5 +1,5 @@
 use network_core::{
-    build_diagnostic_bundle, delete_benchmark_snapshot, explain_locally,
+    build_diagnostic_bundle_with_dir, delete_benchmark_snapshot, explain_locally,
     list_benchmark_snapshots, save_benchmark_snapshot, BenchmarkSnapshot, DiagnosticBundle,
     DiagnosticBundleOptions, ExternalSpeedtestNote, LocalExplainReport,
 };
@@ -72,11 +72,12 @@ pub fn export_diagnostic_bundle(
         .clone()
         .ok_or_else(|| "Run a health check before exporting a diagnostic bundle.".to_string())?;
 
-    Ok(build_diagnostic_bundle(
+    Ok(build_diagnostic_bundle_with_dir(
         &report,
         DiagnosticBundleOptions {
             include_ssid: include_ssid.unwrap_or(false),
         },
+        Some(&data_dir()),
     ))
 }
 

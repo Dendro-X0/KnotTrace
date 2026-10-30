@@ -1,6 +1,6 @@
 use chrono::Utc;
 use network_core::{
-    build_cloud_system_prompt, build_diagnostic_bundle, parse_cloud_action_ids,
+    build_cloud_system_prompt, build_diagnostic_bundle_with_dir, parse_cloud_action_ids,
     sanitize_cloud_markdown, AiExplainProvider, AiExplainSettings, CloudExplainResult,
     DiagnosticBundleOptions, AI_EXPLAIN_CONSENT_VERSION, CLOUD_USER_PROMPT,
 };
@@ -185,11 +185,12 @@ pub async fn explain_with_cloud(
         .clone()
         .ok_or_else(|| "Run a health check before cloud explain.".to_string())?;
 
-    let bundle = build_diagnostic_bundle(
+    let bundle = build_diagnostic_bundle_with_dir(
         &report,
         DiagnosticBundleOptions {
             include_ssid: settings.include_ssid,
         },
+        Some(&data_dir()),
     );
     let system = build_cloud_system_prompt(&bundle);
     let url = format!("{}/chat/completions", settings.base_url.trim_end_matches('/'));

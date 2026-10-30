@@ -53,7 +53,9 @@ pub use benchmark::{
     delete_benchmark_snapshot, list_benchmark_snapshots, save_benchmark_snapshot, BenchmarkError,
 };
 pub use diagnosis::diagnose_network;
-pub use diagnostic_bundle::build_diagnostic_bundle;
+pub use diagnostic_bundle::{
+    build_config_timeline, build_diagnostic_bundle, build_diagnostic_bundle_with_dir,
+};
 pub use connect::{
     apply_connect_switch, compare_proxy_paths, compare_proxy_paths_discovered,
     discover_connect_config, load_connect_config, recommend_connect,

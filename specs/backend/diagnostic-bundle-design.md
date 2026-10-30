@@ -1,6 +1,6 @@
 # Diagnostic bundle export (Path Truth Band 2)
 
-Status: **implemented** (core + Overview export; L3 smoke pending)  
+Status: **implemented** (core + Overview export + config timeline from local backups)  
 Product plan: [product-plan-path-truth-2026-10.md](../../docs/product-plan-path-truth-2026-10.md) §4, §8 order 2  
 Depends on: [path-break-classifier-design.md](./path-break-classifier-design.md) (Band 1)
 
@@ -51,7 +51,7 @@ DiagnosticBundle
 ├── upstream_pool: { claim, confidence, title } | null
 ├── recommendations: Vec<{ title, category, priority, action_id }>
 ├── integrity_flags: Vec<string>   # soft flags from existing signals only
-├── config_timeline: Vec<string>   # empty in v1 unless backup metadata available
+├── config_timeline: Vec<string>   # from DNS/local-caps/MTU backups + auto-protect log when data_dir provided
 ├── not_checked: Vec<string>
 └── ai_prompt_template: string     # fixed; instructs AI not to invent measurements
 ```

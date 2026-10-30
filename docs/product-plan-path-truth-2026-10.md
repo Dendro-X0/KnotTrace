@@ -11,8 +11,8 @@ GOAL:     High-performance, versatile tool to diagnose and resolve network issue
 POSTURE:  Observe-first · indicators with confidence · reversible assists (opt-in)
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
-DONE:     Band 1–5 · 4A/4B · 3D/3E · CLI · GUI smoke · v1.8.0
-NEXT:     Config-change timeline; cert Linux/macOS; AI 4C polish
+DONE:     Band 1–5 · 4A/4B · 3D/3E · CLI · GUI smoke · config timeline · v1.8.0
+NEXT:     Cert Linux/macOS; AI 4C polish
 ```
 
 ---
@@ -180,4 +180,4 @@ Chartered. Execute in order; do not skip ahead without maintainer OK.
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier integrity/path-break sketch  
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 shipped direction  
 
-_Last updated: 2026-10-30T10:30:00Z_
+_Last updated: 2026-10-30T10:35:00Z_

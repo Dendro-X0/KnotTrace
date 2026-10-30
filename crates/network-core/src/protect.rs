@@ -117,6 +117,8 @@ pub fn evaluate_protect(
                 alerts.push(captive_portal_alert(context, settings));
             }
         }
+
+        push_integrity_board_alerts(report, &mut alerts);
     }
 
     let summary = summarize_status(trust_level, &report.score, alerts.len());
@@ -456,6 +458,65 @@ fn grade_drop_alert(previous: HealthGrade, current: HealthGrade, settings: &Prot
     }
 }
 
+fn push_integrity_board_alerts(report: &HealthReport, alerts: &mut Vec<ProtectAlert>) {
+    let Some(board) = &report.integrity else {
+        return;
+    };
+    let mut added = 0u8;
+    for indicator in &board.indicators {
+        if added >= 3 {
+            break;
+        }
+        let Some((title, level)) = integrity_board_alert_meta(indicator.kind) else {
+            continue;
+        };
+        // Avoid duplicating the dedicated DNS integrity Protect alert.
+        if matches!(indicator.kind, IntegrityIndicatorKind::DnsIntegrity) {
+            continue;
+        }
+        alerts.push(ProtectAlert {
+            level,
+            title: title.to_string(),
+            message: format!(
+                "{} {}",
+                indicator.message,
+                "Open Network → Integrity for evidence. Absence of indicators does not mean you are unobserved."
+            ),
+            actions: vec![ProtectAction {
+                kind: ProtectActionKind::RunCheck,
+                label: "Run health check".to_string(),
+            }],
+        });
+        added = added.saturating_add(1);
+    }
+}
+
+fn integrity_board_alert_meta(kind: IntegrityIndicatorKind) -> Option<(&'static str, AlertLevel)> {
+    match kind {
+        IntegrityIndicatorKind::PathForcedRouting => {
+            Some(("Forced routing / proxy path", AlertLevel::Warning))
+        }
+        IntegrityIndicatorKind::CertStoreDelta => {
+            Some(("Trusted root store changed", AlertLevel::Warning))
+        }
+        IntegrityIndicatorKind::GatewayArpChurn => {
+            Some(("Gateway ARP identity changed", AlertLevel::Warning))
+        }
+        IntegrityIndicatorKind::HighRiskListener => {
+            Some(("High-risk listener detected", AlertLevel::Warning))
+        }
+        IntegrityIndicatorKind::TlsInterceptHint => {
+            Some(("TLS intercept hint on tunnel path", AlertLevel::Warning))
+        }
+        IntegrityIndicatorKind::ProcessEgressHint => {
+            Some(("Processes toward current egress/proxy", AlertLevel::Info))
+        }
+        IntegrityIndicatorKind::ProxyEnabled
+        | IntegrityIndicatorKind::CaptivePortal
+        | IntegrityIndicatorKind::DnsIntegrity => None,
+    }
+}
+
 fn dns_integrity_alert(integrity: &DnsIntegrityStatus, settings: &ProtectSettings) -> ProtectAlert {
     let level = match integrity.state {
         DnsIntegrityState::Suspicious => AlertLevel::Critical,
@@ -731,6 +792,61 @@ mod tests {
                 .iter()
                 .any(|alert| alert.title == "DNS integrity concern")
         );
+    }
+
+    #[test]
+    fn maps_integrity_board_indicators_to_protect_alerts() {
+        let mut report = sample_report(vec![EnvironmentTag::HomeLan], HealthGrade::Good);
+        report.integrity = Some(IntegrityBoardReport {
+            indicator_count: 2,
+            level: IntegrityBoardLevel::Caution,
+            title: "2 indicators".to_string(),
+            summary: "test".to_string(),
+            disclaimer: crate::integrity_board::INTEGRITY_DISCLAIMER.to_string(),
+            indicators: vec![
+                IntegrityIndicator {
+                    kind: IntegrityIndicatorKind::CertStoreDelta,
+                    severity: AlertLevel::Warning,
+                    title: "Trusted root store changed".to_string(),
+                    message: "Root fingerprint changed.".to_string(),
+                    evidence: "fp".to_string(),
+                },
+                IntegrityIndicator {
+                    kind: IntegrityIndicatorKind::GatewayArpChurn,
+                    severity: AlertLevel::Warning,
+                    title: "Gateway ARP identity changed".to_string(),
+                    message: "MAC changed for gateway.".to_string(),
+                    evidence: "mac".to_string(),
+                },
+                IntegrityIndicator {
+                    kind: IntegrityIndicatorKind::ProxyEnabled,
+                    severity: AlertLevel::Info,
+                    title: "System proxy enabled".to_string(),
+                    message: "skip me".to_string(),
+                    evidence: "proxy".to_string(),
+                },
+            ],
+            listeners: None,
+            gateway_arp: None,
+            cert_store: None,
+            process_egress: None,
+            not_checked: vec![],
+            confidence: IntegrityBoardConfidence::Medium,
+        });
+
+        let status = evaluate_protect(&report, None, &default_protect_settings());
+        assert!(status
+            .alerts
+            .iter()
+            .any(|alert| alert.title == "Trusted root store changed"));
+        assert!(status
+            .alerts
+            .iter()
+            .any(|alert| alert.title == "Gateway ARP identity changed"));
+        assert!(!status
+            .alerts
+            .iter()
+            .any(|alert| alert.title.contains("System proxy")));
     }
 
     #[test]

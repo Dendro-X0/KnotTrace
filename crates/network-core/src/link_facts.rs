@@ -26,6 +26,8 @@ pub fn collect_link_facts(environment: &EnvironmentSnapshot) -> LinkFactsReport 
                 wifi_channel: None,
                 wifi_band: None,
                 wifi_radio: None,
+            wifi_noise_dbm: None,
+            wifi_tx_retries: None,
             })
             .collect(),
     };
@@ -131,6 +133,30 @@ fn derive_issues(adapters: &[LinkAdapterFact], active: Option<&LinkAdapterFact>)
                     ),
                 });
             }
+
+            if crate::link_platform::parsers::wifi_noise_is_elevated(active.wifi_noise_dbm) {
+                let noise = active.wifi_noise_dbm.unwrap_or(0);
+                issues.push(LinkIssue {
+                    kind: LinkIssueKind::WifiHighNoise,
+                    severity: AlertLevel::Info,
+                    title: "Wi-Fi noise floor looks elevated".to_string(),
+                    message: format!(
+                        "Reported noise floor is {noise} dBm (higher/less-negative is noisier). Interference can cut airtime — indicator only; KnotTrace cannot retune channels."
+                    ),
+                });
+            }
+
+            if crate::link_platform::parsers::wifi_retries_look_elevated(active.wifi_tx_retries) {
+                let retries = active.wifi_tx_retries.unwrap_or(0);
+                issues.push(LinkIssue {
+                    kind: LinkIssueKind::WifiElevatedRetries,
+                    severity: AlertLevel::Info,
+                    title: "Wi-Fi TX retries look elevated".to_string(),
+                    message: format!(
+                        "Driver reports about {retries} TX retries (often a lifetime counter). Congestion or weak RF can cause this — indicator only."
+                    ),
+                });
+            }
         }
     }
 
@@ -198,6 +224,8 @@ mod tests {
             wifi_channel: None,
             wifi_band: None,
             wifi_radio: None,
+            wifi_noise_dbm: None,
+            wifi_tx_retries: None,
         }
     }
 

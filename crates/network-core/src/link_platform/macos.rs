@@ -39,6 +39,8 @@ pub fn enrich_adapters(interfaces: &[NetworkInterface]) -> Result<Vec<LinkAdapte
             wifi_channel: None,
             wifi_band: None,
             wifi_radio: None,
+            wifi_noise_dbm: None,
+            wifi_tx_retries: None,
         });
     }
 

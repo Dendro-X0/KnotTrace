@@ -496,7 +496,9 @@ export type LinkIssueKind =
   | "half_duplex"
   | "prefer_ethernet"
   | "wifi_active"
-  | "wifi_weak_signal";
+  | "wifi_weak_signal"
+  | "wifi_high_noise"
+  | "wifi_elevated_retries";
 export type WifiBand = "band_2_4" | "band_5" | "band_6" | "unknown";
 
 export interface LinkAdapterFact {
@@ -515,6 +517,8 @@ export interface LinkAdapterFact {
   wifi_channel?: number | null;
   wifi_band?: WifiBand | null;
   wifi_radio?: string | null;
+  wifi_noise_dbm?: number | null;
+  wifi_tx_retries?: number | null;
 }
 
 export interface LinkIssue {

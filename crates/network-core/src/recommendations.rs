@@ -319,6 +319,16 @@ fn push_link_recommendations(report: &HealthReport, items: &mut Vec<NetworkRecom
                 "Wi-Fi signal is weak".to_string(),
                 issue.message.clone(),
             ),
+            LinkIssueKind::WifiHighNoise => (
+                55,
+                "Wi-Fi noise floor looks elevated".to_string(),
+                issue.message.clone(),
+            ),
+            LinkIssueKind::WifiElevatedRetries => (
+                52,
+                "Wi-Fi TX retries look elevated".to_string(),
+                issue.message.clone(),
+            ),
         };
         items.push(NetworkRecommendation {
             category: RecommendationCategory::LinkLocal,

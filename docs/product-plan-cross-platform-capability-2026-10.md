@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace useful on every desktop OS we ship, plus a thin
           — without fake Mbps, AV claims, or Obscur coupling.
 POSTURE:  Observe-first · indicators with confidence · reversible assists
 BASELINE: Path Truth Bands 1–5 + 3D/3E + CLI + AI explain (4A–4C) shipped
-DONE:     Charter · A1–A3 · D1/D2 · B1–B3 · C1–C2 · A2 local-caps observe
-NEXT:     C3 Wi‑Fi quality extras (or C4 autoruns opt-in)
+DONE:     Charter · A1–A3 · B1–B3 · C1–C3 · D1/D2
+NEXT:     C4 autoruns / startup network agents (opt-in)
 ```
 
 ---
@@ -101,8 +101,8 @@ Execute in order; do not skip to mobile full UI before A1.
 | 8 | **B3** iOS companion parity | **Done** (shared mobile shell) |
 | 9 | **C2** Listener board WAN-facing emphasis | **Done** |
 | 10 | **A2** Local caps observe macOS/Linux | **Done** |
-| 11 | **C3** Wi‑Fi quality extras | **Next** |
-| 12 | **C4** | As capacity allows |
+| 11 | **C3** Wi‑Fi quality extras | **Done** |
+| 12 | **C4** Autoruns / startup agents (opt-in) | **Next** |
 
 **Defer (unchanged):** auto node rotation, guaranteed Mbps, AV/EDR, Obscur integration, continuous packet capture.
 
@@ -138,4 +138,4 @@ Execute in order; do not skip to mobile full UI before A1.
 - [specs/backend/mobile-companion-design.md](../specs/backend/mobile-companion-design.md) — B1 backend design  
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — absorbed sketch  
 
-_Last updated: 2026-10-30T15:15:00Z_
+_Last updated: 2026-10-30T15:45:00Z_

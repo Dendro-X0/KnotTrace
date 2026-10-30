@@ -58,6 +58,8 @@ pub struct WifiInterfaceSnapshot {
     pub band: Option<WifiBand>,
     pub radio: Option<String>,
     pub receive_rate_mbps: Option<u32>,
+    pub noise_dbm: Option<i16>,
+    pub tx_retries: Option<u32>,
 }
 
 pub fn band_from_channel(channel: u32) -> WifiBand {
@@ -205,6 +207,55 @@ pub fn wifi_signal_is_weak(percent: Option<u8>, dbm: Option<i16>) -> bool {
     false
 }
 
+/// Elevated noise floor (less negative than −85 dBm) when associated.
+pub fn wifi_noise_is_elevated(noise_dbm: Option<i16>) -> bool {
+    noise_dbm.is_some_and(|n| n >= -85)
+}
+
+/// Soft retry indicator — absolute lifetime counters; treat as hint only.
+pub fn wifi_retries_look_elevated(tx_retries: Option<u32>) -> bool {
+    tx_retries.is_some_and(|n| n >= 100)
+}
+
+/// Parse `/proc/net/wireless` for noise + retry discards by iface name.
+pub fn parse_proc_net_wireless(text: &str, iface: &str) -> (Option<i16>, Option<u32>) {
+    for line in text.lines().skip(2) {
+        let trimmed = line.trim();
+        let Some((name, rest)) = trimmed.split_once(':') else {
+            continue;
+        };
+        if name.trim() != iface {
+            continue;
+        }
+        let cols: Vec<&str> = rest.split_whitespace().collect();
+        // status | link | level | noise | nwid | crypt | frag | retry | misc | ...
+        if cols.len() < 8 {
+            continue;
+        }
+        let noise = parse_signal_dbm(cols[3].trim_end_matches('.'));
+        let retries = cols[7]
+            .trim_end_matches('.')
+            .parse::<u32>()
+            .ok();
+        return (noise, retries);
+    }
+    (None, None)
+}
+
+/// Parse `iw dev … station dump` for `tx retries:` lines.
+pub fn parse_iw_station_dump(text: &str) -> Option<u32> {
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if let Some(rest) = trimmed.strip_prefix("tx retries:") {
+            let digits: String = rest.chars().filter(|c| c.is_ascii_digit()).collect();
+            if let Ok(n) = digits.parse::<u32>() {
+                return Some(n);
+            }
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -241,5 +292,22 @@ There is 1 interface on the system:
         assert_eq!(parsed[0].channel, Some(36));
         assert_eq!(parsed[0].band, Some(WifiBand::Band5));
         assert!(wifi_signal_is_weak(parsed[0].signal_percent, None));
+    }
+
+    #[test]
+    fn parses_proc_wireless_and_iw_retries() {
+        let wireless = "\
+Inter-| sta-|   Quality        |   Discarded packets               
+ face | tus | link level noise |  nwid  crypt   frag  retry   misc
+  wlan0: 0000   70.  -40.  -72        0      0      0    140      0
+";
+        let (noise, retries) = parse_proc_net_wireless(wireless, "wlan0");
+        assert_eq!(noise, Some(-72));
+        assert_eq!(retries, Some(140));
+        assert!(wifi_noise_is_elevated(noise));
+        assert!(wifi_retries_look_elevated(retries));
+
+        let station = "Station aa:bb:cc:dd:ee:ff (on wlan0)\n\ttx retries:\t250\n\ttx failed:\t3\n";
+        assert_eq!(parse_iw_station_dump(station), Some(250));
     }
 }

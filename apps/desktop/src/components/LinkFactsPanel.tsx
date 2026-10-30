@@ -101,6 +101,20 @@ export function LinkFactsPanel({ loading, report }: LinkFactsPanelProps) {
                         label: "Radio",
                         value: active.wifi_radio ?? "Not reported",
                       },
+                      {
+                        label: "Noise",
+                        value:
+                          active.wifi_noise_dbm != null
+                            ? `${active.wifi_noise_dbm} dBm`
+                            : "Not reported",
+                      },
+                      {
+                        label: "TX retries",
+                        value:
+                          active.wifi_tx_retries != null
+                            ? String(active.wifi_tx_retries)
+                            : "Not reported",
+                      },
                     ]
                   : []),
                 { label: "Source", value: report.source },

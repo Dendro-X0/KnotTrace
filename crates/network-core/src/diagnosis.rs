@@ -720,7 +720,9 @@ fn push_path_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
                 LinkIssueKind::PreferEthernet
                 | LinkIssueKind::EthernetCapped
                 | LinkIssueKind::HalfDuplex
-                | LinkIssueKind::WifiWeakSignal => BottleneckCategory::LinkLocal,
+                | LinkIssueKind::WifiWeakSignal
+                | LinkIssueKind::WifiHighNoise
+                | LinkIssueKind::WifiElevatedRetries => BottleneckCategory::LinkLocal,
             };
             hints.push(BottleneckHint {
                 category,
@@ -748,6 +750,16 @@ fn push_path_hints(report: &HealthReport, hints: &mut Vec<BottleneckHint>) {
                         "Move closer to the access point or switch band/channel on the router."
                             .to_string(),
                         "Use Ethernet when possible; weak signal is a radio limit, not an ISP plan issue."
+                            .to_string(),
+                    ],
+                    LinkIssueKind::WifiHighNoise => vec![
+                        "Reduce nearby interference or try a quieter channel/band on the AP."
+                            .to_string(),
+                        "This is an RF environment indicator — KnotTrace cannot retune the radio."
+                            .to_string(),
+                    ],
+                    LinkIssueKind::WifiElevatedRetries => vec![
+                        "Retries often track congestion or weak RF; compare on Ethernet if unsure."
                             .to_string(),
                     ],
                 },
@@ -916,6 +928,10 @@ fn diagnosis_confidence(report: &HealthReport, shape: SlowdownShape) -> Diagnosi
                             | LinkIssueKind::HalfDuplex
                             | LinkIssueKind::PreferEthernet
                             | LinkIssueKind::WifiWeakSignal
+                            | LinkIssueKind::WifiHighNoise
+                            | LinkIssueKind::WifiElevatedRetries
+                            | LinkIssueKind::WifiHighNoise
+                            | LinkIssueKind::WifiElevatedRetries
                     )
                 })
             }) || report.local_caps.as_ref().is_some_and(|caps| {
@@ -1106,6 +1122,10 @@ fn link_local_issue(report: &HealthReport) -> bool {
                     | LinkIssueKind::HalfDuplex
                     | LinkIssueKind::PreferEthernet
                     | LinkIssueKind::WifiWeakSignal
+                    | LinkIssueKind::WifiHighNoise
+                    | LinkIssueKind::WifiElevatedRetries
+                    | LinkIssueKind::WifiHighNoise
+                    | LinkIssueKind::WifiElevatedRetries
             )
         })
     });
@@ -1546,6 +1566,8 @@ mod tests {
                 wifi_channel: None,
                 wifi_band: None,
                 wifi_radio: None,
+            wifi_noise_dbm: None,
+            wifi_tx_retries: None,
             }],
             "test".to_string(),
         ));

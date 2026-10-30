@@ -883,6 +883,8 @@ pub enum LinkIssueKind {
     PreferEthernet,
     WifiActive,
     WifiWeakSignal,
+    WifiHighNoise,
+    WifiElevatedRetries,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -920,6 +922,12 @@ pub struct LinkAdapterFact {
     pub wifi_band: Option<WifiBand>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub wifi_radio: Option<String>,
+    /// Noise floor in dBm when the OS reports it (more negative is quieter).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wifi_noise_dbm: Option<i16>,
+    /// Lifetime or sample TX retry count when available (indicator only).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wifi_tx_retries: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

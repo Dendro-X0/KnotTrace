@@ -1,6 +1,8 @@
 use crate::process::hidden_command;
 use crate::types::{LinkAdapterFact, LinkDuplex, LinkKind, NetworkInterface};
-use super::parsers::{parse_duplex, parse_iw_link, parse_speed_mbps};
+use super::parsers::{
+    parse_duplex, parse_iw_link, parse_iw_station_dump, parse_proc_net_wireless, parse_speed_mbps,
+};
 use std::fs;
 use std::path::PathBuf;
 
@@ -46,6 +48,8 @@ pub fn enrich_adapters(interfaces: &[NetworkInterface]) -> Result<Vec<LinkAdapte
             wifi_channel: None,
             wifi_band: None,
             wifi_radio: None,
+            wifi_noise_dbm: None,
+            wifi_tx_retries: None,
         };
 
         if iface.kind == LinkKind::WiFi {
@@ -62,6 +66,28 @@ pub fn enrich_adapters(interfaces: &[NetworkInterface]) -> Result<Vec<LinkAdapte
                     fact.wifi_channel = wifi.channel;
                     fact.wifi_band = wifi.band;
                     fact.wifi_radio = wifi.radio;
+                    fact.wifi_noise_dbm = wifi.noise_dbm;
+                    fact.wifi_tx_retries = wifi.tx_retries;
+                }
+            }
+            if let Ok(output) = hidden_command("iw")
+                .args(["dev", &iface.name, "station", "dump"])
+                .output()
+            {
+                if output.status.success() {
+                    let text = String::from_utf8_lossy(&output.stdout);
+                    if let Some(retries) = parse_iw_station_dump(&text) {
+                        fact.wifi_tx_retries = Some(retries);
+                    }
+                }
+            }
+            if let Ok(wireless) = fs::read_to_string("/proc/net/wireless") {
+                let (noise, retries) = parse_proc_net_wireless(&wireless, &iface.name);
+                if fact.wifi_noise_dbm.is_none() {
+                    fact.wifi_noise_dbm = noise;
+                }
+                if fact.wifi_tx_retries.is_none() {
+                    fact.wifi_tx_retries = retries;
                 }
             }
         }

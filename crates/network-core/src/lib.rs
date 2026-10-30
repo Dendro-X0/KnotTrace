@@ -1,5 +1,6 @@
 //! Core library for Network Companion — observe-only health checks.
 
+mod ai_explain;
 mod assist;
 mod auto_protect_log;
 mod benchmark;
@@ -34,6 +35,7 @@ mod tunnel_compare;
 mod types;
 mod upstream_pool;
 
+pub use ai_explain::{explain_from_bundle, explain_locally};
 pub use assist::{
     apply_dns_assist, get_assist_state, recommend_dns_assist, restore_dns_assist, AssistError,
 };

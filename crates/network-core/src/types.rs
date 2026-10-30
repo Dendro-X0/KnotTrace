@@ -318,6 +318,25 @@ pub struct PathBreakReport {
 pub const DIAGNOSTIC_BUNDLE_SCHEMA: &str = "knottrace.diagnostic_bundle.v1";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalExplainStep {
+    pub action_id: String,
+    pub label: String,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalExplainReport {
+    pub schema_version: String,
+    pub headline: String,
+    pub plain_summary: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub likely_cause: Option<String>,
+    pub next_steps: Vec<LocalExplainStep>,
+    pub caveats: Vec<String>,
+    pub source: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiagnosticBundleOptions {
     #[serde(default)]
     pub include_ssid: bool,

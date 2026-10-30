@@ -152,6 +152,22 @@ export interface PathBreakReport {
   not_checked: string[];
 }
 
+export interface LocalExplainStep {
+  action_id: string;
+  label: string;
+  reason: string;
+}
+
+export interface LocalExplainReport {
+  schema_version: string;
+  headline: string;
+  plain_summary: string;
+  likely_cause?: string | null;
+  next_steps: LocalExplainStep[];
+  caveats: string[];
+  source: string;
+}
+
 export interface DiagnosticBundle {
   schema_version: string;
   exported_at: string;

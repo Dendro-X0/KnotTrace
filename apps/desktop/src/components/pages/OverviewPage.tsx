@@ -7,6 +7,7 @@ import { NetworkDiagnosisPanel } from "@/components/NetworkDiagnosisPanel";
 import { PathBreakPanel } from "@/components/PathBreakPanel";
 import { DiagnosticBundlePanel } from "@/components/DiagnosticBundlePanel";
 import { IntegrityBoardPanel } from "@/components/IntegrityBoardPanel";
+import { LocalExplainPanel } from "@/components/LocalExplainPanel";
 import { NextStepsPanel } from "@/components/NextStepsPanel";
 import { StatusHero } from "@/components/StatusHero";
 import { TrendCharts } from "@/components/TrendCharts";
@@ -108,6 +109,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
                 <NetworkDiagnosisPanel diagnosis={state.report?.diagnosis} />
                 <PathBreakPanel loading={loading} report={state.report?.path_break} compact />
                 <IntegrityBoardPanel loading={loading} report={state.report?.integrity} compact />
+                <LocalExplainPanel state={state} />
                 <DiagnosticBundlePanel state={state} />
               </div>
               <div className="grid min-h-0 gap-3">

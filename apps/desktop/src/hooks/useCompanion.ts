@@ -11,6 +11,7 @@ import type {
   ConnectRecommendation,
   DiagnosticBundle,
   DnsAssistRecommendation,
+  LocalExplainReport,
   DnsAssistState,
   DnsIntegritySettings,
   HealthReport,
@@ -443,6 +444,10 @@ export function useCompanion() {
       includeSsid,
     });
     return `${JSON.stringify(bundle, null, 2)}\n\n---\n${bundle.ai_prompt_template}\n`;
+  }, []);
+
+  const explainLocally = useCallback(async () => {
+    return invoke<LocalExplainReport>("explain_locally_report");
   }, []);
 
   const deleteBenchmark = useCallback(
@@ -932,6 +937,7 @@ export function useCompanion() {
     saveIntegritySettings,
     saveBenchmark,
     exportDiagnosticBundle,
+    explainLocally,
     deleteBenchmark,
     saveThroughputSettings,
     runThroughputTest,

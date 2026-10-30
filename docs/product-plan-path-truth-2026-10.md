@@ -1,7 +1,7 @@
 # Product plan — KnotTrace “Path Truth” network utility
 
 **Date (UTC):** 2026-10-28  
-**Status:** Implementation chartered · **Bands 1–3 core shipped** · next = Band 4 AI explain (opt-in) after L3 smoke  
+**Status:** Bands 1–3 + **4A local explain** shipped · 4B cloud still design-only  
 **Repo:** KnotTrace (`network`) only  
 **Audience:** Maintainer
 
@@ -11,8 +11,8 @@ GOAL:     High-performance, versatile tool to diagnose and resolve network issue
 POSTURE:  Observe-first · indicators with confidence · reversible assists (opt-in)
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
-DONE:     Band 1 path_break · Band 2 bundle export · Band 3 integrity board
-NEXT:     L3 smoke; Band 4 cloud AI is opt-in only — charter separately
+DONE:     Band 1–3 · Band 4A on-device explain (local_template)
+NEXT:     L3 smoke; Band 5 egress timeline; or charter 4B after open decisions
 ```
 
 ---
@@ -151,7 +151,7 @@ Chartered. Execute in order; do not skip ahead without maintainer OK.
 | 1 | **Path-break classifier** | Direct / Proxy / VPN / Tor + hop labels | **Core shipped** — [path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) |
 | 2 | **Novice Overview + bundle export** | AI-ready JSON without requiring cloud | **Core shipped** — [diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) |
 | 3 | **Integrity / exposure board** | Proxy, DNS integrity, listeners, gateway/ARP, cert deltas | **Core shipped** (listeners + soft indicators; ARP/certs still `not_checked`) — [integrity-board-design.md](../specs/backend/integrity-board-design.md) |
-| 4 | **AI explain (opt-in)** | Redacted bundle + mapped actions + data sheet | Deferred |
+| 4 | **AI explain (opt-in)** | Redacted bundle + mapped actions + data sheet | **4A shipped** (local template); **4B deferred** — [ai-explain-design.md](../specs/backend/ai-explain-design.md) |
 | 5 | **Egress anomaly timeline** | Opt-in, local-first | Deferred |
 | — | **Defer** | Auto node rotation, “speed optimizer,” AV-like claims, Obscur integration | Out of scope |
 
@@ -173,7 +173,8 @@ Chartered. Execute in order; do not skip ahead without maintainer OK.
 - [../specs/backend/path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) — Band 1 design  
 - [../specs/backend/diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) — Band 2 design  
 - [../specs/backend/integrity-board-design.md](../specs/backend/integrity-board-design.md) — Band 3 design  
+- [../specs/backend/ai-explain-design.md](../specs/backend/ai-explain-design.md) — Band 4 design  
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier integrity/path-break sketch  
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 shipped direction  
 
-_Last updated: 2026-10-29T01:10:00Z_
+_Last updated: 2026-10-29T02:30:00Z_

@@ -1,7 +1,7 @@
 use network_core::{
-    build_diagnostic_bundle, delete_benchmark_snapshot, list_benchmark_snapshots,
-    save_benchmark_snapshot, BenchmarkSnapshot, DiagnosticBundle, DiagnosticBundleOptions,
-    ExternalSpeedtestNote,
+    build_diagnostic_bundle, delete_benchmark_snapshot, explain_locally,
+    list_benchmark_snapshots, save_benchmark_snapshot, BenchmarkSnapshot, DiagnosticBundle,
+    DiagnosticBundleOptions, ExternalSpeedtestNote, LocalExplainReport,
 };
 use tauri::State;
 
@@ -78,4 +78,18 @@ pub fn export_diagnostic_bundle(
             include_ssid: include_ssid.unwrap_or(false),
         },
     ))
+}
+
+#[tauri::command]
+pub fn explain_locally_report(
+    state: State<'_, AppState>,
+) -> Result<LocalExplainReport, String> {
+    let report = state
+        .last_report
+        .lock()
+        .map_err(|_| "state lock poisoned".to_string())?
+        .clone()
+        .ok_or_else(|| "Run a health check before asking for a local explanation.".to_string())?;
+
+    Ok(explain_locally(&report))
 }

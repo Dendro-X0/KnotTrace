@@ -1,7 +1,7 @@
 # Product plan — KnotTrace “Path Truth” network utility
 
 **Date (UTC):** 2026-10-28  
-**Status:** Path Truth Bands **1–5 + 4A/4B + 3D + CLI shipped**  
+**Status:** Path Truth plan complete · **v1.8.1**  
 **Repo:** KnotTrace (`network`) only  
 **Audience:** Maintainer
 
@@ -11,8 +11,8 @@ GOAL:     High-performance, versatile tool to diagnose and resolve network issue
 POSTURE:  Observe-first · indicators with confidence · reversible assists (opt-in)
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
-DONE:     Path Truth plan complete (bands + 3E + CLI + polish backlog) · v1.8.0
-NEXT:     Maintain
+DONE:     Path Truth plan complete (bands + 3E + CLI + polish) · v1.8.1
+NEXT:     Maintain (optional: mobile export wrap)
 ```
 
 ---
@@ -180,4 +180,4 @@ Chartered. Execute in order; do not skip ahead without maintainer OK.
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier integrity/path-break sketch  
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 shipped direction  
 
-_Last updated: 2026-10-30T10:45:00Z_
+_Last updated: 2026-10-30T10:55:00Z_

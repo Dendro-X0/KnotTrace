@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-10-30
+
+### Added
+
+- **Band 3E** — opt-in process ↔ egress correlation (Protect toggle; Windows TCP session sample toward current egress/proxy)
+- **Config-change timeline** in diagnostic bundle — DNS / local-caps / MTU backups and recent auto-protect log
+- **Linux/macOS trusted-root snapshots** for integrity cert-store deltas
+- **AI explain 4C** — provider presets, copy reply, clear session reply
+- Spec: [process-egress-design.md](specs/backend/process-egress-design.md)
+
 ## [1.8.0] - 2026-10-30
 
 ### Added
@@ -276,6 +286,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.8.1]: https://github.com/Dendro-X0/KnotTrace/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/Dendro-X0/network/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/Dendro-X0/network/compare/v1.6.0...v1.7.0

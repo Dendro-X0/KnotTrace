@@ -1,6 +1,6 @@
 # KnotTrace
 
-**v1.8.0** — A desktop companion that monitors connection health, explains slowdowns in plain language, and offers **local-first, reversible** assists — plus Path Truth (path break, integrity, AI explain, egress timeline).
+**v1.8.1** — A desktop companion that monitors connection health, explains slowdowns in plain language, and offers **local-first, reversible** assists — plus Path Truth (path break, integrity, AI explain, egress timeline).
 
 KnotTrace watches network health in the background, applies safe DNS/proxy assists when you opt in (or enable Protect auto-apply), and pinpoints whether issues are local (link, DNS, OS caps, MTU), tunnel overhead, or **upstream proxy-pool** quality — without fake “speed boosts.”
 

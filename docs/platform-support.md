@@ -70,6 +70,9 @@ Recommendations and integrity checks work everywhere. Apply/restore still requir
 
 ## Mobile roadmap
 
+- **B1 designed:** thin companion — fast check, score + path-break + integrity, diagnostic export ([frontend-spec-mobile-companion.md](frontend-spec-mobile-companion.md), [mobile-companion-design.md](../specs/backend/mobile-companion-design.md))
+- **B2 next:** Android CompanionShell implement (reuse `network-core`; no Protect/Connect apply)
+- **B3:** iOS parity for B1 surfaces
 - **Android**: signed APK on every release tag (upload keystore in CI secrets)
 - **iOS**: signed IPA on every release tag (distribution cert + provisioning profile)
 - Install/trust steps: [mobile-signing.md](mobile-signing.md)

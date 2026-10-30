@@ -42,6 +42,7 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 | `benchmark_snapshots.json` | Benchmark snapshots (max 20) |
 | `throughput_settings.json` | Throughput sample sizes |
 | `auto_protect_log.jsonl` | Recent automatic DNS/proxy actions |
+| `config_watch_state.json` / `config_watch_events.jsonl` | Hosts file + system proxy change snapshots (Band C1) |
 
 ## Docs index
 
@@ -53,6 +54,9 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [slow-speed-triage.md](./slow-speed-triage.md) — symptom-to-signal triage matrix
 - [product-plan-path-truth-2026-10.md](./product-plan-path-truth-2026-10.md) — Path Truth charter (**complete** at v1.8.1)
 - [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md) — **active** cross-platform + capability expansion
+- [frontend-spec-mobile-companion.md](./frontend-spec-mobile-companion.md) — mobile companion UI (B1 designed; B2 implement)
+- [../specs/backend/mobile-companion-design.md](../specs/backend/mobile-companion-design.md) — mobile companion backend (B1)
+- [../specs/backend/hosts-proxy-timeline-design.md](../specs/backend/hosts-proxy-timeline-design.md) — hosts/proxy config watch (C1)
 - [../specs/backend/path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) — Path Truth Band 1
 - [../specs/backend/diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) — Path Truth Band 2
 - [../specs/backend/integrity-board-design.md](../specs/backend/integrity-board-design.md) — Path Truth Band 3

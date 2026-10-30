@@ -42,19 +42,19 @@ cd apps/desktop && npx tsc --noEmit
 
 Confirm `report.json` has `path_break` + `integrity.disclaimer`, and `explain.json` has `schema_version: knottrace.local_explain.v1`.
 
-Full Overview click-smoke needs `npm run tauri dev` (Windows: Visual Studio **RC.EXE** / Windows SDK on `PATH`).
+### L3 GUI click-smoke (WebView2 CDP)
 
-### L3 runtime smoke (no GUI)
+Windows needs SDK **RC.EXE** on `PATH` (example: `Windows Kits/10/bin/<ver>/x64`).
 
 ```bash
-cargo run -p network-core --bin network-probe --quiet > report.json
-cargo run -p network-core --bin network-probe --quiet -- --explain > explain.json
-cd apps/desktop && npx tsc --noEmit
+export PATH="/c/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64:$PATH"
+export WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS="--remote-debugging-port=9223 --remote-allow-origins=*"
+cd apps/desktop && npm run tauri dev
+# other terminal:
+cd apps/desktop && npm run smoke:gui
 ```
 
-Confirm `report.json` has `path_break` + `integrity.disclaimer`, and `explain.json` has `schema_version: knottrace.local_explain.v1`.
-
-Full Overview click-smoke needs `npm run tauri dev` (Windows: Visual Studio **RC.EXE** / Windows SDK on `PATH`).
+`smoke:gui` connects over CDP, verifies Overview Path Truth panels, runs a health check via Ctrl+K, clicks Explain / Copy JSON, then checks Network panels.
 
 ## Project layout
 

@@ -11,6 +11,7 @@ mod diagnostic_bundle;
 mod dns_integrity;
 mod dns_platform;
 mod egress;
+mod egress_timeline;
 mod env;
 mod fingerprint;
 mod integrity_board;
@@ -69,6 +70,7 @@ pub use mtu_assist::{
 };
 pub use local_repair::{collect_local_repair, run_local_repair_action};
 pub use egress::{egress_unstable, probe_egress, probe_egress_with_options, EgressProbeOptions};
+pub use egress_timeline::{evaluate_egress_timeline, evaluate_egress_timeline_snapshot};
 pub use fingerprint::environment_fingerprint;
 pub use network_context::{
     assess_network_context, is_untrusted_context, probe_captive_portal,
@@ -233,6 +235,7 @@ pub async fn run_health_check_with_settings(
         upstream_pool: None,
         path_break: None,
         integrity: None,
+        egress_timeline: None,
     };
 
     // Link facts / local caps / MTU assist are sync OS reads; keep off the async probe critical path.
@@ -244,6 +247,7 @@ pub async fn run_health_check_with_settings(
     report.local_repair = Some(collect_local_repair(&report));
     report.path_break = Some(classify_path_break(&report));
     report.integrity = Some(assess_integrity_board(&report));
+    report.egress_timeline = Some(evaluate_egress_timeline_snapshot(&report));
     report.recommendations = Some(build_recommendations(&report));
     report.diagnosis = Some(diagnose_network(&report));
 

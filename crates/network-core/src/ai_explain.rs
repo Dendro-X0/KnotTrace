@@ -282,6 +282,7 @@ mod tests {
                 not_checked: vec![],
                 confidence: IntegrityBoardConfidence::Low,
             }),
+            egress_timeline: None,
         }
     }
 

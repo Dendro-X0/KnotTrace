@@ -398,6 +398,7 @@ mod tests {
                 not_checked: vec!["listeners".to_string()],
             }),
             integrity: None,
+            egress_timeline: None,
         }
     }
 

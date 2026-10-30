@@ -48,11 +48,12 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [platform-support.md](./platform-support.md) — what works on each OS
 - [slowdown-factors.md](./slowdown-factors.md) — cross-platform slowdown research
 - [slow-speed-triage.md](./slow-speed-triage.md) — symptom-to-signal triage matrix
-- [product-plan-path-truth-2026-10.md](./product-plan-path-truth-2026-10.md) — **product plan** Path Truth (Bands 1–3 + 4A local explain; cloud 4B deferred; independent of Obscur)
+- [product-plan-path-truth-2026-10.md](./product-plan-path-truth-2026-10.md) — **product plan** Path Truth (Bands 1–5 core; cloud 4B deferred; independent of Obscur)
 - [../specs/backend/path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) — Path Truth Band 1 design
 - [../specs/backend/diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) — Path Truth Band 2 diagnostic export
 - [../specs/backend/integrity-board-design.md](../specs/backend/integrity-board-design.md) — Path Truth Band 3 integrity board
 - [../specs/backend/ai-explain-design.md](../specs/backend/ai-explain-design.md) — Path Truth Band 4 AI explain (4A local; 4B design)
+- [../specs/backend/egress-timeline-design.md](../specs/backend/egress-timeline-design.md) — Path Truth Band 5 egress timeline
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier security / integrity / path-break sketch (superseded in scope by Path Truth plan)
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 local-first bands
 - [../specs/backend/](../specs/backend/) — design specs

@@ -1,6 +1,7 @@
 use network_core::{
-    detect_environment, environment_fingerprint, evaluate_upstream_pool_proof,
-    load_dns_integrity_settings, run_health_check_with_settings, CheckProfile, HealthReport,
+    detect_environment, environment_fingerprint, evaluate_egress_timeline,
+    evaluate_upstream_pool_proof, load_dns_integrity_settings, run_health_check_with_settings,
+    CheckProfile, HealthReport,
 };
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
@@ -23,7 +24,7 @@ pub async fn perform_check(app: &AppHandle, reason: &str) -> Result<HealthReport
 
     match run_health_check_with_settings(Some(&integrity_settings), profile).await {
         Ok(mut report) => {
-            enrich_upstream_pool(app, &mut report)?;
+            enrich_history_claims(app, &mut report)?;
             publish_report(app, &report, reason)?;
             Ok(report)
         }
@@ -35,7 +36,7 @@ pub async fn perform_check(app: &AppHandle, reason: &str) -> Result<HealthReport
     }
 }
 
-fn enrich_upstream_pool(app: &AppHandle, report: &mut HealthReport) -> Result<(), String> {
+fn enrich_history_claims(app: &AppHandle, report: &mut HealthReport) -> Result<(), String> {
     let history = app
         .state::<AppState>()
         .store
@@ -45,6 +46,7 @@ fn enrich_upstream_pool(app: &AppHandle, report: &mut HealthReport) -> Result<()
         .map_err(|error| error.to_string())?;
 
     report.upstream_pool = evaluate_upstream_pool_proof(report, &history);
+    report.egress_timeline = Some(evaluate_egress_timeline(report, &history));
     report.recommendations = Some(network_core::build_recommendations(report));
     report.diagnosis = Some(network_core::diagnose_network(report));
     Ok(())

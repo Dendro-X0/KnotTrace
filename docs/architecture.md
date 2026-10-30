@@ -33,6 +33,7 @@ Single source of truth for network logic. No UI dependencies.
 | `diagnostic_bundle` | Path Truth Band 2: redacted AI-ready JSON export (no cloud) |
 | `integrity_board` | Path Truth Band 3: exposure/integrity indicators + listener scan (never “safe”) |
 | `ai_explain` | Path Truth Band 4A: on-device local explain template (no cloud) |
+| `egress_timeline` | Path Truth Band 5: public IP stability/churn from local history |
 | `upstream_pool` | Claim grades for active-path vs recurring upstream-pool impairment |
 | `egress` | Public IP probes and path consistency |
 | `network_context` | Guest/public network and captive portal classification |
@@ -65,7 +66,7 @@ Thin Tauri command layer + React dashboard.
 | `throughput` | Throughput settings and on-demand test |
 | `dns_integrity` | Integrity settings |
 
-Frontend state centralizes in `useCompanion.ts`; pages live under `components/pages/`. Notable Network/Overview panels: `LinkFactsPanel`, `LocalCapsPanel`, `MtuAssistPanel`, `PathBreakPanel`, `IntegrityBoardPanel`, `LocalExplainPanel`, `DiagnosticBundlePanel`, `TunnelComparePanel`, `UpstreamPoolPanel`, `ProxyPathPanel`, `NetworkDiagnosisPanel`, `NextStepsPanel`, `TrendCharts`.
+Frontend state centralizes in `useCompanion.ts`; pages live under `components/pages/`. Notable Network/Overview panels: `LinkFactsPanel`, `LocalCapsPanel`, `MtuAssistPanel`, `PathBreakPanel`, `IntegrityBoardPanel`, `EgressTimelinePanel`, `LocalExplainPanel`, `DiagnosticBundlePanel`, `TunnelComparePanel`, `UpstreamPoolPanel`, `ProxyPathPanel`, `NetworkDiagnosisPanel`, `NextStepsPanel`, `TrendCharts`.
 
 Scrolling uses a single `ScrollArea` component with the `.app-scroll` CSS class for consistent thin scrollbars.
 
@@ -107,6 +108,7 @@ Design notes and roadmap: [`specs/backend/`](../specs/backend/).
 | [diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) | Path Truth Band 2 diagnostic bundle export |
 | [integrity-board-design.md](../specs/backend/integrity-board-design.md) | Path Truth Band 3 integrity / exposure board |
 | [ai-explain-design.md](../specs/backend/ai-explain-design.md) | Path Truth Band 4 AI explain (4A local shipped; 4B cloud deferred) |
+| [egress-timeline-design.md](../specs/backend/egress-timeline-design.md) | Path Truth Band 5 egress anomaly timeline |
 | [upstream-pool-quality-design.md](../specs/backend/upstream-pool-quality-design.md) | Pool claim grades (L5) |
 | [mtu-assist-design.md](../specs/backend/mtu-assist-design.md) | Opt-in MTU clamp (L6) |
 | [slow-speed-diagnosis-v1.3.x.md](../specs/backend/slow-speed-diagnosis-v1.3.x.md) | Symptom shapes, confidence, proxy path |

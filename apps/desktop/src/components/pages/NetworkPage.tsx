@@ -12,6 +12,7 @@ import { UpstreamPoolPanel } from "@/components/UpstreamPoolPanel";
 import { NetworkInsightsPanel } from "@/components/NetworkInsightsPanel";
 import { PathBreakPanel } from "@/components/PathBreakPanel";
 import { IntegrityBoardPanel } from "@/components/IntegrityBoardPanel";
+import { EgressTimelinePanel } from "@/components/EgressTimelinePanel";
 import { ProxyPathPanel } from "@/components/ProxyPathPanel";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
 import { Badge } from "@/components/ui/badge";
@@ -194,6 +195,7 @@ export function NetworkPage({ state }: NetworkPageProps) {
       />
       <PathBreakPanel loading={loading} report={state.report?.path_break} />
       <IntegrityBoardPanel loading={loading} report={state.report?.integrity} />
+      <EgressTimelinePanel loading={loading} report={state.report?.egress_timeline} />
       <ProxyPathPanel
         loading={loading}
         proxyEnabled={env?.proxy.enabled}

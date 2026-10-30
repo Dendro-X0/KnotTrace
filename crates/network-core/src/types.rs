@@ -187,6 +187,59 @@ pub struct HealthReport {
     pub path_break: Option<PathBreakReport>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub integrity: Option<IntegrityBoardReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub egress_timeline: Option<EgressTimelineReport>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EgressTimelineClaim {
+    None,
+    InsufficientHistory,
+    Stable,
+    IpChanged,
+    Churning,
+    Unstable,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EgressTimelineConfidence {
+    High,
+    Medium,
+    Low,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EgressTimelineEventKind {
+    IpChanged,
+    UnstableSample,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EgressTimelineEvent {
+    pub at: DateTime<Utc>,
+    pub kind: EgressTimelineEventKind,
+    pub detail: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EgressTimelineReport {
+    pub claim: EgressTimelineClaim,
+    pub confidence: EgressTimelineConfidence,
+    pub title: String,
+    pub summary: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub current_ip: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub previous_ip: Option<String>,
+    pub distinct_ips: u8,
+    pub checks_considered: u8,
+    pub events: Vec<EgressTimelineEvent>,
+    pub evidence: Vec<String>,
+    pub not_proven: Vec<String>,
+    pub action: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

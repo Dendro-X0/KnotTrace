@@ -542,6 +542,7 @@ mod tests {
             upstream_pool: None,
             path_break: None,
             integrity: None,
+            egress_timeline: None,
         }
     }
 

@@ -64,6 +64,40 @@ export interface HealthReport {
   upstream_pool?: UpstreamPoolProof | null;
   path_break?: PathBreakReport | null;
   integrity?: IntegrityBoardReport | null;
+  egress_timeline?: EgressTimelineReport | null;
+}
+
+export type EgressTimelineClaim =
+  | "none"
+  | "insufficient_history"
+  | "stable"
+  | "ip_changed"
+  | "churning"
+  | "unstable";
+
+export type EgressTimelineConfidence = "high" | "medium" | "low";
+
+export type EgressTimelineEventKind = "ip_changed" | "unstable_sample";
+
+export interface EgressTimelineEvent {
+  at: string;
+  kind: EgressTimelineEventKind;
+  detail: string;
+}
+
+export interface EgressTimelineReport {
+  claim: EgressTimelineClaim;
+  confidence: EgressTimelineConfidence;
+  title: string;
+  summary: string;
+  current_ip?: string | null;
+  previous_ip?: string | null;
+  distinct_ips: number;
+  checks_considered: number;
+  events: EgressTimelineEvent[];
+  evidence: string[];
+  not_proven: string[];
+  action: string;
 }
 
 export type IntegrityBoardLevel = "none" | "info" | "caution" | "elevated";

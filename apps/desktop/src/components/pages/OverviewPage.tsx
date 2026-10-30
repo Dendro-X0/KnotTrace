@@ -8,6 +8,7 @@ import { PathBreakPanel } from "@/components/PathBreakPanel";
 import { DiagnosticBundlePanel } from "@/components/DiagnosticBundlePanel";
 import { IntegrityBoardPanel } from "@/components/IntegrityBoardPanel";
 import { LocalExplainPanel } from "@/components/LocalExplainPanel";
+import { EgressTimelinePanel } from "@/components/EgressTimelinePanel";
 import { NextStepsPanel } from "@/components/NextStepsPanel";
 import { StatusHero } from "@/components/StatusHero";
 import { TrendCharts } from "@/components/TrendCharts";
@@ -109,6 +110,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
                 <NetworkDiagnosisPanel diagnosis={state.report?.diagnosis} />
                 <PathBreakPanel loading={loading} report={state.report?.path_break} compact />
                 <IntegrityBoardPanel loading={loading} report={state.report?.integrity} compact />
+                <EgressTimelinePanel loading={loading} report={state.report?.egress_timeline} compact />
                 <LocalExplainPanel state={state} />
                 <DiagnosticBundlePanel state={state} />
               </div>

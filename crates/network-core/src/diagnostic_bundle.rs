@@ -2,6 +2,7 @@
 
 use crate::assist::load_backup as load_dns_backup;
 use crate::auto_protect_log::list_auto_protect_log;
+use crate::config_watch::list_config_watch_events;
 use crate::local_caps::load_backup as load_local_caps_backup;
 use crate::mtu_assist::load_backup as load_mtu_backup;
 use crate::types::*;
@@ -187,6 +188,14 @@ pub fn build_config_timeline(data_dir: &Path) -> Vec<String> {
                     "Auto-protect {}: {} ({})",
                     entry.kind, entry.message, status
                 ),
+            ));
+        }
+    }
+    if let Ok(entries) = list_config_watch_events(data_dir, 12) {
+        for entry in entries {
+            events.push((
+                entry.timestamp,
+                format!("Config watch ({}): {}", entry.kind, entry.detail),
             ));
         }
     }
@@ -529,6 +538,30 @@ mod tests {
         crate::assist::save_backup(&dir, &backup).unwrap();
         let timeline = build_config_timeline(&dir);
         assert!(timeline.iter().any(|line| line.contains("DNS Assist")));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn config_timeline_includes_config_watch_events() {
+        let dir = std::env::temp_dir().join(format!(
+            "knottrace-timeline-cw-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let event = ConfigWatchEvent {
+            timestamp: Utc::now(),
+            kind: "proxy".to_string(),
+            detail: "System proxy config changed (enabled false→true, source none→env)".to_string(),
+        };
+        let path = crate::config_watch::events_path(&dir);
+        std::fs::write(&path, format!("{}\n", serde_json::to_string(&event).unwrap())).unwrap();
+        let timeline = build_config_timeline(&dir);
+        assert!(timeline
+            .iter()
+            .any(|line| line.contains("Config watch (proxy)")));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

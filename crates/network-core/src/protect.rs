@@ -511,6 +511,12 @@ fn integrity_board_alert_meta(kind: IntegrityIndicatorKind) -> Option<(&'static 
         IntegrityIndicatorKind::ProcessEgressHint => {
             Some(("Processes toward current egress/proxy", AlertLevel::Info))
         }
+        IntegrityIndicatorKind::HostsFileDelta => {
+            Some(("Hosts file changed", AlertLevel::Warning))
+        }
+        IntegrityIndicatorKind::ProxyConfigDelta => {
+            Some(("System proxy configuration changed", AlertLevel::Warning))
+        }
         IntegrityIndicatorKind::ProxyEnabled
         | IntegrityIndicatorKind::CaptivePortal
         | IntegrityIndicatorKind::DnsIntegrity => None,

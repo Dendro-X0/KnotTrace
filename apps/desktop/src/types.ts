@@ -103,6 +103,8 @@ export interface EgressTimelineReport {
 export type IntegrityBoardLevel = "none" | "info" | "caution" | "elevated";
 export type IntegrityBoardConfidence = "high" | "medium" | "low";
 export type IntegrityIndicatorKind =
+  | "hosts_file_delta"
+  | "proxy_config_delta"
   | "proxy_enabled"
   | "dns_integrity"
   | "captive_portal"

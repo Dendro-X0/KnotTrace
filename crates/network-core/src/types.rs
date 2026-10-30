@@ -271,6 +271,8 @@ pub enum IntegrityIndicatorKind {
     GatewayArpChurn,
     CertStoreDelta,
     ProcessEgressHint,
+    HostsFileDelta,
+    ProxyConfigDelta,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -339,6 +341,30 @@ pub struct ProcessEgressSnapshot {
 pub struct ProcessEgressSettings {
     pub enabled: bool,
     pub consent_ack: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HostsFileSnapshot {
+    pub path: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mtime_unix: Option<i64>,
+    pub size: u64,
+    pub content_hash: String,
+    pub observed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProxyWatchSnapshot {
+    pub enabled: bool,
+    pub server_fingerprint: String,
+    pub source: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConfigWatchEvent {
+    pub timestamp: DateTime<Utc>,
+    pub kind: String,
+    pub detail: String,
 }
 
 impl Default for ProcessEgressSettings {

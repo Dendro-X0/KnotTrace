@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace useful on every desktop OS we ship, plus a thin
           — without fake Mbps, AV claims, or Obscur coupling.
 POSTURE:  Observe-first · indicators with confidence · reversible assists
 BASELINE: Path Truth Bands 1–5 + 3D/3E + CLI + AI explain (4A–4C) shipped
-DONE:     Charter · A1 · D1/D2 · A3 Protect↔integrity alerts
-NEXT:     C1 Hosts/proxy change timeline
+DONE:     Charter · A1 · D1/D2 · A3 · C1 hosts/proxy timeline
+NEXT:     B1 Mobile companion design
 ```
 
 ---
@@ -26,7 +26,7 @@ Path Truth shipped the honesty ladder (path break, integrity, AI explain, egress
 |-----------|----------|
 | **OS unevenness** | Process↔egress Windows-only; local caps Windows-only; mobile is packaging without Path Truth UX |
 | **Onboarding / discoverability** | START-HERE under-describes Integrity / Explain / Egress / process-egress |
-| **Integrity depth** | No hosts-file watch; Protect alerts not fully mapped to new integrity kinds; Wi‑Fi retries / WAN-facing listener hints thin |
+| **Integrity depth** | Wi‑Fi retries / WAN-facing listener hints thin; autoruns still deferred (C4) |
 | **Mobile** | APK/IPA pipeline exists; no “check + export bundle” companion surface |
 
 This plan **expands** KnotTrace. It does not reopen Obscur merge, speed optimizers, or AV certification ([Path Truth §9](./product-plan-path-truth-2026-10.md)).
@@ -95,8 +95,8 @@ Execute in order; do not skip to mobile full UI before A1.
 | 2 | **D1** START-HERE refresh | **Done** |
 | 3 | **D2** Future-plan status stamp | **Done** |
 | 4 | **A3** Protect ↔ integrity alert mapping | **Done** |
-| 5 | **C1** Hosts/proxy change timeline | **Next** |
-| 6 | **B1** Mobile companion design | Queued |
+| 5 | **C1** Hosts/proxy change timeline | **Done** |
+| 6 | **B1** Mobile companion design | **Next** |
 | 7 | **B2** Android companion implement | After B1 |
 | 8 | **A2 / C2 / C3 / B3 / C4** | As capacity allows |
 
@@ -120,8 +120,8 @@ Execute in order; do not skip to mobile full UI before A1.
 - [ ] Path Truth features documented per OS with no silent “Windows-only” surprises  
 - [ ] Process↔egress works or honestly `not_implemented` with user-visible copy on each desktop OS  
 - [ ] Mobile user can run a check and export a redacted bundle without desktop  
-- [ ] At least one new integrity/timeline signal beyond Path Truth v1.8.1 (C1 or A3)  
-- [ ] START-HERE matches the product users actually see  
+- [x] At least one new integrity/timeline signal beyond Path Truth v1.8.1 (C1 or A3)  
+- [x] START-HERE matches the product users actually see  
 
 ---
 
@@ -132,4 +132,4 @@ Execute in order; do not skip to mobile full UI before A1.
 - [mobile-signing.md](./mobile-signing.md) — APK/IPA signing  
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — absorbed sketch  
 
-_Last updated: 2026-10-30T12:30:00Z_
+_Last updated: 2026-10-30T13:00:00Z_

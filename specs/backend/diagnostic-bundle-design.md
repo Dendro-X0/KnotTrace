@@ -51,7 +51,7 @@ DiagnosticBundle
 ├── upstream_pool: { claim, confidence, title } | null
 ├── recommendations: Vec<{ title, category, priority, action_id }>
 ├── integrity_flags: Vec<string>   # soft flags from existing signals only
-├── config_timeline: Vec<string>   # from DNS/local-caps/MTU backups + auto-protect log when data_dir provided
+├── config_timeline: Vec<string>   # DNS/local-caps/MTU backups + auto-protect log + hosts/proxy watch events when data_dir provided
 ├── not_checked: Vec<string>
 └── ai_prompt_template: string     # fixed; instructs AI not to invent measurements
 ```

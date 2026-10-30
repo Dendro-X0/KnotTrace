@@ -6,6 +6,7 @@ mod cli_args;
 mod auto_protect_log;
 mod benchmark;
 mod clash_api;
+mod config_watch;
 mod connect;
 mod diagnosis;
 mod diagnostic_bundle;
@@ -53,6 +54,10 @@ pub use benchmark::{
     delete_benchmark_snapshot, list_benchmark_snapshots, save_benchmark_snapshot, BenchmarkError,
 };
 pub use diagnosis::diagnose_network;
+pub use config_watch::{
+    list_config_watch_events, refresh_config_watch, snapshot_hosts_file, snapshot_proxy,
+    ConfigWatchError,
+};
 pub use diagnostic_bundle::{
     build_config_timeline, build_diagnostic_bundle, build_diagnostic_bundle_with_dir,
 };

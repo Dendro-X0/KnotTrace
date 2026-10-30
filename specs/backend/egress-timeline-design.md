@@ -100,4 +100,5 @@ v1 is **observe-only** from existing history (no extra probes). “Opt-in” for
 - [x] Unit fixtures: stable / changed / churning / unstable  
 - [x] UI panel  
 - [x] Docs + product plan Band 5  
-- [ ] L3 GUI click-smoke when RC.EXE available  
+- [x] L3 GUI: Egress timeline visible on Overview + Network via CDP smoke (2026-10-30)  
+

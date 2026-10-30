@@ -117,6 +117,7 @@ Pure function; no I/O. Tauri returns the struct (serde JSON to UI). UI copies `J
 - [x] Overview export control present  
 - [x] Docs + product plan Band 2 status updated  
 - [x] L3 (runtime): bundle builder + export IPC present; frontend `tsc --noEmit` clean after smoke fix  
-- [ ] L3 (GUI): Overview Copy JSON click — blocked here by missing Windows `RC.EXE` for `tauri dev`  
+- [x] L3 (GUI): Diagnostic export panel visible; Copy JSON clicked in CDP smoke (2026-10-30)  
+
 
 

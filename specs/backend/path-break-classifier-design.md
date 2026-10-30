@@ -168,6 +168,7 @@ report.path_break = Some(classify_path_break(&report));
 - [x] Unit tests cover ≥4 fixtures (`cargo test -p network-core path_break`)  
 - [x] Docs: architecture + START-HERE index mention Path Truth Band 1  
 - [x] L3 (runtime): live `network-probe` includes `path_break` (2026-10-30 smoke; active_path/hop present)  
-- [ ] L3 (GUI): Overview Path break panel — blocked here by missing Windows `RC.EXE` for `tauri dev`  
+- [x] L3 (GUI): Overview + Network Path break visible via CDP click-smoke (`npm run smoke:gui`, 2026-10-30)  
+
 
 

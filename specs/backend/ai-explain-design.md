@@ -257,7 +257,8 @@ Consent version string: `knottrace.ai_explain.consent.v1`
 - [x] Overview `LocalExplainPanel` (navigate-only action chips)  
 - [x] L1: `cargo test -p network-core --lib ai_explain`  
 - [x] L3 (runtime): `network-probe --explain` returns `knottrace.local_explain.v1` with action_ids + disclaimer caveat  
-- [ ] L3 (GUI): Overview Explain locally / cloud click-smoke  
+- [x] L3 (GUI): Overview Explain locally clicked via CDP smoke; cloud panel visible (2026-10-30)  
+
 
 ### 4B implementation
 

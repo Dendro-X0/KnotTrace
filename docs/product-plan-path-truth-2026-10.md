@@ -11,8 +11,8 @@ GOAL:     High-performance, versatile tool to diagnose and resolve network issue
 POSTURE:  Observe-first · indicators with confidence · reversible assists (opt-in)
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
-DONE:     Band 1–5 · 4A local explain · 4B cloud explain (user OpenAI-compatible)
-NEXT:     GUI click-smoke; optional Band 3 ARP/cert deltas; CLI check --json later
+DONE:     Band 1–5 · 4A/4B · GUI click-smoke (CDP) green 2026-10-30
+NEXT:     Optional Band 3 ARP/cert deltas; CLI check --json; release bump when ready
 ```
 
 ---

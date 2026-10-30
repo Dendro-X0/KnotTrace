@@ -11,7 +11,7 @@ Release automation builds desktop installers for all three platforms on tag push
 | Health monitor & probes | Yes | Yes | Yes |
 | Link facts (speed/duplex) | Yes (+ Wi‑Fi signal) | Yes | Yes (+ `iw` when present) |
 | Local repair (flush DNS / DHCP / restart NIC) | **Yes** | **Yes** (flush/DHCP) | **Yes** |
-| Local caps (TCP / NIC power) | **Yes** (opt-in repair) | Observe N/A | Observe N/A |
+| Local caps (TCP / NIC power) | **Yes** (observe + opt-in repair) | **Observe** (sysctl; repair N/A) | **Observe** (`/proc` + sysfs; repair N/A) |
 | MTU assist (opt-in clamp) | **Yes** | **Yes** (`networksetup`) | **Yes** (`ip` / sysfs) |
 | Tunnel path compare | Yes | Yes | Yes |
 | Upstream pool proof | Yes | Yes | Yes |

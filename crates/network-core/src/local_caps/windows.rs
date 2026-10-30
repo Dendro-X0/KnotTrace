@@ -8,6 +8,10 @@ pub fn platform_available() -> bool {
     true
 }
 
+pub fn platform_can_repair() -> bool {
+    true
+}
+
 pub fn platform_note() -> String {
     "Windows TCP auto-tuning and NIC power settings. Administrator approval may be required to repair.".to_string()
 }

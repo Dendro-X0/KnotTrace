@@ -4,8 +4,12 @@ pub fn platform_available() -> bool {
     false
 }
 
+pub fn platform_can_repair() -> bool {
+    false
+}
+
 pub fn platform_note() -> String {
-    "Windows local caps (TCP auto-tuning / NIC power) are only available on Windows.".to_string()
+    "Local caps observe is implemented for Windows, Linux, and macOS. This platform is unsupported.".to_string()
 }
 
 pub fn read_autotuning_level() -> Result<String, String> {

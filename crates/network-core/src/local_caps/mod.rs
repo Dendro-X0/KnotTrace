@@ -2,12 +2,20 @@ mod parsers;
 
 #[cfg(windows)]
 mod windows;
-#[cfg(not(windows))]
+#[cfg(target_os = "linux")]
+mod linux;
+#[cfg(target_os = "macos")]
+mod macos;
+#[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
 mod stub;
 
 #[cfg(windows)]
 use windows as platform;
-#[cfg(not(windows))]
+#[cfg(target_os = "linux")]
+use linux as platform;
+#[cfg(target_os = "macos")]
+use macos as platform;
+#[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
 use stub as platform;
 
 use crate::types::*;
@@ -60,7 +68,7 @@ pub fn get_local_caps_state(data_dir: &Path) -> Result<LocalCapsState, LocalCaps
     let backup = load_backup(data_dir)?;
     Ok(LocalCapsState {
         available: platform::platform_available(),
-        can_repair: platform::platform_available(),
+        can_repair: platform::platform_can_repair() && backup.is_none(),
         repair_active: backup.is_some(),
         backup,
         platform_note: platform::platform_note(),
@@ -108,7 +116,7 @@ fn build_report(environment: &EnvironmentSnapshot, repair_active: bool) -> Local
                 (
                     LocalCapsIssueKind::AutotuningDisabled,
                     "TCP receive-window auto-tuning is disabled".to_string(),
-                    "With auto-tuning off, Windows can under-use fast or high-latency links. Restoring Normal usually helps large downloads.".to_string(),
+                    "With auto-tuning / window scaling off, this host can under-use fast or high-latency links.".to_string(),
                 )
             } else {
                 (
@@ -139,7 +147,7 @@ fn build_report(environment: &EnvironmentSnapshot, repair_active: bool) -> Local
             severity: AlertLevel::Info,
             title: "NIC power saving may throttle the link".to_string(),
             message: format!(
-                "Adapter `{}` allows Windows to turn it off to save power. That can cause stalls or uneven speed on laptops.",
+                "Adapter `{}` may allow the OS to power the device down. That can cause stalls or uneven speed on laptops.",
                 adapter_name.as_deref().unwrap_or("active")
             ),
         });
@@ -147,16 +155,17 @@ fn build_report(environment: &EnvironmentSnapshot, repair_active: bool) -> Local
 
     let summary = if issues.is_empty() {
         match tcp_autotuning_level.as_deref() {
-            Some(level) => format!("Windows local stack looks fine (TCP auto-tuning: {level})."),
-            None => "Windows local caps could not be fully read.".to_string(),
+            Some(level) => format!("Local TCP stack looks fine (auto-tuning class: {level})."),
+            None => "Local caps could not be fully read.".to_string(),
         }
     } else if let Some(issue) = issues.first() {
         issue.title.clone()
     } else {
-        "Windows local caps need attention.".to_string()
+        "Local caps need attention.".to_string()
     };
 
-    let can_repair = !issues.is_empty() && !repair_active;
+    let can_repair =
+        platform::platform_can_repair() && !issues.is_empty() && !repair_active;
 
     LocalCapsReport {
         available: true,
@@ -177,7 +186,7 @@ pub fn apply_local_caps_repair(
     data_dir: &Path,
     environment: &EnvironmentSnapshot,
 ) -> Result<LocalCapsRepairResult, LocalCapsError> {
-    if !platform::platform_available() {
+    if !platform::platform_can_repair() {
         return Err(LocalCapsError::Unavailable(platform::platform_note()));
     }
     if load_backup(data_dir)?.is_some() {
@@ -189,7 +198,7 @@ pub fn apply_local_caps_repair(
     let report = build_report(environment, false);
     if report.issues.is_empty() {
         return Err(LocalCapsError::Unavailable(
-            "No Windows local-cap issues to repair right now.".to_string(),
+            "No local-cap issues to repair right now.".to_string(),
         ));
     }
 
@@ -237,7 +246,7 @@ pub fn apply_local_caps_repair(
 }
 
 pub fn restore_local_caps_repair(data_dir: &Path) -> Result<String, LocalCapsError> {
-    if !platform::platform_available() {
+    if !platform::platform_can_repair() {
         return Err(LocalCapsError::Unavailable(platform::platform_note()));
     }
 

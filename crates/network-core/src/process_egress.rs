@@ -135,7 +135,15 @@ pub fn scan_process_egress(report: &HealthReport) -> ProcessEgressSnapshot {
     {
         return scan_process_egress_windows(&targets);
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
+    {
+        return scan_process_egress_linux(&targets);
+    }
+    #[cfg(target_os = "macos")]
+    {
+        return scan_process_egress_macos(&targets);
+    }
+    #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
     {
         ProcessEgressSnapshot {
             scanned: false,
@@ -215,26 +223,7 @@ fn scan_process_egress_windows(targets: &[String]) -> ProcessEgressSnapshot {
             let text = String::from_utf8_lossy(&out.stdout);
             let rows = parse_pid_remote_lines(&text);
             let hits = aggregate_hits(rows, resolve_process_name_windows);
-            let summary = if hits.is_empty() {
-                format!(
-                    "No established TCP sessions matched targets {}.",
-                    targets.join(", ")
-                )
-            } else {
-                format!(
-                    "{} process group(s) matched toward {}.",
-                    hits.len(),
-                    targets.join(", ")
-                )
-            };
-            ProcessEgressSnapshot {
-                scanned: true,
-                enabled: true,
-                source: "powershell Get-NetTCPConnection".to_string(),
-                matched_targets: targets.to_vec(),
-                hits,
-                summary,
-            }
+            finish_snapshot(targets, hits, "powershell Get-NetTCPConnection")
         }
         Ok(out) => ProcessEgressSnapshot {
             scanned: false,
@@ -277,6 +266,214 @@ fn resolve_process_name_windows(pid: u32) -> String {
         }
         _ => format!("pid:{pid}"),
     }
+}
+
+#[cfg(target_os = "linux")]
+fn scan_process_egress_linux(targets: &[String]) -> ProcessEgressSnapshot {
+    let output = hidden_command("ss")
+        .args(["-H", "-tnip"])
+        .output();
+    match output {
+        Ok(out) if out.status.success() => {
+            let text = String::from_utf8_lossy(&out.stdout);
+            let rows = parse_ss_tnip_lines(&text, targets);
+            let hits = aggregate_hits(rows, |pid| resolve_process_name_proc(pid));
+            finish_snapshot(targets, hits, "ss -tnip")
+        }
+        Ok(out) => ProcessEgressSnapshot {
+            scanned: false,
+            enabled: true,
+            source: "ss -tnip".to_string(),
+            matched_targets: targets.to_vec(),
+            hits: vec![],
+            summary: format!(
+                "Process egress scan failed: {}",
+                String::from_utf8_lossy(&out.stderr).trim()
+            ),
+        },
+        Err(error) => ProcessEgressSnapshot {
+            scanned: false,
+            enabled: true,
+            source: "ss -tnip".to_string(),
+            matched_targets: targets.to_vec(),
+            hits: vec![],
+            summary: format!("Process egress scan unavailable: {error}"),
+        },
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn scan_process_egress_macos(targets: &[String]) -> ProcessEgressSnapshot {
+    let output = hidden_command("lsof")
+        .args(["-nP", "-iTCP", "-sTCP:ESTABLISHED"])
+        .output();
+    match output {
+        Ok(out) if out.status.success() => {
+            let text = String::from_utf8_lossy(&out.stdout);
+            let rows = parse_lsof_tcp_lines(&text, targets);
+            let hits = aggregate_hits(rows, |pid| resolve_process_name_proc(pid));
+            finish_snapshot(targets, hits, "lsof -iTCP")
+        }
+        Ok(out) => ProcessEgressSnapshot {
+            scanned: false,
+            enabled: true,
+            source: "lsof -iTCP".to_string(),
+            matched_targets: targets.to_vec(),
+            hits: vec![],
+            summary: format!(
+                "Process egress scan failed: {}",
+                String::from_utf8_lossy(&out.stderr).trim()
+            ),
+        },
+        Err(error) => ProcessEgressSnapshot {
+            scanned: false,
+            enabled: true,
+            source: "lsof -iTCP".to_string(),
+            matched_targets: targets.to_vec(),
+            hits: vec![],
+            summary: format!("Process egress scan unavailable: {error}"),
+        },
+    }
+}
+
+fn finish_snapshot(
+    targets: &[String],
+    hits: Vec<ProcessEgressHit>,
+    source: &str,
+) -> ProcessEgressSnapshot {
+    let summary = if hits.is_empty() {
+        format!(
+            "No established TCP sessions matched targets {}.",
+            targets.join(", ")
+        )
+    } else {
+        format!(
+            "{} process group(s) matched toward {}.",
+            hits.len(),
+            targets.join(", ")
+        )
+    };
+    ProcessEgressSnapshot {
+        scanned: true,
+        enabled: true,
+        source: source.to_string(),
+        matched_targets: targets.to_vec(),
+        hits,
+        summary,
+    }
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn resolve_process_name_proc(pid: u32) -> String {
+    let path = format!("/proc/{pid}/comm");
+    if let Ok(name) = std::fs::read_to_string(&path) {
+        let trimmed = name.trim();
+        if !trimmed.is_empty() {
+            return trimmed.to_string();
+        }
+    }
+    // macOS has no /proc; try ps
+    let output = hidden_command("ps")
+        .args(["-p", &pid.to_string(), "-o", "comm="])
+        .output();
+    if let Ok(out) = output {
+        if out.status.success() {
+            let name = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if !name.is_empty() {
+                return name;
+            }
+        }
+    }
+    format!("pid:{pid}")
+}
+
+#[cfg_attr(windows, allow(dead_code))]
+fn endpoint_host(endpoint: &str) -> String {
+    if let Some(rest) = endpoint.strip_prefix('[') {
+        if let Some((host, _)) = rest.split_once("]:") {
+            return host.to_string();
+        }
+    }
+    endpoint
+        .rsplit_once(':')
+        .map(|(host, _)| host.to_string())
+        .unwrap_or_else(|| endpoint.to_string())
+}
+
+#[cfg_attr(windows, allow(dead_code))]
+fn host_matches_targets(host: &str, targets: &[String]) -> bool {
+    targets.iter().any(|target| target == host)
+}
+
+/// Parse `ss -H -tnip` lines; keep remotes matching targets.
+#[cfg_attr(windows, allow(dead_code))]
+fn parse_ss_tnip_lines(text: &str, targets: &[String]) -> Vec<(u32, String)> {
+    let mut rows = Vec::new();
+    for line in text.lines() {
+        let Some(remote) = ss_remote_address(line) else {
+            continue;
+        };
+        let host = endpoint_host(&remote);
+        if !host_matches_targets(&host, targets) {
+            continue;
+        }
+        if let Some(pid) = ss_pid(line) {
+            rows.push((pid, host));
+        }
+    }
+    rows
+}
+
+#[cfg_attr(windows, allow(dead_code))]
+fn ss_remote_address(line: &str) -> Option<String> {
+    // Typical: ESTAB 0 0 192.168.1.2:443 203.0.113.10:443 users:(("curl",pid=123,fd=3))
+    let before_users = line.split("users:").next().unwrap_or(line).trim();
+    let parts: Vec<&str> = before_users.split_whitespace().collect();
+    // Peer address is the last token before the users= blob.
+    let candidate = parts.last().copied()?;
+    if !candidate.contains(':') {
+        return None;
+    }
+    Some(candidate.to_string())
+}
+
+#[cfg_attr(windows, allow(dead_code))]
+fn ss_pid(line: &str) -> Option<u32> {
+    let idx = line.find("pid=")?;
+    let rest = &line[idx + 4..];
+    let digits: String = rest.chars().take_while(|c| c.is_ascii_digit()).collect();
+    digits.parse().ok()
+}
+
+/// Parse `lsof -nP -iTCP -sTCP:ESTABLISHED` lines for matching remotes.
+#[cfg_attr(windows, allow(dead_code))]
+fn parse_lsof_tcp_lines(text: &str, targets: &[String]) -> Vec<(u32, String)> {
+    let mut rows = Vec::new();
+    for line in text.lines().skip(1) {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() < 9 {
+            continue;
+        }
+        let Some(pid) = parts[1].parse::<u32>().ok() else {
+            continue;
+        };
+        // e.g. 192.168.1.2:54321->203.0.113.10:443 (ESTABLISHED) — NAME may be split
+        let endpoint = parts
+            .iter()
+            .find(|part| part.contains("->"))
+            .copied()
+            .unwrap_or("");
+        let remote = endpoint.split("->").nth(1).unwrap_or("");
+        if remote.is_empty() {
+            continue;
+        }
+        let host = endpoint_host(remote);
+        if !host_matches_targets(&host, targets) {
+            continue;
+        }
+        rows.push((pid, host));
+    }
+    rows
 }
 
 fn parse_pid_remote_lines(text: &str) -> Vec<(u32, String)> {
@@ -490,5 +687,23 @@ mod tests {
             .not_checked
             .iter()
             .any(|s| s.contains("Process ↔ egress")));
+    }
+
+    #[test]
+    fn parses_ss_and_lsof_for_matching_targets() {
+        let targets = vec!["203.0.113.10".to_string()];
+        let ss = "ESTAB 0 0 192.168.1.2:443 203.0.113.10:443 users:((curl,pid=4242,fd=3))\n";
+        assert_eq!(
+            ss_remote_address(ss.trim()).as_deref(),
+            Some("203.0.113.10:443")
+        );
+        assert_eq!(ss_pid(ss.trim()), Some(4242));
+        let ss_rows = parse_ss_tnip_lines(ss, &targets);
+        assert_eq!(ss_rows, vec![(4242, "203.0.113.10".to_string())]);
+
+        let lsof = "COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME\n\
+curl      4242 me     3u   IPv4 0x0      0t0  TCP 192.168.1.2:54321->203.0.113.10:443 (ESTABLISHED)\n";
+        let lsof_rows = parse_lsof_tcp_lines(lsof, &targets);
+        assert_eq!(lsof_rows, vec![(4242, "203.0.113.10".to_string())]);
     }
 }

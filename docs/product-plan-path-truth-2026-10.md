@@ -12,7 +12,7 @@ POSTURE:  Observe-first · indicators with confidence · reversible assists (opt
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
 DONE:     Path Truth plan complete (bands + 3E + CLI + polish) · v1.8.1
-NEXT:     Maintain (optional: mobile export wrap)
+NEXT:     Successor charter — [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md)
 ```
 
 ---
@@ -180,4 +180,4 @@ Chartered. Execute in order; do not skip ahead without maintainer OK.
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier integrity/path-break sketch  
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 shipped direction  
 
-_Last updated: 2026-10-30T10:55:00Z_
+_Last updated: 2026-10-30T11:55:00Z_

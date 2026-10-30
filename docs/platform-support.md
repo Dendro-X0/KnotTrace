@@ -17,11 +17,21 @@ Release automation builds desktop installers for all three platforms on tag push
 | Upstream pool proof | Yes | Yes | Yes |
 | Diagnosis & stability | Yes | Yes | Yes |
 | DNS integrity (observe) | Yes | Yes | Yes |
+| Path break classifier | Yes | Yes | Yes |
+| Integrity board (listeners / soft signals) | Yes | Yes | Yes |
+| Gateway ARP snapshot | Yes | Yes | Yes |
+| Trusted-root cert snapshot | Yes | Yes | Yes |
+| Process↔egress (Protect opt-in) | **Yes** | **Best-effort** (`lsof`) | **Best-effort** (`ss`) |
+| Egress anomaly timeline | Yes | Yes | Yes |
+| Local / cloud AI explain | Yes | Yes | Yes |
+| Diagnostic bundle export | Yes | Yes | Yes |
+| Headless `network-probe check --json` | Yes | Yes | Yes |
 | Benchmark snapshots | Yes | Yes | Yes |
 | Throughput test (on-demand) | Yes | Yes | Yes |
 | Connect Assist (Clash API) | Yes | Yes* | Yes* |
 | Protect & notifications | Yes | Yes | Yes |
 | **DNS Assist apply/restore** | **Yes** | **Yes** (`networksetup`) | **Yes** (`nmcli` or `resolvectl`) |
+| Mobile companion (check + export) | — | — | — (Track B; not shipped) |
 
 \* Requires a local Mihomo, sing-box, or compatible proxy with `external-controller` enabled.
 

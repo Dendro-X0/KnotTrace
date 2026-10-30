@@ -1,8 +1,8 @@
 # Future plan — Security, integrity, and path honesty (KnotTrace)
 
 **Date (UTC):** 2026-10-17  
-**Status:** Plan only · not implementing in this pass  
-**Audience:** Maintainer iterating KnotTrace later (Obscur work continues separately)
+**Status:** **Superseded / absorbed** — Path Truth shipped the path-break + integrity + egress core; remaining depth is chartered in [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md)  
+**Audience:** Historical sketch (do not execute this doc as an active band list)
 
 ```text
 GOAL:     Grow KnotTrace beyond “local assist + honest Tor/VPN overhead”
@@ -86,4 +86,4 @@ Broader product plan (AI diagnostic bundles, novice UX, exposure board, ship ord
 - Changing Obscur Tor gateway to work around LAN `TLS_ERROR`  
 - Claiming Tor Verified from KnotTrace probes  
 
-_Last updated: 2026-10-17T15:05:00Z_
+_Last updated: 2026-10-30T11:55:00Z_

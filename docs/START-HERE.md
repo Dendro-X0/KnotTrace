@@ -8,11 +8,11 @@ Product direction: fix what is on the machine (DNS, link, OS caps, MTU) first; t
 
 | Page | Purpose |
 |------|---------|
-| **Overview** | Health score, fast/full check badge, diagnosis shapes, path-break (path + hop), upstream pool claim, next steps, trends, benchmark snapshots |
+| **Overview** | Health score, fast/full check, diagnosis, **Path break**, **Integrity**, **Egress timeline**, local/cloud **Explain**, diagnostic export, upstream pool, next steps, trends, benchmarks |
 | **DNS Assist** | Recommend and apply a faster DNS resolver (Windows, macOS, Linux) |
 | **Connect** | Discover Mihomo/sing-box API and switch proxy nodes (manual / Protect opt-in) |
-| **Protect** | Trust level, shape-aware alerts, notifications, opt-in auto-apply |
-| **Network** | Environment, Link (+ Wi‑Fi signal), Local repair, Local caps (Windows), MTU assist, Path break, Tunnel compare, proxy path + upstream pool proof, probes, throughput |
+| **Protect** | Trust level, alerts, notifications, opt-in auto-apply, **process↔egress** opt-in |
+| **Network** | Environment, Link (+ Wi‑Fi), Local repair, Local caps (Windows), MTU assist, Path break, Integrity, Egress timeline, Tunnel compare, proxy path + upstream pool, probes, throughput |
 
 **Default posture:** observe first. The background monitor runs full health checks; manual checks use a faster profile. DNS, Connect, MTU, and local-caps changes stay manual unless you enable Protect auto-apply (DNS/proxy only — **never** MTU or local caps). Proxy path / upstream pool proof is detect-only — it does not switch nodes for you.
 
@@ -37,8 +37,11 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 | `connect_config.json` | Proxy API settings |
 | `protect_settings.json` | Protect policies |
 | `dns_integrity_settings.json` | Integrity verification domains |
+| `process_egress_settings.json` | Opt-in process↔egress correlation |
+| `ai_explain_settings.json` / `ai_explain_api_key.txt` | Cloud AI explain (opt-in; key file separate) |
 | `benchmark_snapshots.json` | Benchmark snapshots (max 20) |
 | `throughput_settings.json` | Throughput sample sizes |
+| `auto_protect_log.jsonl` | Recent automatic DNS/proxy actions |
 
 ## Docs index
 
@@ -48,13 +51,16 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [platform-support.md](./platform-support.md) — what works on each OS
 - [slowdown-factors.md](./slowdown-factors.md) — cross-platform slowdown research
 - [slow-speed-triage.md](./slow-speed-triage.md) — symptom-to-signal triage matrix
-- [product-plan-path-truth-2026-10.md](./product-plan-path-truth-2026-10.md) — **product plan** Path Truth (Bands 1–5 + 4B cloud opt-in; independent of Obscur)
-- [../specs/backend/path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) — Path Truth Band 1 design
-- [../specs/backend/diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) — Path Truth Band 2 diagnostic export
-- [../specs/backend/integrity-board-design.md](../specs/backend/integrity-board-design.md) — Path Truth Band 3 integrity board
-- [../specs/backend/ai-explain-design.md](../specs/backend/ai-explain-design.md) — Path Truth Band 4 AI explain (4A local; 4B design)
-- [../specs/backend/egress-timeline-design.md](../specs/backend/egress-timeline-design.md) — Path Truth Band 5 egress timeline
-- [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier security / integrity / path-break sketch (superseded in scope by Path Truth plan)
+- [product-plan-path-truth-2026-10.md](./product-plan-path-truth-2026-10.md) — Path Truth charter (**complete** at v1.8.1)
+- [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md) — **active** cross-platform + capability expansion
+- [../specs/backend/path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) — Path Truth Band 1
+- [../specs/backend/diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) — Path Truth Band 2
+- [../specs/backend/integrity-board-design.md](../specs/backend/integrity-board-design.md) — Path Truth Band 3
+- [../specs/backend/process-egress-design.md](../specs/backend/process-egress-design.md) — Path Truth Band 3E
+- [../specs/backend/ai-explain-design.md](../specs/backend/ai-explain-design.md) — Path Truth Band 4 (4A–4C)
+- [../specs/backend/egress-timeline-design.md](../specs/backend/egress-timeline-design.md) — Path Truth Band 5
+- [../specs/backend/cli-check-design.md](../specs/backend/cli-check-design.md) — headless `check --json`
+- [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — historical sketch (absorbed)
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 local-first bands
 - [../specs/backend/](../specs/backend/) — design specs
 - [github-ci.md](./github-ci.md) — GitHub Actions CI and release publishing

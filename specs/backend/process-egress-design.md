@@ -53,16 +53,21 @@ IntegrityIndicatorKind += process_egress_hint
 
 Attach `process_egress: ProcessEgressSnapshot | null` on `IntegrityBoardReport`.
 
-## Scan rules (Windows v1)
+## Scan rules
 
 1. If settings `enabled` is false → skip; keep “Process ↔ egress correlation” in `not_checked`.
 2. Collect match targets: `egress.primary_ip` if present; proxy host from `environment.proxy.server` if proxy enabled.
 3. If no targets → `scanned: true`, empty hits, summary “No egress/proxy target to match.”
-4. Query established TCP remotes (`Get-NetTCPConnection -State Established`), filter to targets, group by OwningProcess, resolve process name (cap 12 hits).
+4. Query established TCP remotes, filter to targets, group by PID, resolve process name (cap 12 hits):
+
+| OS | Method |
+|----|--------|
+| Windows | `Get-NetTCPConnection -State Established` |
+| Linux | `ss -H -tnip` |
+| macOS | `lsof -nP -iTCP -sTCP:ESTABLISHED` |
+
 5. If any hits → push indicator `process_egress_hint` (info): title “Processes with sessions toward current egress/proxy”; message lists top names; evidence = summary counts.
 6. Failures → `scanned: false`, no fake clean bill; leave honesty note if useful.
-
-Linux/macOS v1: `scanned: false`, source `not_implemented` (same pattern as early cert store).
 
 ## Orchestration
 

@@ -64,7 +64,7 @@ Thin Tauri command layer + React dashboard.
 | `throughput` | Throughput settings and on-demand test |
 | `dns_integrity` | Integrity settings |
 
-Frontend state centralizes in `useCompanion.ts`; pages live under `components/pages/`. Notable Network/Overview panels: `LinkFactsPanel`, `LocalCapsPanel`, `MtuAssistPanel`, `PathBreakPanel`, `TunnelComparePanel`, `UpstreamPoolPanel`, `ProxyPathPanel`, `NetworkDiagnosisPanel`, `NextStepsPanel`, `TrendCharts`.
+Frontend state centralizes in `useCompanion.ts`; pages live under `components/pages/`. Notable Network/Overview panels: `LinkFactsPanel`, `LocalCapsPanel`, `MtuAssistPanel`, `PathBreakPanel`, `IntegrityBoardPanel`, `DiagnosticBundlePanel`, `TunnelComparePanel`, `UpstreamPoolPanel`, `ProxyPathPanel`, `NetworkDiagnosisPanel`, `NextStepsPanel`, `TrendCharts`.
 
 Scrolling uses a single `ScrollArea` component with the `.app-scroll` CSS class for consistent thin scrollbars.
 

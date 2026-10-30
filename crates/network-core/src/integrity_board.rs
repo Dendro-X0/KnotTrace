@@ -286,7 +286,15 @@ fn snapshot_cert_store() -> Option<CertStoreSnapshot> {
     {
         return Some(snapshot_cert_store_windows());
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
+    {
+        return Some(snapshot_cert_store_linux());
+    }
+    #[cfg(target_os = "macos")]
+    {
+        return Some(snapshot_cert_store_macos());
+    }
+    #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
     {
         Some(CertStoreSnapshot {
             root_count: 0,
@@ -472,6 +480,116 @@ fn snapshot_cert_store_windows() -> CertStoreSnapshot {
             observed: false,
         },
     }
+}
+
+#[cfg(target_os = "linux")]
+fn snapshot_cert_store_linux() -> CertStoreSnapshot {
+    const CANDIDATES: &[&str] = &[
+        "/etc/ssl/certs/ca-certificates.crt",
+        "/etc/pki/tls/certs/ca-bundle.crt",
+        "/etc/ssl/ca-bundle.pem",
+    ];
+    for path in CANDIDATES {
+        if let Ok(bytes) = std::fs::read(path) {
+            if let Some(snapshot) = snapshot_from_pem_bundle(&bytes, path) {
+                return snapshot;
+            }
+        }
+    }
+    // Fallback: count hashed cert symlinks in /etc/ssl/certs
+    if let Ok(entries) = std::fs::read_dir("/etc/ssl/certs") {
+        let mut names: Vec<String> = entries
+            .filter_map(|entry| entry.ok())
+            .filter_map(|entry| {
+                let name = entry.file_name().to_string_lossy().to_string();
+                if name.ends_with(".pem") || name.ends_with(".crt") {
+                    Some(name)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        if !names.is_empty() {
+            names.sort();
+            let root_count = names.len().min(u16::MAX as usize) as u16;
+            let fingerprint = fingerprint_thumbprints(&names);
+            return CertStoreSnapshot {
+                root_count,
+                fingerprint,
+                source: "/etc/ssl/certs".to_string(),
+                observed: true,
+            };
+        }
+    }
+    CertStoreSnapshot {
+        root_count: 0,
+        fingerprint: String::new(),
+        source: "/etc/ssl/certs".to_string(),
+        observed: false,
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn snapshot_cert_store_macos() -> CertStoreSnapshot {
+    let output = hidden_command("security")
+        .args([
+            "find-certificate",
+            "-a",
+            "-p",
+            "/System/Library/Keychains/SystemRootCertificates.keychain",
+        ])
+        .output();
+    match output {
+        Ok(out) if out.status.success() => {
+            if let Some(snapshot) =
+                snapshot_from_pem_bundle(&out.stdout, "SystemRootCertificates.keychain")
+            {
+                return snapshot;
+            }
+            CertStoreSnapshot {
+                root_count: 0,
+                fingerprint: String::new(),
+                source: "SystemRootCertificates.keychain".to_string(),
+                observed: false,
+            }
+        }
+        _ => CertStoreSnapshot {
+            root_count: 0,
+            fingerprint: String::new(),
+            source: "SystemRootCertificates.keychain".to_string(),
+            observed: false,
+        },
+    }
+}
+
+#[cfg_attr(windows, allow(dead_code))]
+fn snapshot_from_pem_bundle(bytes: &[u8], source: &str) -> Option<CertStoreSnapshot> {
+    let text = String::from_utf8_lossy(bytes);
+    let mut digests = Vec::new();
+    for block in text.split("-----BEGIN CERTIFICATE-----").skip(1) {
+        let pem = block
+            .split("-----END CERTIFICATE-----")
+            .next()
+            .unwrap_or("")
+            .chars()
+            .filter(|c| !c.is_whitespace())
+            .collect::<String>();
+        if pem.is_empty() {
+            continue;
+        }
+        digests.push(fingerprint_thumbprints(std::slice::from_ref(&pem)));
+    }
+    if digests.is_empty() {
+        return None;
+    }
+    let root_count = digests.len().min(u16::MAX as usize) as u16;
+    let fingerprint = fingerprint_thumbprints(&digests);
+    Some(CertStoreSnapshot {
+        root_count,
+        fingerprint,
+        source: source.to_string(),
+        observed: true,
+    })
 }
 
 #[cfg_attr(not(windows), allow(dead_code))]
@@ -1051,6 +1169,15 @@ mod tests {
             parse_proc_net_arp(proc, "192.168.1.1").as_deref(),
             Some("aa:bb:cc:dd:ee:ff")
         );
+    }
+
+    #[test]
+    fn pem_bundle_snapshot_counts_certs() {
+        let pem = b"-----BEGIN CERTIFICATE-----\nQUJD\n-----END CERTIFICATE-----\n-----BEGIN CERTIFICATE-----\nREVG\n-----END CERTIFICATE-----\n";
+        let snap = snapshot_from_pem_bundle(pem, "test-bundle").unwrap();
+        assert!(snap.observed);
+        assert_eq!(snap.root_count, 2);
+        assert!(!snap.fingerprint.is_empty());
     }
 
     #[test]

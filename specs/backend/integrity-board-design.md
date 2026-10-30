@@ -101,7 +101,7 @@ ListenerScanSummary
 | Signal | Windows | Linux | macOS |
 |--------|---------|-------|-------|
 | Gateway ARP | `Get-NetNeighbor` for `environment.default_gateway` (fallback `arp -a`) | `/proc/net/arp` | `arp -n` |
-| Trusted roots | `Cert:\LocalMachine\Root` count + sorted-thumbprint fingerprint | omit / `observed: false` (v1) | omit / `observed: false` (v1) |
+| Trusted roots | `Cert:\LocalMachine\Root` count + sorted-thumbprint fingerprint | PEM bundle (`ca-certificates.crt` / siblings) or `/etc/ssl/certs` names | `security find-certificate -a -p` SystemRootCertificates |
 
 Failures → `observed: false`, no fake clean bill. Snapshots always attach when a probe was attempted.
 

@@ -7,6 +7,7 @@ import {
   useGlobalSearchShortcut,
 } from "@/components/GlobalSearch";
 import { ConnectPage } from "@/components/pages/ConnectPage";
+import { CompanionHomePage } from "@/components/pages/CompanionHomePage";
 import { DnsPage } from "@/components/pages/DnsPage";
 import { NetworkPage } from "@/components/pages/NetworkPage";
 import { OverviewPage } from "@/components/pages/OverviewPage";
@@ -20,6 +21,28 @@ export function App() {
   const openSearch = useCallback(() => setSearchOpen(true), []);
 
   useGlobalSearchShortcut(openSearch);
+
+  if (state.capabilities?.companion_shell) {
+    return (
+      <div className="bg-background text-foreground min-h-dvh">
+        <div className="surface-panel mx-auto flex min-h-dvh max-w-lg flex-col gap-2 p-3 sm:p-4">
+          <UpdateBanner
+            update={state.updateCheck}
+            checking={state.updateChecking}
+            installing={state.updateInstalling}
+            progress={state.updateProgress}
+            error={state.updateError}
+            onCheck={() => void state.checkForUpdates()}
+            onInstall={() => void state.installUpdate()}
+            onOpenRelease={() => void state.openUpdateRelease()}
+          />
+          <main className="app-scroll min-h-0 flex-1 overflow-x-hidden">
+            <CompanionHomePage state={state} />
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background text-foreground grid min-h-dvh grid-cols-1 lg:h-dvh lg:grid-cols-[220px_minmax(0,1fr)] lg:overflow-hidden">

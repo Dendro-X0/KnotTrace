@@ -1,6 +1,6 @@
 # Mobile companion (Track B / Band B1 design)
 
-Status: **designed** (B1) — implement in **B2** (Android) / **B3** (iOS)  
+Status: **B1 designed · B2 shell implemented** (CompanionHome + capabilities; Android device L3 still pending) — **B3** iOS parity  
 Product plan: [product-plan-cross-platform-capability-2026-10.md](../../docs/product-plan-cross-platform-capability-2026-10.md) Track B  
 UI blueprint: [frontend-spec-mobile-companion.md](../../docs/frontend-spec-mobile-companion.md)  
 Signing: [mobile-signing.md](../../docs/mobile-signing.md)

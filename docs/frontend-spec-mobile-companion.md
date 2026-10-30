@@ -1,6 +1,6 @@
 # Frontend spec — Mobile companion shell (Band B1)
 
-Status: **spec for B2** (do not implement until B2 starts)  
+Status: **B2 shell landed** (CompanionHome + `get_app_capabilities`; desktop `?companion=1` preview)  
 Backend: [specs/backend/mobile-companion-design.md](../specs/backend/mobile-companion-design.md)  
 Product plan: [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md)
 
@@ -66,7 +66,8 @@ Dark-mode-only redesign, purple glow marketing, multi-page IA, floating promo ch
 
 ## B2 acceptance (UI)
 
-- [ ] Cold → Run check → Ready shows grade + path-break title + integrity block  
-- [ ] Export copies/shares JSON with `schema_version` knottrace diagnostic bundle  
-- [ ] No navigation entry to Protect apply / Connect switch / DNS apply  
-- [ ] Desktop build still shows full sidebar
+- [x] Cold → Run check → Ready shows grade + path-break title + integrity block (CompanionHome)  
+- [x] Export copies JSON with `schema_version` knottrace diagnostic bundle (share sheet deferred)  
+- [x] No navigation entry to Protect apply / Connect switch / DNS apply  
+- [x] Desktop build still shows full sidebar (`companion_shell` false unless `?companion=1`)  
+- [ ] L3 on physical/emulator Android APK

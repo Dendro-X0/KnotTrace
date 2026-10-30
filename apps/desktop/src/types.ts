@@ -100,6 +100,12 @@ export interface EgressTimelineReport {
   action: string;
 }
 
+export interface AppCapabilities {
+  companion_shell: boolean;
+  background_monitor_default: boolean;
+  platform: string;
+}
+
 export type IntegrityBoardLevel = "none" | "info" | "caution" | "elevated";
 export type IntegrityBoardConfidence = "high" | "medium" | "low";
 export type IntegrityIndicatorKind =

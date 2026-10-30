@@ -60,9 +60,9 @@ export function IntegrityBoardPanel({ loading, report, compact }: IntegrityBoard
         <p className="text-sm font-medium leading-relaxed">{report.title}</p>
         <p className="text-muted-foreground text-xs leading-relaxed">{report.summary}</p>
         <p className="text-xs leading-relaxed italic">{report.disclaimer}</p>
-        {!compact && report.indicators.length > 0 && (
+        {report.indicators.length > 0 && (
           <ul className="space-y-2">
-            {report.indicators.slice(0, 6).map((item) => (
+            {report.indicators.slice(0, compact ? 3 : 6).map((item) => (
               <li
                 key={`${item.kind}-${item.title}`}
                 className="rounded-lg border border-border/70 bg-background/40 p-2.5 text-xs"
@@ -75,6 +75,11 @@ export function IntegrityBoardPanel({ loading, report, compact }: IntegrityBoard
               </li>
             ))}
           </ul>
+        )}
+        {compact && report.indicators.length > 3 && (
+          <p className="text-muted-foreground text-xs">
+            +{report.indicators.length - 3} more indicator(s) in the full report export.
+          </p>
         )}
         {!compact && report.listeners?.scanned && (
           <p className="text-muted-foreground text-xs">{report.listeners.summary}</p>

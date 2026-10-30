@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { invokeErrorMessage } from "@/lib/utils";
 import type {
+  AppCapabilities,
   AutoProtectLogEntry,
   AutoProtectResult,
   BenchmarkSnapshot,
@@ -105,6 +106,7 @@ export function useCompanion() {
   const [updateInstalling, setUpdateInstalling] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(null);
   const [bootstrapping, setBootstrapping] = useState(true);
+  const [capabilities, setCapabilities] = useState<AppCapabilities | null>(null);
 
   const navigate = useCallback((next: PageId) => {
     setPage(next);
@@ -783,6 +785,32 @@ export function useCompanion() {
 
     void (async () => {
       try {
+        const caps = await invoke<AppCapabilities>("get_app_capabilities");
+        let companionShell = caps.companion_shell;
+        try {
+          if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("companion") === "1") {
+              companionShell = true;
+            }
+          }
+        } catch {
+          // Ignore URL parse failures.
+        }
+        if (!cancelled) {
+          setCapabilities({ ...caps, companion_shell: companionShell });
+        }
+      } catch {
+        if (!cancelled) {
+          setCapabilities({
+            companion_shell: false,
+            background_monitor_default: true,
+            platform: "unknown",
+          });
+        }
+      }
+
+      try {
         const cached = await invoke<HealthReport | null>("get_last_report");
         if (!cancelled && cached) setReport(cached);
       } catch {
@@ -966,6 +994,7 @@ export function useCompanion() {
     updateProgress,
     updateError,
     bootstrapping,
+    capabilities,
     runCheck,
     setMonitorEnabled,
     applyRecommendedDns,

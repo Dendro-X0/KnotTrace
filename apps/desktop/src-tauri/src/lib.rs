@@ -82,6 +82,34 @@ fn set_monitor_enabled(state: State<'_, AppState>, enabled: bool) -> Result<(), 
     Ok(())
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct AppCapabilities {
+    companion_shell: bool,
+    background_monitor_default: bool,
+    platform: &'static str,
+}
+
+#[tauri::command]
+fn get_app_capabilities() -> AppCapabilities {
+    #[cfg(mobile)]
+    {
+        AppCapabilities {
+            companion_shell: true,
+            background_monitor_default: false,
+            platform: std::env::consts::OS,
+        }
+    }
+    #[cfg(not(mobile))]
+    {
+        AppCapabilities {
+            companion_shell: false,
+            background_monitor_default: true,
+            platform: std::env::consts::OS,
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -91,9 +119,14 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
             let store = open_store()?;
+            #[cfg(mobile)]
+            let monitor_default = false;
+            #[cfg(not(mobile))]
+            let monitor_default = true;
+
             app.manage(AppState {
                 last_report: std::sync::Mutex::new(None),
-                monitor_enabled: std::sync::Mutex::new(true),
+                monitor_enabled: std::sync::Mutex::new(monitor_default),
                 last_check_reason: std::sync::Mutex::new("startup".to_string()),
                 store: std::sync::Mutex::new(store),
             });
@@ -128,6 +161,7 @@ pub fn run() {
             get_history_trends,
             get_monitor_status,
             set_monitor_enabled,
+            get_app_capabilities,
             dns_integrity::get_dns_integrity_settings,
             dns_integrity::set_dns_integrity_settings,
             dns_integrity::get_dns_integrity_status,

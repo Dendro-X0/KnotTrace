@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-30
+
+### Added
+
+- **Path Truth (Bands 1–5)** — path-break classifier, novice Overview + diagnostic bundle export, integrity/exposure board, opt-in local + cloud AI explain, egress anomaly timeline
+- **Band 3D** — gateway ARP MAC snapshot and Windows trusted-root fingerprint; history enrich flags ARP churn and cert-store deltas as indicators only
+- **Headless CLI** — `network-probe check --json` (`--fast`/`--full`, `--explain`, `--bundle`) for agents and power users
+- **GUI click-smoke** — WebView2 CDP script (`npm run smoke:gui`) for Overview/Network Path Truth panels
+- Specs: [product-plan-path-truth-2026-10.md](docs/product-plan-path-truth-2026-10.md), [path-break-classifier-design.md](specs/backend/path-break-classifier-design.md), [diagnostic-bundle-design.md](specs/backend/diagnostic-bundle-design.md), [integrity-board-design.md](specs/backend/integrity-board-design.md), [ai-explain-design.md](specs/backend/ai-explain-design.md), [egress-timeline-design.md](specs/backend/egress-timeline-design.md), [cli-check-design.md](specs/backend/cli-check-design.md)
+
+### Changed
+
+- Integrity board honesty list drops ARP/cert “not checked” lines when snapshots observe successfully
+- Development docs cover L3 probe smoke and CDP GUI click-smoke
+
 ## [1.7.1] - 2026-08-06
 
 ### Fixed
@@ -261,6 +276,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.8.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/Dendro-X0/network/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/Dendro-X0/network/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/Dendro-X0/network/compare/v1.5.0...v1.6.0

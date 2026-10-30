@@ -284,12 +284,29 @@ pub struct IntegrityIndicator {
     pub evidence: String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ListenerExposureScope {
+    /// Bound to all interfaces / unspecified (`0.0.0.0`, `::`, `*`) — strongest exposure hint.
+    WanFacing,
+    /// Bound to a non-loopback private/link-local address.
+    LanPrivate,
+    /// Non-loopback but not classified (unusual public bind, opaque IPv6 hex, etc.).
+    OtherNonLoopback,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HighRiskListener {
     pub port: u16,
     pub address: String,
+    #[serde(default = "default_listener_scope")]
+    pub scope: ListenerExposureScope,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub process_hint: Option<String>,
+}
+
+fn default_listener_scope() -> ListenerExposureScope {
+    ListenerExposureScope::OtherNonLoopback
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

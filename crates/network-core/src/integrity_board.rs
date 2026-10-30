@@ -46,18 +46,20 @@ pub fn assess_integrity_board_with_parts(
 
     if let Some(scan) = &listeners {
         for entry in &scan.high_risk {
+            let (title, message) = listener_indicator_copy(entry);
             indicators.push(IntegrityIndicator {
                 kind: IntegrityIndicatorKind::HighRiskListener,
                 severity: AlertLevel::Warning,
-                title: format!("High-risk listen on port {}", entry.port),
-                message: format!(
-                    "Local service listening on {} (port {}). This is an exposure indicator, not proof of compromise.",
-                    entry.address, entry.port
-                ),
-                evidence: entry
-                    .process_hint
-                    .clone()
-                    .unwrap_or_else(|| format!("{}:{}", entry.address, entry.port)),
+                title,
+                message,
+                evidence: entry.process_hint.clone().unwrap_or_else(|| {
+                    format!(
+                        "{}:{} scope={}",
+                        entry.address,
+                        entry.port,
+                        listener_scope_label(entry.scope)
+                    )
+                }),
             });
         }
     }
@@ -880,20 +882,39 @@ fn summarize_listener_rows(
         if !seen.insert(key) {
             continue;
         }
+        let scope = classify_listener_scope(&address);
         high_risk.push(HighRiskListener {
             port,
             address,
+            scope,
             process_hint: None,
         });
-        if high_risk.len() >= 12 {
-            break;
-        }
     }
+    // WAN-facing first, then LAN, then other — strongest exposure hints surface first.
+    high_risk.sort_by_key(|entry| match entry.scope {
+        ListenerExposureScope::WanFacing => 0u8,
+        ListenerExposureScope::LanPrivate => 1,
+        ListenerExposureScope::OtherNonLoopback => 2,
+    });
+    high_risk.truncate(12);
+
+    let wan_count = high_risk
+        .iter()
+        .filter(|e| e.scope == ListenerExposureScope::WanFacing)
+        .count();
     let summary = if high_risk.is_empty() {
-        format!("Scanned listen sockets via {source}; no high-risk non-loopback ports in sample.")
+        format!(
+            "Scanned listen sockets via {source}; no high-risk non-loopback ports in sample. Loopback-only services are omitted."
+        )
+    } else if wan_count > 0 {
+        format!(
+            "Found {} high-risk listen port(s) via {source}, including {} WAN-facing (all-interfaces) bind(s). Indicator only — not proof of compromise.",
+            high_risk.len(),
+            wan_count
+        )
     } else {
         format!(
-            "Found {} high-risk non-loopback listen port(s) via {source}.",
+            "Found {} high-risk non-loopback listen port(s) via {source} (LAN/private binds; none all-interfaces). Indicator only.",
             high_risk.len()
         )
     };
@@ -904,6 +925,64 @@ fn summarize_listener_rows(
         total_listened_sampled: sampled,
         summary,
     }
+}
+
+fn listener_indicator_copy(entry: &HighRiskListener) -> (String, String) {
+    match entry.scope {
+        ListenerExposureScope::WanFacing => (
+            format!("WAN-facing high-risk listen on port {}", entry.port),
+            format!(
+                "Service appears bound on all interfaces ({}:{}) — reachable beyond this host if the firewall allows. Exposure indicator only, not proof of compromise.",
+                entry.address, entry.port
+            ),
+        ),
+        ListenerExposureScope::LanPrivate => (
+            format!("LAN-facing high-risk listen on port {}", entry.port),
+            format!(
+                "Service listening on private/LAN address {} (port {}). Nearby devices may reach it; still an exposure indicator, not proof of compromise.",
+                entry.address, entry.port
+            ),
+        ),
+        ListenerExposureScope::OtherNonLoopback => (
+            format!("High-risk listen on port {}", entry.port),
+            format!(
+                "Local service listening on {} (port {}). Non-loopback bind — review whether this should be exposed. Indicator only.",
+                entry.address, entry.port
+            ),
+        ),
+    }
+}
+
+fn listener_scope_label(scope: ListenerExposureScope) -> &'static str {
+    match scope {
+        ListenerExposureScope::WanFacing => "wan_facing",
+        ListenerExposureScope::LanPrivate => "lan_private",
+        ListenerExposureScope::OtherNonLoopback => "other_non_loopback",
+    }
+}
+
+fn classify_listener_scope(address: &str) -> ListenerExposureScope {
+    let trimmed = address.trim().trim_start_matches('[').trim_end_matches(']');
+    if trimmed.is_empty()
+        || trimmed == "*"
+        || trimmed == "0.0.0.0"
+        || trimmed == "::"
+        || trimmed == "::0"
+        || trimmed.eq_ignore_ascii_case("unspecified")
+    {
+        return ListenerExposureScope::WanFacing;
+    }
+    if let Ok(ip) = trimmed.parse::<Ipv4Addr>() {
+        if ip.is_unspecified() {
+            return ListenerExposureScope::WanFacing;
+        }
+        if ip.is_private() || ip.is_link_local() {
+            return ListenerExposureScope::LanPrivate;
+        }
+        return ListenerExposureScope::OtherNonLoopback;
+    }
+    // Opaque IPv6 hex from /proc or similar — treat as other non-loopback.
+    ListenerExposureScope::OtherNonLoopback
 }
 
 fn is_high_risk_port(port: u16) -> bool {
@@ -1140,6 +1219,11 @@ mod tests {
         assert!(summary.scanned);
         assert_eq!(summary.high_risk.len(), 1);
         assert_eq!(summary.high_risk[0].port, 3389);
+        assert_eq!(
+            summary.high_risk[0].scope,
+            ListenerExposureScope::WanFacing
+        );
+        assert!(summary.summary.contains("WAN-facing"));
     }
 
     #[test]
@@ -1150,6 +1234,37 @@ mod tests {
         // 127 loopback filtered; 445 on 0.0.0.0 kept
         assert_eq!(summary.high_risk.len(), 1);
         assert_eq!(summary.high_risk[0].port, 445);
+        assert_eq!(
+            summary.high_risk[0].scope,
+            ListenerExposureScope::WanFacing
+        );
+    }
+
+    #[test]
+    fn wan_facing_listeners_sort_before_lan() {
+        let rows = vec![
+            ("192.168.1.10".to_string(), 445),
+            ("0.0.0.0".to_string(), 3389),
+            ("10.0.0.5".to_string(), 5900),
+        ];
+        let summary = summarize_listener_rows(rows, "test");
+        assert_eq!(summary.high_risk.len(), 3);
+        assert_eq!(summary.high_risk[0].scope, ListenerExposureScope::WanFacing);
+        assert_eq!(summary.high_risk[0].port, 3389);
+        assert!(summary.high_risk[1..]
+            .iter()
+            .all(|e| e.scope == ListenerExposureScope::LanPrivate));
+
+        let board = assess_integrity_board_with_listeners(
+            &base_report(),
+            Some(summary),
+        );
+        assert!(
+            board
+                .indicators
+                .iter()
+                .any(|i| i.title.contains("WAN-facing"))
+        );
     }
 
     #[test]

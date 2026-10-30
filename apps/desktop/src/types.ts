@@ -129,9 +129,15 @@ export interface IntegrityIndicator {
   evidence: string;
 }
 
+export type ListenerExposureScope =
+  | "wan_facing"
+  | "lan_private"
+  | "other_non_loopback";
+
 export interface HighRiskListener {
   port: number;
   address: string;
+  scope?: ListenerExposureScope;
   process_hint?: string | null;
 }
 

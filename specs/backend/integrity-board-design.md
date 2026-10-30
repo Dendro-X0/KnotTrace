@@ -1,6 +1,6 @@
 # Integrity / exposure board (Path Truth Band 3)
 
-Status: **implemented** (core + UI + Band 3D ARP/cert snapshots + history deltas)  
+Status: **implemented** (core + UI + Band 3D ARP/cert + 3E process-egress + C2 WAN/LAN listener scope)  
 Product plan: [product-plan-path-truth-2026-10.md](../../docs/product-plan-path-truth-2026-10.md) §6, §8 order 3  
 Depends on: Band 1 path-break, Band 2 bundle (will consume integrity flags later)
 

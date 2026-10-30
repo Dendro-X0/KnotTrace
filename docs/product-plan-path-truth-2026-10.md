@@ -12,7 +12,7 @@ POSTURE:  Observe-first · indicators with confidence · reversible assists (opt
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
 DONE:     Band 1–3 · Band 4A on-device explain (local_template)
-NEXT:     L3 smoke; Band 5 egress timeline; or charter 4B after open decisions
+NEXT:     GUI L3 when RC.EXE available; Band 5 egress timeline; or charter 4B
 ```
 
 ---

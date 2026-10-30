@@ -57,7 +57,7 @@ export function LocalExplainPanel({ state }: LocalExplainPanelProps) {
             </div>
             <CardTitle className="text-base">Explain locally</CardTitle>
           </div>
-          <Button size="sm" variant="outline" disabled={disabled} onClick={() => void handleExplain()}>
+          <Button size="sm" variant="secondary" disabled={disabled} onClick={() => void handleExplain()}>
             {busy ? "Reading…" : explain ? "Refresh" : "Explain"}
           </Button>
         </div>

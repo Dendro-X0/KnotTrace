@@ -116,5 +116,7 @@ Pure function; no I/O. Tauri returns the struct (serde JSON to UI). UI copies `J
 - [x] Recommendations carry `action_id`  
 - [x] Overview export control present  
 - [x] Docs + product plan Band 2 status updated  
-- [ ] L3: copy JSON from Overview after a health check  
+- [x] L3 (runtime): bundle builder + export IPC present; frontend `tsc --noEmit` clean after smoke fix  
+- [ ] L3 (GUI): Overview Copy JSON click — blocked here by missing Windows `RC.EXE` for `tauri dev`  
+
 

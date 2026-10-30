@@ -118,5 +118,7 @@ Update Band 2 bundle later to pull `integrity.indicators` into `integrity_flags`
 - [x] Proxy / DNS / captive map to indicators  
 - [x] Listener scan unit-tested with fixture parsers  
 - [x] Docs + product plan Band 3 status  
-- [ ] L3: Overview Integrity panel + disclaimer after health check  
+- [x] L3 (runtime): live `network-probe` includes `integrity` with disclaimer (`unobserved` copy present)  
+- [ ] L3 (GUI): Overview Integrity panel — blocked here by missing Windows `RC.EXE` for `tauri dev`  
+
 

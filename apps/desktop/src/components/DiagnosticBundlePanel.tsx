@@ -40,7 +40,7 @@ export function DiagnosticBundlePanel({ state }: DiagnosticBundlePanelProps) {
             </div>
             <CardTitle className="text-base">Diagnostic export</CardTitle>
           </div>
-          <Button size="sm" variant="outline" disabled={disabled} onClick={() => void handleExport()}>
+          <Button size="sm" variant="secondary" disabled={disabled} onClick={() => void handleExport()}>
             {busy ? "Exporting…" : "Copy JSON"}
           </Button>
         </div>

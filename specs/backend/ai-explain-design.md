@@ -254,7 +254,9 @@ Record answers before 4B impl:
 - [x] Tauri `explain_locally_report`  
 - [x] Overview `LocalExplainPanel` (navigate-only action chips)  
 - [x] L1: `cargo test -p network-core --lib ai_explain`  
-- [ ] L3: Overview Explain after a live health check  
+- [x] L3 (runtime): `network-probe --explain` returns `knottrace.local_explain.v1` with action_ids + disclaimer caveat  
+- [ ] L3 (GUI): Overview Explain locally click — blocked here by missing Windows `RC.EXE` for `tauri dev`  
+
 - [ ] Maintainer answers open decisions (before 4B code)  
 - [ ] 4B implementation chartered (separate session)  
 

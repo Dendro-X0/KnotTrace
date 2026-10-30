@@ -9,6 +9,27 @@ import type { AiExplainSettings, CloudExplainResult, PageId } from "@/types";
 const DATA_SHEET =
   "KnotTrace will send a redacted diagnostic JSON to the AI provider you configured. Nothing is sent until you confirm. KnotTrace does not operate a KnotTrace-hosted model. Hostname stays out; SSID only if you enable it. The API key goes only to your provider. Replies are kept in this session memory only.";
 
+const PROVIDER_PRESETS: Array<{ id: string; label: string; baseUrl: string; model: string }> = [
+  {
+    id: "openai",
+    label: "OpenAI",
+    baseUrl: "https://api.openai.com/v1",
+    model: "gpt-4o-mini",
+  },
+  {
+    id: "openrouter",
+    label: "OpenRouter",
+    baseUrl: "https://openrouter.ai/api/v1",
+    model: "openai/gpt-4o-mini",
+  },
+  {
+    id: "custom",
+    label: "Custom OpenAI-compatible",
+    baseUrl: "",
+    model: "",
+  },
+];
+
 interface CloudExplainPanelProps {
   state: CompanionState;
 }
@@ -40,6 +61,8 @@ export function CloudExplainPanel({ state }: CloudExplainPanelProps) {
   const [result, setResult] = useState<CloudExplainResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [presetId, setPresetId] = useState("openai");
+  const [copyNote, setCopyNote] = useState<string | null>(null);
 
   const refreshSettings = useCallback(async () => {
     try {
@@ -112,6 +135,28 @@ export function CloudExplainPanel({ state }: CloudExplainPanelProps) {
     }
   }
 
+  function applyPreset(id: string) {
+    setPresetId(id);
+    const preset = PROVIDER_PRESETS.find((item) => item.id === id);
+    if (!preset || id === "custom") {
+      return;
+    }
+    setBaseUrl(preset.baseUrl);
+    setModel(preset.model);
+  }
+
+  async function handleCopyReply() {
+    if (!result?.ok || !result.plain_markdown) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(result.plain_markdown);
+      setCopyNote("Copied reply to clipboard.");
+    } catch {
+      setCopyNote("Could not copy reply.");
+    }
+  }
+
   const enabled = settings?.cloud_enabled === true;
 
   return (
@@ -148,12 +193,29 @@ export function CloudExplainPanel({ state }: CloudExplainPanelProps) {
         </label>
 
         <div className="grid gap-2 sm:grid-cols-2">
+          <label className="grid gap-1 text-xs sm:col-span-2">
+            Provider preset
+            <select
+              className="rounded-md border border-border bg-background px-2 py-1"
+              value={presetId}
+              onChange={(event) => applyPreset(event.target.value)}
+            >
+              {PROVIDER_PRESETS.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="grid gap-1 text-xs">
             Base URL
             <input
               className="rounded-md border border-border bg-background px-2 py-1"
               value={baseUrl}
-              onChange={(event) => setBaseUrl(event.target.value)}
+              onChange={(event) => {
+                setPresetId("custom");
+                setBaseUrl(event.target.value);
+              }}
               placeholder="https://api.openai.com/v1"
             />
           </label>
@@ -162,7 +224,10 @@ export function CloudExplainPanel({ state }: CloudExplainPanelProps) {
             <input
               className="rounded-md border border-border bg-background px-2 py-1"
               value={model}
-              onChange={(event) => setModel(event.target.value)}
+              onChange={(event) => {
+                setPresetId("custom");
+                setModel(event.target.value);
+              }}
               placeholder="gpt-4o-mini"
             />
           </label>
@@ -207,7 +272,25 @@ export function CloudExplainPanel({ state }: CloudExplainPanelProps) {
         {error && <p className="text-xs text-destructive">{error}</p>}
         {result?.ok && (
           <div className="space-y-2 rounded-lg border border-border/70 bg-background/40 p-3">
-            <p className="text-xs font-medium">Provider reply ({result.model})</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-medium">Provider reply ({result.model})</p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="secondary" onClick={() => void handleCopyReply()}>
+                  Copy reply
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setResult(null);
+                    setCopyNote(null);
+                  }}
+                >
+                  Clear reply
+                </Button>
+              </div>
+            </div>
+            {copyNote && <p className="text-xs text-muted-foreground">{copyNote}</p>}
             <pre className="whitespace-pre-wrap text-xs leading-relaxed">{result.plain_markdown}</pre>
             {result.parsed_actions.length > 0 && (
               <div className="flex flex-wrap gap-2">

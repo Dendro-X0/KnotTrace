@@ -212,7 +212,7 @@ Do **not** put provider HTTP inside `network-core` if that forces API keys into 
 |------:|-------------|
 | 4A | `LocalExplainReport` + Overview Explain panel + tests |
 | 4B | Settings + data sheet + consent + cloud command + action parsing |
-| 4C (optional polish) | Local reply cache clear; “copy reply”; provider presets |
+| 4C (optional polish) | Session reply clear; “copy reply”; provider presets — **shipped** |
 
 Do not start 4B until 4A is green. Do not enable cloud in CI.
 

@@ -1,8 +1,8 @@
 use network_core::{
-    detect_environment, enrich_integrity_board, enrich_process_egress, environment_fingerprint,
-    evaluate_egress_timeline, evaluate_upstream_pool_proof, load_dns_integrity_settings,
-    load_process_egress_settings, refresh_config_watch, run_health_check_with_settings,
-    CheckProfile, HealthReport,
+    detect_environment, enrich_autoruns, enrich_integrity_board, enrich_process_egress,
+    environment_fingerprint, evaluate_egress_timeline, evaluate_upstream_pool_proof,
+    load_autorun_settings, load_dns_integrity_settings, load_process_egress_settings,
+    refresh_config_watch, run_health_check_with_settings, CheckProfile, HealthReport,
 };
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
@@ -53,6 +53,9 @@ fn enrich_history_claims(app: &AppHandle, report: &mut HealthReport) -> Result<(
     let process_settings =
         load_process_egress_settings(&data_dir()).map_err(|error| error.to_string())?;
     enrich_process_egress(report, &process_settings);
+    let autorun_settings =
+        load_autorun_settings(&data_dir()).map_err(|error| error.to_string())?;
+    enrich_autoruns(report, &autorun_settings);
     report.recommendations = Some(network_core::build_recommendations(report));
     report.diagnosis = Some(network_core::diagnose_network(report));
     Ok(())

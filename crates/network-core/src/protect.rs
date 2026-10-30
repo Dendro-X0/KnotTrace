@@ -517,6 +517,9 @@ fn integrity_board_alert_meta(kind: IntegrityIndicatorKind) -> Option<(&'static 
         IntegrityIndicatorKind::ProxyConfigDelta => {
             Some(("System proxy configuration changed", AlertLevel::Warning))
         }
+        IntegrityIndicatorKind::StartupNetworkAgent => {
+            Some(("Network-related startup entries", AlertLevel::Info))
+        }
         IntegrityIndicatorKind::ProxyEnabled
         | IntegrityIndicatorKind::CaptivePortal
         | IntegrityIndicatorKind::DnsIntegrity => None,
@@ -836,6 +839,7 @@ mod tests {
             gateway_arp: None,
             cert_store: None,
             process_egress: None,
+                autoruns: None,
             not_checked: vec![],
             confidence: IntegrityBoardConfidence::Medium,
         });

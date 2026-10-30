@@ -1,5 +1,6 @@
 mod ai_explain;
 mod assist;
+mod autoruns;
 mod benchmark;
 mod connect;
 mod dns_integrity;
@@ -177,6 +178,8 @@ pub fn run() {
             ai_explain::explain_with_cloud,
             process_egress::get_process_egress_settings,
             process_egress::set_process_egress_settings,
+            autoruns::get_autorun_settings,
+            autoruns::set_autorun_settings,
             assist::recommend_dns,
             assist::get_dns_assist_state,
             assist::apply_dns,

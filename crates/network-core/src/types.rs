@@ -273,6 +273,7 @@ pub enum IntegrityIndicatorKind {
     ProcessEgressHint,
     HostsFileDelta,
     ProxyConfigDelta,
+    StartupNetworkAgent,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -394,6 +395,38 @@ impl Default for ProcessEgressSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AutorunHit {
+    pub name: String,
+    pub location: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub command_hint: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AutorunSnapshot {
+    pub scanned: bool,
+    pub enabled: bool,
+    pub source: String,
+    pub hits: Vec<AutorunHit>,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AutorunSettings {
+    pub enabled: bool,
+    pub consent_ack: bool,
+}
+
+impl Default for AutorunSettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            consent_ack: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrityBoardReport {
     pub indicator_count: u8,
     pub level: IntegrityBoardLevel,
@@ -409,6 +442,8 @@ pub struct IntegrityBoardReport {
     pub cert_store: Option<CertStoreSnapshot>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub process_egress: Option<ProcessEgressSnapshot>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub autoruns: Option<AutorunSnapshot>,
     pub not_checked: Vec<String>,
     pub confidence: IntegrityBoardConfidence,
 }

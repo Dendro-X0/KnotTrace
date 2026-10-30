@@ -2,6 +2,7 @@
 
 mod ai_explain;
 mod assist;
+mod autoruns;
 mod cli_args;
 mod auto_protect_log;
 mod benchmark;
@@ -54,6 +55,10 @@ pub use benchmark::{
     delete_benchmark_snapshot, list_benchmark_snapshots, save_benchmark_snapshot, BenchmarkError,
 };
 pub use diagnosis::diagnose_network;
+pub use autoruns::{
+    default_autorun_settings, enrich_autoruns, load_autorun_settings, save_autorun_settings,
+    AutorunError, AUTORUNS_CONSENT,
+};
 pub use config_watch::{
     list_config_watch_events, refresh_config_watch, snapshot_hosts_file, snapshot_proxy,
     ConfigWatchError,

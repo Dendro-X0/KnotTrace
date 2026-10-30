@@ -99,6 +99,9 @@ export function IntegrityBoardPanel({ loading, report, compact }: IntegrityBoard
         {!compact && report.process_egress?.scanned && (
           <p className="text-muted-foreground text-xs">{report.process_egress.summary}</p>
         )}
+        {!compact && report.autoruns?.scanned && (
+          <p className="text-muted-foreground text-xs">{report.autoruns.summary}</p>
+        )}
       </CardContent>
     </Card>
   );

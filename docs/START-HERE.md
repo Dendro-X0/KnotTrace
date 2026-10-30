@@ -43,6 +43,7 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 | `throughput_settings.json` | Throughput sample sizes |
 | `auto_protect_log.jsonl` | Recent automatic DNS/proxy actions |
 | `config_watch_state.json` / `config_watch_events.jsonl` | Hosts file + system proxy change snapshots (Band C1) |
+| `autoruns_settings.json` | Opt-in startup network-agent scan (Band C4) |
 
 ## Docs index
 

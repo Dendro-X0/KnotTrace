@@ -12,7 +12,12 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import type { CompanionState } from "@/hooks/useCompanion";
-import type { ProcessEgressSettings, ProtectAction, ProtectSettings } from "@/types";
+import type {
+  AutorunSettings,
+  ProcessEgressSettings,
+  ProtectAction,
+  ProtectSettings,
+} from "@/types";
 
 interface ProtectPageProps {
   state: CompanionState;
@@ -77,6 +82,9 @@ export function ProtectPage({ state }: ProtectPageProps) {
   const [processEgress, setProcessEgress] = useState<ProcessEgressSettings | null>(null);
   const [processEgressError, setProcessEgressError] = useState<string | null>(null);
   const [consentChecked, setConsentChecked] = useState(false);
+  const [autoruns, setAutoruns] = useState<AutorunSettings | null>(null);
+  const [autorunsError, setAutorunsError] = useState<string | null>(null);
+  const [autorunsConsent, setAutorunsConsent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,10 +100,22 @@ export function ProtectPage({ state }: ProtectPageProps) {
           setProcessEgressError(error instanceof Error ? error.message : String(error));
         }
       });
+    void state.getAutorunSettings()
+      .then((settings) => {
+        if (!cancelled) {
+          setAutoruns(settings);
+          setAutorunsConsent(settings.consent_ack);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setAutorunsError(error instanceof Error ? error.message : String(error));
+        }
+      });
     return () => {
       cancelled = true;
     };
-  }, [state.getProcessEgressSettings]);
+  }, [state.getProcessEgressSettings, state.getAutorunSettings]);
 
   return (
     <FeaturePage
@@ -247,6 +267,58 @@ export function ProtectPage({ state }: ProtectPageProps) {
                 })
                 .catch((error: unknown) => {
                   setProcessEgressError(error instanceof Error ? error.message : String(error));
+                });
+            }}
+          />
+        </div>
+      </section>
+
+      <Separator className="shrink-0" />
+
+      <section className="grid gap-2 rounded-xl border border-border/60 bg-muted/15 px-3 py-3">
+        <h2 className="text-sm font-medium">Startup network agents (opt-in)</h2>
+        <p className="text-muted-foreground text-[0.68rem] leading-relaxed">
+          When enabled, KnotTrace scans common startup locations for names that look like VPN/proxy
+          clients and lists matches as integrity indicators only. It does not disable anything. Off
+          by default.
+        </p>
+        {autorunsError && <p className="text-muted-foreground text-xs">{autorunsError}</p>}
+        <label className="flex items-start gap-2 text-xs">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={autorunsConsent}
+            onChange={(event) => setAutorunsConsent(event.target.checked)}
+          />
+          <span>
+            I understand KnotTrace will read local startup/autorun entry names on this device only.
+          </span>
+        </label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="autoruns-enabled" className="text-xs">
+            Enable startup network-agent scan
+          </Label>
+          <Switch
+            id="autoruns-enabled"
+            checked={autoruns?.enabled ?? false}
+            disabled={!autoruns}
+            onCheckedChange={(value) => {
+              if (value && !autorunsConsent) {
+                setAutorunsError("Ack the consent note before enabling.");
+                return;
+              }
+              void state
+                .setAutorunSettings({
+                  enabled: value,
+                  consentAck: value ? autorunsConsent : autoruns?.consent_ack ?? false,
+                })
+                .then((next) => {
+                  setAutoruns(next);
+                  setAutorunsConsent(next.consent_ack);
+                  setAutorunsError(null);
+                })
+                .catch((error: unknown) => {
+                  setAutorunsError(error instanceof Error ? error.message : String(error));
                 });
             }}
           />

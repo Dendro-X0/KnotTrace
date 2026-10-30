@@ -119,7 +119,8 @@ export type IntegrityIndicatorKind =
   | "path_forced_routing"
   | "gateway_arp_churn"
   | "cert_store_delta"
-  | "process_egress_hint";
+  | "process_egress_hint"
+  | "startup_network_agent";
 
 export interface IntegrityIndicator {
   kind: IntegrityIndicatorKind;
@@ -184,6 +185,25 @@ export interface ProcessEgressSettings {
   consent_ack: boolean;
 }
 
+export interface AutorunHit {
+  name: string;
+  location: string;
+  command_hint?: string | null;
+}
+
+export interface AutorunSnapshot {
+  scanned: boolean;
+  enabled: boolean;
+  source: string;
+  hits: AutorunHit[];
+  summary: string;
+}
+
+export interface AutorunSettings {
+  enabled: boolean;
+  consent_ack: boolean;
+}
+
 export interface IntegrityBoardReport {
   indicator_count: number;
   level: IntegrityBoardLevel;
@@ -195,6 +215,7 @@ export interface IntegrityBoardReport {
   gateway_arp?: GatewayArpSnapshot | null;
   cert_store?: CertStoreSnapshot | null;
   process_egress?: ProcessEgressSnapshot | null;
+  autoruns?: AutorunSnapshot | null;
   not_checked: string[];
   confidence: IntegrityBoardConfidence;
 }

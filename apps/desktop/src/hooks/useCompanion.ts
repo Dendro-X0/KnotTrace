@@ -11,6 +11,7 @@ import type {
   ConnectConfig,
   ConnectRecommendation,
   AiExplainSettings,
+  AutorunSettings,
   ProcessEgressSettings,
   CloudExplainResult,
   DiagnosticBundle,
@@ -489,6 +490,17 @@ export function useCompanion() {
   const setProcessEgressSettings = useCallback(
     async (update: { enabled: boolean; consentAck: boolean }) => {
       return invoke<ProcessEgressSettings>("set_process_egress_settings", { update });
+    },
+    [],
+  );
+
+  const getAutorunSettings = useCallback(async () => {
+    return invoke<AutorunSettings>("get_autorun_settings");
+  }, []);
+
+  const setAutorunSettings = useCallback(
+    async (update: { enabled: boolean; consentAck: boolean }) => {
+      return invoke<AutorunSettings>("set_autorun_settings", { update });
     },
     [],
   );
@@ -1014,6 +1026,8 @@ export function useCompanion() {
     explainWithCloud,
     getProcessEgressSettings,
     setProcessEgressSettings,
+    getAutorunSettings,
+    setAutorunSettings,
     deleteBenchmark,
     saveThroughputSettings,
     runThroughputTest,

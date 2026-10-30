@@ -930,8 +930,6 @@ fn diagnosis_confidence(report: &HealthReport, shape: SlowdownShape) -> Diagnosi
                             | LinkIssueKind::WifiWeakSignal
                             | LinkIssueKind::WifiHighNoise
                             | LinkIssueKind::WifiElevatedRetries
-                            | LinkIssueKind::WifiHighNoise
-                            | LinkIssueKind::WifiElevatedRetries
                     )
                 })
             }) || report.local_caps.as_ref().is_some_and(|caps| {
@@ -1122,8 +1120,6 @@ fn link_local_issue(report: &HealthReport) -> bool {
                     | LinkIssueKind::HalfDuplex
                     | LinkIssueKind::PreferEthernet
                     | LinkIssueKind::WifiWeakSignal
-                    | LinkIssueKind::WifiHighNoise
-                    | LinkIssueKind::WifiElevatedRetries
                     | LinkIssueKind::WifiHighNoise
                     | LinkIssueKind::WifiElevatedRetries
             )

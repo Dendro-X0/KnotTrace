@@ -244,6 +244,7 @@ fn finalize_board(
         gateway_arp,
         cert_store,
         process_egress,
+        autoruns: None,
         not_checked,
         confidence,
     }
@@ -1340,6 +1341,7 @@ mod tests {
                 observed: true,
             }),
             process_egress: None,
+                autoruns: None,
             not_checked: vec![],
             confidence: IntegrityBoardConfidence::Low,
         });

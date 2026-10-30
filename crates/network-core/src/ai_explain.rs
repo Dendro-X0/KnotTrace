@@ -356,6 +356,7 @@ mod tests {
                 gateway_arp: None,
                 cert_store: None,
                 process_egress: None,
+                autoruns: None,
                 not_checked: vec![],
                 confidence: IntegrityBoardConfidence::Low,
             }),
@@ -459,6 +460,7 @@ mod tests {
             gateway_arp: None,
             cert_store: None,
             process_egress: None,
+                autoruns: None,
             not_checked: vec![],
             confidence: IntegrityBoardConfidence::High,
         });

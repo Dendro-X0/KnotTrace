@@ -9,6 +9,7 @@ import type {
   BenchmarkSnapshot,
   ConnectConfig,
   ConnectRecommendation,
+  DiagnosticBundle,
   DnsAssistRecommendation,
   DnsAssistState,
   DnsIntegritySettings,
@@ -436,6 +437,13 @@ export function useCompanion() {
     },
     [refreshBenchmarks],
   );
+
+  const exportDiagnosticBundle = useCallback(async (includeSsid = false) => {
+    const bundle = await invoke<DiagnosticBundle>("export_diagnostic_bundle", {
+      includeSsid,
+    });
+    return `${JSON.stringify(bundle, null, 2)}\n\n---\n${bundle.ai_prompt_template}\n`;
+  }, []);
 
   const deleteBenchmark = useCallback(
     async (id: string) => {
@@ -923,6 +931,7 @@ export function useCompanion() {
     runLocalRepair,
     saveIntegritySettings,
     saveBenchmark,
+    exportDiagnosticBundle,
     deleteBenchmark,
     saveThroughputSettings,
     runThroughputTest,

@@ -245,6 +245,147 @@ pub struct PathBreakReport {
     pub not_checked: Vec<String>,
 }
 
+pub const DIAGNOSTIC_BUNDLE_SCHEMA: &str = "knottrace.diagnostic_bundle.v1";
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticBundleOptions {
+    #[serde(default)]
+    pub include_ssid: bool,
+}
+
+impl Default for DiagnosticBundleOptions {
+    fn default() -> Self {
+        Self {
+            include_ssid: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticBundleApp {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticBundleRedaction {
+    pub include_ssid: bool,
+    pub notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticPathBreakSummary {
+    pub local_ok: bool,
+    pub active_path: PathBreakPath,
+    pub break_hop: PathBreakHop,
+    pub environment_class: PathEnvironmentClass,
+    pub confidence: PathBreakConfidence,
+    pub title: String,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticScoreSummary {
+    pub grade: HealthGrade,
+    pub score: u8,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticDiagnosisSummary {
+    pub slowdown_shape: SlowdownShape,
+    pub confidence: DiagnosisConfidence,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary_bottleneck: Option<BottleneckCategory>,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticContextSummary {
+    pub kind: NetworkContextKind,
+    pub risk_level: NetworkRiskLevel,
+    pub captive_state: CaptivePortalState,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticDnsIntegritySummary {
+    pub state: DnsIntegrityState,
+    pub confidence: DnsIntegrityConfidence,
+    pub mismatch_count: u8,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticProxySummary {
+    pub enabled: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub server: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticTorSummary {
+    pub detected: bool,
+    pub socks_reachable: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticProbeRow {
+    pub path: String,
+    pub stage: String,
+    pub ok: bool,
+    pub detail: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticUpstreamSummary {
+    pub claim: UpstreamPoolClaim,
+    pub confidence: UpstreamPoolConfidence,
+    pub title: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticRecommendation {
+    pub title: String,
+    pub category: RecommendationCategory,
+    pub priority: u8,
+    pub action_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiagnosticBundle {
+    pub schema_version: String,
+    pub exported_at: DateTime<Utc>,
+    pub app: DiagnosticBundleApp,
+    pub redaction: DiagnosticBundleRedaction,
+    pub os: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub environment_class: Option<PathEnvironmentClass>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path_break: Option<DiagnosticPathBreakSummary>,
+    pub score: DiagnosticScoreSummary,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub diagnosis: Option<DiagnosticDiagnosisSummary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub network_context: Option<DiagnosticContextSummary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dns_integrity: Option<DiagnosticDnsIntegritySummary>,
+    pub proxy: DiagnosticProxySummary,
+    pub tor: DiagnosticTorSummary,
+    pub vpn_detected: bool,
+    pub probe_table: Vec<DiagnosticProbeRow>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link_summary: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub upstream_pool: Option<DiagnosticUpstreamSummary>,
+    pub recommendations: Vec<DiagnosticRecommendation>,
+    pub integrity_flags: Vec<String>,
+    pub config_timeline: Vec<String>,
+    pub not_checked: Vec<String>,
+    pub ai_prompt_template: String,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum UpstreamPoolClaim {

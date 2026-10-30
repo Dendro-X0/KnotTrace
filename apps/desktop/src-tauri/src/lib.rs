@@ -133,6 +133,7 @@ pub fn run() {
             benchmark::save_benchmark,
             benchmark::delete_benchmark,
             benchmark::get_network_diagnosis,
+            benchmark::export_diagnostic_bundle,
             assist::recommend_dns,
             assist::get_dns_assist_state,
             assist::apply_dns,

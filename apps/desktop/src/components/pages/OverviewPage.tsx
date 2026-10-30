@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { MetricCard } from "@/components/MetricCard";
 import { NetworkDiagnosisPanel } from "@/components/NetworkDiagnosisPanel";
 import { PathBreakPanel } from "@/components/PathBreakPanel";
+import { DiagnosticBundlePanel } from "@/components/DiagnosticBundlePanel";
 import { NextStepsPanel } from "@/components/NextStepsPanel";
 import { StatusHero } from "@/components/StatusHero";
 import { TrendCharts } from "@/components/TrendCharts";
@@ -105,6 +106,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
               <div className="grid min-h-0 min-w-0 gap-3">
                 <NetworkDiagnosisPanel diagnosis={state.report?.diagnosis} />
                 <PathBreakPanel loading={loading} report={state.report?.path_break} compact />
+                <DiagnosticBundlePanel state={state} />
               </div>
               <div className="grid min-h-0 gap-3">
                 <UpstreamPoolPanel

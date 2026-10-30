@@ -107,6 +107,63 @@ export interface PathBreakReport {
   not_checked: string[];
 }
 
+export interface DiagnosticBundle {
+  schema_version: string;
+  exported_at: string;
+  app: { name: string; version?: string | null };
+  redaction: { include_ssid: boolean; notes: string[] };
+  os: string;
+  environment_class?: PathEnvironmentClass | null;
+  path_break?: {
+    local_ok: boolean;
+    active_path: PathBreakPath;
+    break_hop: PathBreakHop;
+    environment_class: PathEnvironmentClass;
+    confidence: PathBreakConfidence;
+    title: string;
+    summary: string;
+  } | null;
+  score: { grade: HealthGrade; score: number; summary: string };
+  diagnosis?: {
+    slowdown_shape: string;
+    confidence: string;
+    primary_bottleneck?: string | null;
+    summary: string;
+  } | null;
+  network_context?: {
+    kind: string;
+    risk_level: string;
+    captive_state: string;
+    summary: string;
+  } | null;
+  dns_integrity?: {
+    state: string;
+    confidence: string;
+    mismatch_count: number;
+    summary: string;
+  } | null;
+  proxy: { enabled: boolean; server?: string | null };
+  tor: { detected: boolean; socks_reachable: boolean };
+  vpn_detected: boolean;
+  probe_table: { path: string; stage: string; ok: boolean; detail: string }[];
+  link_summary?: string | null;
+  upstream_pool?: {
+    claim: UpstreamPoolClaim;
+    confidence: UpstreamPoolConfidence;
+    title: string;
+  } | null;
+  recommendations: {
+    title: string;
+    category: string;
+    priority: number;
+    action_id: string;
+  }[];
+  integrity_flags: string[];
+  config_timeline: string[];
+  not_checked: string[];
+  ai_prompt_template: string;
+}
+
 export type UpstreamPoolClaim =
   | "none"
   | "inconclusive"

@@ -6,6 +6,7 @@ mod benchmark;
 mod clash_api;
 mod connect;
 mod diagnosis;
+mod diagnostic_bundle;
 mod dns_integrity;
 mod dns_platform;
 mod egress;
@@ -42,6 +43,7 @@ pub use benchmark::{
     delete_benchmark_snapshot, list_benchmark_snapshots, save_benchmark_snapshot, BenchmarkError,
 };
 pub use diagnosis::diagnose_network;
+pub use diagnostic_bundle::build_diagnostic_bundle;
 pub use connect::{
     apply_connect_switch, compare_proxy_paths, compare_proxy_paths_discovered,
     discover_connect_config, load_connect_config, recommend_connect,

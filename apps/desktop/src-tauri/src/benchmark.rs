@@ -1,5 +1,6 @@
 use network_core::{
-    delete_benchmark_snapshot, list_benchmark_snapshots, save_benchmark_snapshot, BenchmarkSnapshot,
+    build_diagnostic_bundle, delete_benchmark_snapshot, list_benchmark_snapshots,
+    save_benchmark_snapshot, BenchmarkSnapshot, DiagnosticBundle, DiagnosticBundleOptions,
     ExternalSpeedtestNote,
 };
 use tauri::State;
@@ -57,4 +58,24 @@ pub fn get_network_diagnosis(
         .map_err(|_| "state lock poisoned".to_string())?
         .as_ref()
         .and_then(|report| report.diagnosis.clone()))
+}
+
+#[tauri::command]
+pub fn export_diagnostic_bundle(
+    state: State<'_, AppState>,
+    include_ssid: Option<bool>,
+) -> Result<DiagnosticBundle, String> {
+    let report = state
+        .last_report
+        .lock()
+        .map_err(|_| "state lock poisoned".to_string())?
+        .clone()
+        .ok_or_else(|| "Run a health check before exporting a diagnostic bundle.".to_string())?;
+
+    Ok(build_diagnostic_bundle(
+        &report,
+        DiagnosticBundleOptions {
+            include_ssid: include_ssid.unwrap_or(false),
+        },
+    ))
 }

@@ -1,7 +1,7 @@
 # Product plan — KnotTrace “Path Truth” network utility
 
 **Date (UTC):** 2026-10-28  
-**Status:** Implementation chartered · **Band 1 core shipped** · next = Band 2 (bundle export) after L3 smoke  
+**Status:** Implementation chartered · **Bands 1–2 core shipped** · next = Band 3 integrity board after L3 smoke  
 **Repo:** KnotTrace (`network`) only  
 **Audience:** Maintainer
 
@@ -11,8 +11,8 @@ GOAL:     High-performance, versatile tool to diagnose and resolve network issue
 POSTURE:  Observe-first · indicators with confidence · reversible assists (opt-in)
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
-DONE:     Band 1 core — path_break on HealthReport + PathBreakPanel
-NEXT:     L3 smoke (`npm run tauri dev`) then Band 2 design, or polish Band 1
+DONE:     Band 1 path_break · Band 2 diagnostic bundle export (no cloud)
+NEXT:     L3 smoke, then Band 3 integrity / exposure board
 ```
 
 ---
@@ -148,8 +148,8 @@ Chartered. Execute in order; do not skip ahead without maintainer OK.
 
 | Order | Band | Outcome | Status |
 |------:|------|---------|--------|
-| 1 | **Path-break classifier** | Direct / Proxy / VPN / Tor + hop labels | **Core shipped** (L1 tests green; L3 UI smoke pending) — [path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) |
-| 2 | **Novice Overview + bundle export** | AI-ready JSON without requiring cloud | Deferred |
+| 1 | **Path-break classifier** | Direct / Proxy / VPN / Tor + hop labels | **Core shipped** — [path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) |
+| 2 | **Novice Overview + bundle export** | AI-ready JSON without requiring cloud | **Core shipped** — [diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) |
 | 3 | **Integrity / exposure board** | Proxy, DNS integrity, listeners, gateway/ARP, cert deltas | Deferred |
 | 4 | **AI explain (opt-in)** | Redacted bundle + mapped actions + data sheet | Deferred |
 | 5 | **Egress anomaly timeline** | Opt-in, local-first | Deferred |
@@ -171,7 +171,8 @@ Chartered. Execute in order; do not skip ahead without maintainer OK.
 - [START-HERE.md](./START-HERE.md) — product onboarding  
 - [architecture.md](./architecture.md) — current module map  
 - [../specs/backend/path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) — Band 1 design  
+- [../specs/backend/diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) — Band 2 design  
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier integrity/path-break sketch  
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 shipped direction  
 
-_Last updated: 2026-10-29T00:53:00Z_
+_Last updated: 2026-10-29T01:10:00Z_

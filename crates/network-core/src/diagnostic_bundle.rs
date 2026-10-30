@@ -150,6 +150,16 @@ fn map_recommendations(report: &HealthReport) -> Vec<DiagnosticRecommendation> {
 }
 
 fn collect_integrity_flags(report: &HealthReport) -> Vec<String> {
+    if let Some(board) = &report.integrity {
+        if !board.indicators.is_empty() {
+            return board
+                .indicators
+                .iter()
+                .map(|indicator| format!("{}: {}", indicator.title, indicator.message))
+                .collect();
+        }
+    }
+
     let mut flags = Vec::new();
     if report.environment.proxy.enabled {
         flags.push("System / HTTP(S) proxy enabled.".to_string());
@@ -387,6 +397,7 @@ mod tests {
                 evidence: vec![],
                 not_checked: vec!["listeners".to_string()],
             }),
+            integrity: None,
         }
     }
 

@@ -31,6 +31,7 @@ Single source of truth for network logic. No UI dependencies.
 | `tunnel_compare` | Direct / proxy / Tor path samples + expectation copy |
 | `path_break` | Path Truth Band 1: active path + hop + environment class (synthesizes existing signals) |
 | `diagnostic_bundle` | Path Truth Band 2: redacted AI-ready JSON export (no cloud) |
+| `integrity_board` | Path Truth Band 3: exposure/integrity indicators + listener scan (never “safe”) |
 | `upstream_pool` | Claim grades for active-path vs recurring upstream-pool impairment |
 | `egress` | Public IP probes and path consistency |
 | `network_context` | Guest/public network and captive portal classification |
@@ -103,6 +104,7 @@ Design notes and roadmap: [`specs/backend/`](../specs/backend/).
 | [tunnel-path-compare-design.md](../specs/backend/tunnel-path-compare-design.md) | Tor/VPN expectations (L4) |
 | [path-break-classifier-design.md](../specs/backend/path-break-classifier-design.md) | Path Truth Band 1 path/hop classifier |
 | [diagnostic-bundle-design.md](../specs/backend/diagnostic-bundle-design.md) | Path Truth Band 2 diagnostic bundle export |
+| [integrity-board-design.md](../specs/backend/integrity-board-design.md) | Path Truth Band 3 integrity / exposure board |
 | [upstream-pool-quality-design.md](../specs/backend/upstream-pool-quality-design.md) | Pool claim grades (L5) |
 | [mtu-assist-design.md](../specs/backend/mtu-assist-design.md) | Opt-in MTU clamp (L6) |
 | [slow-speed-diagnosis-v1.3.x.md](../specs/backend/slow-speed-diagnosis-v1.3.x.md) | Symptom shapes, confidence, proxy path |

@@ -185,6 +185,76 @@ pub struct HealthReport {
     pub upstream_pool: Option<UpstreamPoolProof>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path_break: Option<PathBreakReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub integrity: Option<IntegrityBoardReport>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum IntegrityBoardLevel {
+    None,
+    Info,
+    Caution,
+    Elevated,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum IntegrityBoardConfidence {
+    High,
+    Medium,
+    Low,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum IntegrityIndicatorKind {
+    ProxyEnabled,
+    DnsIntegrity,
+    CaptivePortal,
+    TlsInterceptHint,
+    HighRiskListener,
+    PathForcedRouting,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IntegrityIndicator {
+    pub kind: IntegrityIndicatorKind,
+    pub severity: AlertLevel,
+    pub title: String,
+    pub message: String,
+    pub evidence: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HighRiskListener {
+    pub port: u16,
+    pub address: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub process_hint: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ListenerScanSummary {
+    pub scanned: bool,
+    pub source: String,
+    pub high_risk: Vec<HighRiskListener>,
+    pub total_listened_sampled: u8,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IntegrityBoardReport {
+    pub indicator_count: u8,
+    pub level: IntegrityBoardLevel,
+    pub title: String,
+    pub summary: String,
+    pub disclaimer: String,
+    pub indicators: Vec<IntegrityIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub listeners: Option<ListenerScanSummary>,
+    pub not_checked: Vec<String>,
+    pub confidence: IntegrityBoardConfidence,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

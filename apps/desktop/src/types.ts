@@ -63,6 +63,51 @@ export interface HealthReport {
   tunnel_compare?: TunnelPathCompareReport | null;
   upstream_pool?: UpstreamPoolProof | null;
   path_break?: PathBreakReport | null;
+  integrity?: IntegrityBoardReport | null;
+}
+
+export type IntegrityBoardLevel = "none" | "info" | "caution" | "elevated";
+export type IntegrityBoardConfidence = "high" | "medium" | "low";
+export type IntegrityIndicatorKind =
+  | "proxy_enabled"
+  | "dns_integrity"
+  | "captive_portal"
+  | "tls_intercept_hint"
+  | "high_risk_listener"
+  | "path_forced_routing";
+
+export interface IntegrityIndicator {
+  kind: IntegrityIndicatorKind;
+  severity: "info" | "warning" | "critical";
+  title: string;
+  message: string;
+  evidence: string;
+}
+
+export interface HighRiskListener {
+  port: number;
+  address: string;
+  process_hint?: string | null;
+}
+
+export interface ListenerScanSummary {
+  scanned: boolean;
+  source: string;
+  high_risk: HighRiskListener[];
+  total_listened_sampled: number;
+  summary: string;
+}
+
+export interface IntegrityBoardReport {
+  indicator_count: number;
+  level: IntegrityBoardLevel;
+  title: string;
+  summary: string;
+  disclaimer: string;
+  indicators: IntegrityIndicator[];
+  listeners?: ListenerScanSummary | null;
+  not_checked: string[];
+  confidence: IntegrityBoardConfidence;
 }
 
 export type PathBreakPath =

@@ -12,6 +12,7 @@ mod dns_platform;
 mod egress;
 mod env;
 mod fingerprint;
+mod integrity_board;
 mod link_facts;
 mod link_platform;
 mod local_caps;
@@ -72,6 +73,7 @@ pub use network_context::{
     probe_captive_portal_with_options, CaptivePortalProbeOptions,
 };
 pub use path_break::classify_path_break;
+pub use integrity_board::assess_integrity_board;
 pub use probe::{measure_tcp_latency, probe_dns_resolver, resolve_dns_addresses, run_quick_probe};
 pub use stability::run_stability_probes;
 pub use tor::{detect_tor_status, is_tor_socks_endpoint};
@@ -228,6 +230,7 @@ pub async fn run_health_check_with_settings(
         tunnel_compare,
         upstream_pool: None,
         path_break: None,
+        integrity: None,
     };
 
     // Link facts / local caps / MTU assist are sync OS reads; keep off the async probe critical path.
@@ -238,6 +241,7 @@ pub async fn run_health_check_with_settings(
     report.mtu_assist = Some(collect_mtu_assist(&report, None));
     report.local_repair = Some(collect_local_repair(&report));
     report.path_break = Some(classify_path_break(&report));
+    report.integrity = Some(assess_integrity_board(&report));
     report.recommendations = Some(build_recommendations(&report));
     report.diagnosis = Some(diagnose_network(&report));
 

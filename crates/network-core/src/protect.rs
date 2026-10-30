@@ -672,6 +672,7 @@ mod tests {
             tunnel_compare: None,
             upstream_pool: None,
             path_break: None,
+            integrity: None,
         }
     }
 

@@ -70,8 +70,8 @@ Recommendations and integrity checks work everywhere. Apply/restore still requir
 
 ## Mobile roadmap
 
-- **B1/B2:** CompanionShell — fast check, score + path-break + integrity, diagnostic export ([frontend-spec-mobile-companion.md](frontend-spec-mobile-companion.md)); Android packaging uses existing signed APK path
-- **B3 next:** iOS parity for companion surfaces
+- **B1–B3:** CompanionShell shared on Android/iOS via `cfg(mobile)` ([frontend-spec-mobile-companion.md](frontend-spec-mobile-companion.md)); signed APK/IPA paths unchanged
+- Device L3 (physical check + export) still pending on each OS
 - **Android**: signed APK on every release tag (upload keystore in CI secrets)
 - **iOS**: signed IPA on every release tag (distribution cert + provisioning profile)
 - Install/trust steps: [mobile-signing.md](mobile-signing.md)

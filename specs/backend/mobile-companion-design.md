@@ -1,6 +1,6 @@
 # Mobile companion (Track B / Band B1 design)
 
-Status: **B1 designed · B2 shell implemented** (CompanionHome + capabilities; Android device L3 still pending) — **B3** iOS parity  
+Status: **B1–B3 complete for shell** (shared `cfg(mobile)` CompanionHome; Android/iOS device L3 still pending on signed builds)  
 Product plan: [product-plan-cross-platform-capability-2026-10.md](../../docs/product-plan-cross-platform-capability-2026-10.md) Track B  
 UI blueprint: [frontend-spec-mobile-companion.md](../../docs/frontend-spec-mobile-companion.md)  
 Signing: [mobile-signing.md](../../docs/mobile-signing.md)
@@ -98,8 +98,19 @@ Use Tauri app data directory on device (same `data_dir()` helper). Config-watch 
 - **B2 implemented:** CompanionShell ships on Android with allowlisted IPC  
 - **Verified:** L3 on a physical or emulator device with evidence path in handoff/changelog  
 
-## Open decisions (resolve in B2 if blocking)
+## B3 — iOS parity
 
-1. Share sheet vs clipboard-only for bundle JSON on Android.  
-2. Whether background poll runs at all on mobile (default **off** to save battery).  
-3. Whether Network page deep-links exist or Home embeds the three panels only.
+Same CompanionShell as Android (`#[cfg(mobile)]` / `get_app_capabilities.companion_shell`). No iOS-only page fork.
+
+| Item | Status |
+|------|--------|
+| CompanionHome surfaces | Shared with Android |
+| Background monitor default | Off on all mobile |
+| Signing / IPA | [mobile-signing.md](../../docs/mobile-signing.md) |
+| Device L3 | Pending maintainer run on TestFlight / Ad Hoc IPA |
+
+## Resolved decisions
+
+1. Bundle export: clipboard JSON first; OS share sheet deferred.  
+2. Background poll: **off** by default on mobile.  
+3. Home embeds path-break + integrity + export; no Network deep-links in v1.

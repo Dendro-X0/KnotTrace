@@ -1,7 +1,7 @@
 # Product plan — KnotTrace “Path Truth” network utility
 
 **Date (UTC):** 2026-10-28  
-**Status:** Path Truth plan complete · **v1.8.1**  
+**Status:** Path Truth plan complete · **v1.8.1** (successor expansion shipped in **v1.9.0**)  
 **Repo:** KnotTrace (`network`) only  
 **Audience:** Maintainer
 

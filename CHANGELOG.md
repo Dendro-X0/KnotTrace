@@ -6,6 +6,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-30
+
+### Added
+
+- **Cross-platform expansion track** — [product-plan-cross-platform-capability-2026-10.md](docs/product-plan-cross-platform-capability-2026-10.md)
+- **A1** — Path Truth OS matrix; process↔egress best-effort on Linux (`ss`) / macOS (`lsof`)
+- **A2** — Local-caps observe on Linux/macOS (repair remains Windows-only)
+- **A3** — Integrity-board kinds mapped into Protect alerts
+- **B1–B3** — Thin CompanionShell (fast check, path-break, integrity, diagnostic export); shared Android/iOS via `cfg(mobile)`; desktop preview `?companion=1`
+- **C1** — Hosts file + system proxy change timeline (`config_watch_*`)
+- **C2** — WAN-facing vs LAN listener scope on the integrity board
+- **C3** — Wi‑Fi noise floor / TX-retry indicators where the OS reports them
+- **C4** — Opt-in startup network-agent scan (Protect toggle; HKCU Run / XDG autostart / LaunchAgents)
+- Specs: [hosts-proxy-timeline-design.md](specs/backend/hosts-proxy-timeline-design.md), [mobile-companion-design.md](specs/backend/mobile-companion-design.md), [autoruns-design.md](specs/backend/autoruns-design.md), [frontend-spec-mobile-companion.md](docs/frontend-spec-mobile-companion.md)
+
+### Changed
+
+- START-HERE and platform-support matrix cover new Path Truth / integrity / companion surfaces
+
 ## [1.8.1] - 2026-10-30
 
 ### Added
@@ -286,6 +305,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.9.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/Dendro-X0/KnotTrace/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.7.1...v1.8.0
 [1.7.1]: https://github.com/Dendro-X0/network/compare/v1.7.0...v1.7.1

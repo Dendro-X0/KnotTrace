@@ -54,7 +54,7 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [slowdown-factors.md](./slowdown-factors.md) — cross-platform slowdown research
 - [slow-speed-triage.md](./slow-speed-triage.md) — symptom-to-signal triage matrix
 - [product-plan-path-truth-2026-10.md](./product-plan-path-truth-2026-10.md) — Path Truth charter (**complete** at v1.8.1)
-- [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md) — **active** cross-platform + capability expansion
+- [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md) — cross-platform expansion (**complete** in v1.9.0)
 - [frontend-spec-mobile-companion.md](./frontend-spec-mobile-companion.md) — mobile companion UI (B1 designed; B2 implement)
 - [../specs/backend/mobile-companion-design.md](../specs/backend/mobile-companion-design.md) — mobile companion backend (B1)
 - [../specs/backend/hosts-proxy-timeline-design.md](../specs/backend/hosts-proxy-timeline-design.md) — hosts/proxy config watch (C1)

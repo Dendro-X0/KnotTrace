@@ -31,7 +31,11 @@ Release automation builds desktop installers for all three platforms on tag push
 | Connect Assist (Clash API) | Yes | Yes* | Yes* |
 | Protect & notifications | Yes | Yes | Yes |
 | **DNS Assist apply/restore** | **Yes** | **Yes** (`networksetup`) | **Yes** (`nmcli` or `resolvectl`) |
-| Mobile companion (check + export) | CompanionShell via Tauri mobile (`cfg(mobile)`); desktop preview `?companion=1` |
+| Hosts/proxy config watch (C1) | Yes | Yes | Yes |
+| WAN/LAN listener scope (C2) | Yes | Yes | Yes |
+| Wi‑Fi noise / TX retries (C3) | Partial (signal only; noise/retries rarely exposed) | Partial | **Yes** (`iw` + `/proc/net/wireless`) |
+| Startup network agents (C4, opt-in) | **Yes** (HKCU Run) | **Yes** (LaunchAgents) | **Yes** (XDG autostart) |
+| Mobile companion (check + export) | Shared CompanionShell (`cfg(mobile)`); desktop preview `?companion=1` | Same | Same |
 
 \* Requires a local Mihomo, sing-box, or compatible proxy with `external-controller` enabled.
 

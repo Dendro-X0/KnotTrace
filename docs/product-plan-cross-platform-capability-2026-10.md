@@ -1,7 +1,7 @@
 # Product plan — Cross-platform versatility & capability expansion
 
 **Date (UTC):** 2026-10-30  
-**Status:** Chartered (successor to Path Truth maintain track)  
+**Status:** **Complete** for A/B/C/D bands (successor to Path Truth; release as v1.9.0)  
 **Repo:** KnotTrace (`network`) only  
 **Audience:** Maintainer  
 **Depends on:** Path Truth complete at **v1.8.1** — [product-plan-path-truth-2026-10.md](./product-plan-path-truth-2026-10.md)
@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace useful on every desktop OS we ship, plus a thin
           — without fake Mbps, AV claims, or Obscur coupling.
 POSTURE:  Observe-first · indicators with confidence · reversible assists
 BASELINE: Path Truth Bands 1–5 + 3D/3E + CLI + AI explain (4A–4C) shipped
-DONE:     Charter · A1–A3 · B1–B3 · C1–C4 · D1/D2 (expansion track complete)
-NEXT:     Device L3 for CompanionShell; polish / release as needed
+DONE:     Charter · A1–A3 · B1–B3 · C1–C4 · D1/D2 · v1.9.0 release prep
+NEXT:     Physical Android/iOS CompanionShell L3 when devices available
 ```
 
 ---
@@ -24,10 +24,10 @@ Path Truth shipped the honesty ladder (path break, integrity, AI explain, egress
 
 | Gap class | Examples |
 |-----------|----------|
-| **OS unevenness** | Process↔egress Windows-only; local caps Windows-only; mobile is packaging without Path Truth UX |
-| **Onboarding / discoverability** | START-HERE under-describes Integrity / Explain / Egress / process-egress |
-| **Integrity depth** | Wi‑Fi retries / WAN-facing listener hints thin; autoruns still deferred (C4) |
-| **Mobile** | APK/IPA pipeline exists; no “check + export bundle” companion surface |
+| **OS unevenness** | Closed for Path Truth + A2 observe + process↔egress best-effort (matrix in platform-support) |
+| **Onboarding / discoverability** | START-HERE refreshed (D1) |
+| **Integrity depth** | C1–C4 shipped (hosts/proxy timeline, WAN listeners, Wi‑Fi noise/retries, opt-in autoruns) |
+| **Mobile** | CompanionShell shipped in tree; physical device L3 still pending |
 
 This plan **expands** KnotTrace. It does not reopen Obscur merge, speed optimizers, or AV certification ([Path Truth §9](./product-plan-path-truth-2026-10.md)).
 
@@ -121,9 +121,9 @@ Execute in order; do not skip to mobile full UI before A1.
 
 ## 6. Success criteria (plan-level)
 
-- [ ] Path Truth features documented per OS with no silent “Windows-only” surprises  
-- [ ] Process↔egress works or honestly `not_implemented` with user-visible copy on each desktop OS  
-- [ ] Mobile user can run a check and export a redacted bundle without desktop  
+- [x] Path Truth features documented per OS with no silent “Windows-only” surprises  
+- [x] Process↔egress works or honestly `not_implemented` with user-visible copy on each desktop OS  
+- [x] Mobile CompanionShell can run a check and export a redacted bundle (code path; physical APK/IPA L3 pending)  
 - [x] At least one new integrity/timeline signal beyond Path Truth v1.8.1 (C1 or A3)  
 - [x] START-HERE matches the product users actually see  
 
@@ -138,4 +138,4 @@ Execute in order; do not skip to mobile full UI before A1.
 - [specs/backend/mobile-companion-design.md](../specs/backend/mobile-companion-design.md) — B1 backend design  
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — absorbed sketch  
 
-_Last updated: 2026-10-30T16:30:00Z_
+_Last updated: 2026-10-30T17:00:00Z_

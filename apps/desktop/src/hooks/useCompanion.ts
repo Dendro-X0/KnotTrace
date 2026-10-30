@@ -10,6 +10,7 @@ import type {
   ConnectConfig,
   ConnectRecommendation,
   AiExplainSettings,
+  ProcessEgressSettings,
   CloudExplainResult,
   DiagnosticBundle,
   DnsAssistRecommendation,
@@ -478,6 +479,17 @@ export function useCompanion() {
   const explainWithCloud = useCallback(async () => {
     return invoke<CloudExplainResult>("explain_with_cloud");
   }, []);
+
+  const getProcessEgressSettings = useCallback(async () => {
+    return invoke<ProcessEgressSettings>("get_process_egress_settings");
+  }, []);
+
+  const setProcessEgressSettings = useCallback(
+    async (update: { enabled: boolean; consentAck: boolean }) => {
+      return invoke<ProcessEgressSettings>("set_process_egress_settings", { update });
+    },
+    [],
+  );
 
   const deleteBenchmark = useCallback(
     async (id: string) => {
@@ -971,6 +983,8 @@ export function useCompanion() {
     setAiExplainSettings,
     clearAiExplainKey,
     explainWithCloud,
+    getProcessEgressSettings,
+    setProcessEgressSettings,
     deleteBenchmark,
     saveThroughputSettings,
     runThroughputTest,

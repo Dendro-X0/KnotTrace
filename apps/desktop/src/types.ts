@@ -110,7 +110,8 @@ export type IntegrityIndicatorKind =
   | "high_risk_listener"
   | "path_forced_routing"
   | "gateway_arp_churn"
-  | "cert_store_delta";
+  | "cert_store_delta"
+  | "process_egress_hint";
 
 export interface IntegrityIndicator {
   kind: IntegrityIndicatorKind;
@@ -148,6 +149,27 @@ export interface CertStoreSnapshot {
   observed: boolean;
 }
 
+export interface ProcessEgressHit {
+  process_name: string;
+  pid?: number | null;
+  remote: string;
+  count: number;
+}
+
+export interface ProcessEgressSnapshot {
+  scanned: boolean;
+  enabled: boolean;
+  source: string;
+  matched_targets: string[];
+  hits: ProcessEgressHit[];
+  summary: string;
+}
+
+export interface ProcessEgressSettings {
+  enabled: boolean;
+  consent_ack: boolean;
+}
+
 export interface IntegrityBoardReport {
   indicator_count: number;
   level: IntegrityBoardLevel;
@@ -158,6 +180,7 @@ export interface IntegrityBoardReport {
   listeners?: ListenerScanSummary | null;
   gateway_arp?: GatewayArpSnapshot | null;
   cert_store?: CertStoreSnapshot | null;
+  process_egress?: ProcessEgressSnapshot | null;
   not_checked: string[];
   confidence: IntegrityBoardConfidence;
 }

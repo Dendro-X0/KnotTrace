@@ -62,7 +62,7 @@ pub fn assess_integrity_board_with_parts(
         }
     }
 
-    finalize_board(indicators, listeners, gateway_arp, cert_store)
+    finalize_board(indicators, listeners, gateway_arp, cert_store, None)
 }
 
 /// Apply Band 3D history deltas (ARP MAC churn, cert-store fingerprint change).
@@ -146,8 +146,32 @@ pub fn enrich_integrity_board(report: &mut HealthReport, history: &[HealthReport
     let listeners = board.listeners.clone();
     let gateway_arp = board.gateway_arp.clone();
     let cert_store = board.cert_store.clone();
+    let process_egress = board.process_egress.clone();
     let indicators = board.indicators.clone();
-    *board = finalize_board(indicators, listeners, gateway_arp, cert_store);
+    *board = finalize_board(
+        indicators,
+        listeners,
+        gateway_arp,
+        cert_store,
+        process_egress,
+    );
+}
+
+/// Public finalize used by Band 3E process-egress enrich.
+pub fn finalize_board_for_enrich(
+    indicators: Vec<IntegrityIndicator>,
+    listeners: Option<ListenerScanSummary>,
+    gateway_arp: Option<GatewayArpSnapshot>,
+    cert_store: Option<CertStoreSnapshot>,
+    process_egress: Option<ProcessEgressSnapshot>,
+) -> IntegrityBoardReport {
+    finalize_board(
+        indicators,
+        listeners,
+        gateway_arp,
+        cert_store,
+        process_egress,
+    )
 }
 
 fn truncate_fp(fp: &str) -> String {
@@ -163,6 +187,7 @@ fn finalize_board(
     listeners: Option<ListenerScanSummary>,
     gateway_arp: Option<GatewayArpSnapshot>,
     cert_store: Option<CertStoreSnapshot>,
+    process_egress: Option<ProcessEgressSnapshot>,
 ) -> IntegrityBoardReport {
     let indicator_count = indicators.len().min(u8::MAX as usize) as u8;
     let level = classify_level(&indicators);
@@ -179,7 +204,7 @@ fn finalize_board(
     let (title, summary) = if indicator_count == 0 {
         (
             "No integrity indicators in this check".to_string(),
-            "No proxy, DNS integrity, captive, TLS-intercept-hint, high-risk listener, ARP-churn, or cert-delta indicators fired. This is not a clean bill of health.".to_string(),
+            "No proxy, DNS integrity, captive, TLS-intercept-hint, high-risk listener, ARP-churn, cert-delta, or process-egress indicators fired. This is not a clean bill of health.".to_string(),
         )
     } else {
         (
@@ -195,10 +220,10 @@ fn finalize_board(
         )
     };
 
-    let mut not_checked = vec![
-        NOT_CHECKED_PROCESS.to_string(),
-        NOT_CHECKED_COVERT.to_string(),
-    ];
+    let mut not_checked = vec![NOT_CHECKED_COVERT.to_string()];
+    if !process_egress.as_ref().is_some_and(|s| s.scanned) {
+        not_checked.insert(0, NOT_CHECKED_PROCESS.to_string());
+    }
     if !gateway_arp.as_ref().is_some_and(|s| s.observed) {
         not_checked.insert(0, NOT_CHECKED_ARP.to_string());
     }
@@ -216,6 +241,7 @@ fn finalize_board(
         listeners,
         gateway_arp,
         cert_store,
+        process_egress,
         not_checked,
         confidence,
     }
@@ -1071,6 +1097,7 @@ mod tests {
                 source: "test".to_string(),
                 observed: true,
             }),
+            process_egress: None,
             not_checked: vec![],
             confidence: IntegrityBoardConfidence::Low,
         });

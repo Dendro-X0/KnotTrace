@@ -18,7 +18,7 @@ When no indicators fire, title/summary still use **“No indicators in this chec
 
 - AV / malware removal  
 - Covert tap detection guarantees  
-- Process ↔ egress correlation (opt-in later)  
+- Process ↔ egress continuous capture (Band 3E is opt-in snapshot only)  
 - Full cert inventory UI / CA attribution (“who issued this root”)  
 - Cloud AI (Band 4)
 

@@ -270,6 +270,7 @@ pub enum IntegrityIndicatorKind {
     PathForcedRouting,
     GatewayArpChurn,
     CertStoreDelta,
+    ProcessEgressHint,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -316,6 +317,40 @@ pub struct CertStoreSnapshot {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessEgressHit {
+    pub process_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pid: Option<u32>,
+    pub remote: String,
+    pub count: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessEgressSnapshot {
+    pub scanned: bool,
+    pub enabled: bool,
+    pub source: String,
+    pub matched_targets: Vec<String>,
+    pub hits: Vec<ProcessEgressHit>,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessEgressSettings {
+    pub enabled: bool,
+    pub consent_ack: bool,
+}
+
+impl Default for ProcessEgressSettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            consent_ack: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrityBoardReport {
     pub indicator_count: u8,
     pub level: IntegrityBoardLevel,
@@ -329,6 +364,8 @@ pub struct IntegrityBoardReport {
     pub gateway_arp: Option<GatewayArpSnapshot>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cert_store: Option<CertStoreSnapshot>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub process_egress: Option<ProcessEgressSnapshot>,
     pub not_checked: Vec<String>,
     pub confidence: IntegrityBoardConfidence,
 }

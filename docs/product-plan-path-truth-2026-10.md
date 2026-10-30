@@ -11,8 +11,8 @@ GOAL:     High-performance, versatile tool to diagnose and resolve network issue
 POSTURE:  Observe-first · indicators with confidence · reversible assists (opt-in)
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
-DONE:     Band 1–5 · 4A/4B · 3D ARP/cert · CLI check --json · GUI smoke · v1.8.0
-NEXT:     Maintain; optional polish
+DONE:     Band 1–5 · 4A/4B · 3D/3E · CLI · GUI smoke · v1.8.0
+NEXT:     Config-change timeline; cert Linux/macOS; AI 4C polish
 ```
 
 ---
@@ -112,7 +112,7 @@ Include:
 - DNS answers diverge from integrity check  
 - Default gateway / ARP identity churn  
 - New trusted roots; HTTPS intercept-like behavior  
-- Opt-in later: process ↔ egress correlation  
+- Opt-in process ↔ egress correlation (Band 3E; Protect toggle; Windows snapshot)  
 
 **Canonical copy:**
 
@@ -176,7 +176,8 @@ Chartered. Execute in order; do not skip ahead without maintainer OK.
 - [../specs/backend/ai-explain-design.md](../specs/backend/ai-explain-design.md) — Band 4 design  
 - [../specs/backend/egress-timeline-design.md](../specs/backend/egress-timeline-design.md) — Band 5 design  
 - [../specs/backend/cli-check-design.md](../specs/backend/cli-check-design.md) — headless `check --json`  
+- [../specs/backend/process-egress-design.md](../specs/backend/process-egress-design.md) — Band 3E opt-in process↔egress  
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — earlier integrity/path-break sketch  
 - [../specs/backend/local-first-improvement-roadmap.md](../specs/backend/local-first-improvement-roadmap.md) — L1–L6 shipped direction  
 
-_Last updated: 2026-10-30T09:50:00Z_
+_Last updated: 2026-10-30T10:30:00Z_

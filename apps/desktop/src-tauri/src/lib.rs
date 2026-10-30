@@ -7,6 +7,7 @@ mod local_caps;
 mod local_repair;
 mod mtu_assist;
 mod monitor;
+mod process_egress;
 mod protect;
 mod state;
 mod throughput;
@@ -140,6 +141,8 @@ pub fn run() {
             ai_explain::set_ai_explain_settings,
             ai_explain::clear_ai_explain_key,
             ai_explain::explain_with_cloud,
+            process_egress::get_process_egress_settings,
+            process_egress::set_process_egress_settings,
             assist::recommend_dns,
             assist::get_dns_assist_state,
             assist::apply_dns,

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Shield, ShieldCheck, History } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
@@ -11,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import type { CompanionState } from "@/hooks/useCompanion";
-import type { ProtectAction, ProtectSettings } from "@/types";
+import type { ProcessEgressSettings, ProtectAction, ProtectSettings } from "@/types";
 
 interface ProtectPageProps {
   state: CompanionState;
@@ -73,6 +74,28 @@ const TOGGLES: Array<{
 export function ProtectPage({ state }: ProtectPageProps) {
   const status = state.protectStatus;
   const loading = state.bootstrapping && !status && !state.protectError;
+  const [processEgress, setProcessEgress] = useState<ProcessEgressSettings | null>(null);
+  const [processEgressError, setProcessEgressError] = useState<string | null>(null);
+  const [consentChecked, setConsentChecked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void state.getProcessEgressSettings()
+      .then((settings) => {
+        if (!cancelled) {
+          setProcessEgress(settings);
+          setConsentChecked(settings.consent_ack);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setProcessEgressError(error instanceof Error ? error.message : String(error));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.getProcessEgressSettings]);
 
   return (
     <FeaturePage
@@ -173,6 +196,61 @@ export function ProtectPage({ state }: ProtectPageProps) {
             </ul>
           </ScrollArea>
         )}
+      </section>
+
+      <Separator className="shrink-0" />
+
+      <section className="grid gap-2 rounded-xl border border-border/60 bg-muted/15 px-3 py-3">
+        <h2 className="text-sm font-medium">Process ↔ egress (opt-in)</h2>
+        <p className="text-muted-foreground text-[0.68rem] leading-relaxed">
+          When enabled, KnotTrace briefly queries OS connection tables for sessions matching your
+          current public egress IP or system proxy host, then lists process names as integrity
+          indicators only. Nothing is uploaded. Off by default.
+        </p>
+        {processEgressError && (
+          <p className="text-muted-foreground text-xs">{processEgressError}</p>
+        )}
+        <label className="flex items-start gap-2 text-xs">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={consentChecked}
+            onChange={(event) => setConsentChecked(event.target.checked)}
+          />
+          <span>
+            I understand KnotTrace will read local connection/process names for matching egress
+            sessions on this device only.
+          </span>
+        </label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="process-egress-enabled" className="text-xs">
+            Enable process ↔ egress sampling
+          </Label>
+          <Switch
+            id="process-egress-enabled"
+            checked={processEgress?.enabled ?? false}
+            disabled={!processEgress}
+            onCheckedChange={(value) => {
+              if (value && !consentChecked) {
+                setProcessEgressError("Ack the consent note before enabling.");
+                return;
+              }
+              void state
+                .setProcessEgressSettings({
+                  enabled: value,
+                  consentAck: value ? consentChecked : processEgress?.consent_ack ?? false,
+                })
+                .then((next) => {
+                  setProcessEgress(next);
+                  setConsentChecked(next.consent_ack);
+                  setProcessEgressError(null);
+                })
+                .catch((error: unknown) => {
+                  setProcessEgressError(error instanceof Error ? error.message : String(error));
+                });
+            }}
+          />
+        </div>
       </section>
 
       <Separator className="shrink-0" />

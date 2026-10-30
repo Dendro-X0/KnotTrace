@@ -355,6 +355,7 @@ mod tests {
                 listeners: None,
                 gateway_arp: None,
                 cert_store: None,
+                process_egress: None,
                 not_checked: vec![],
                 confidence: IntegrityBoardConfidence::Low,
             }),
@@ -457,6 +458,7 @@ mod tests {
             listeners: None,
             gateway_arp: None,
             cert_store: None,
+            process_egress: None,
             not_checked: vec![],
             confidence: IntegrityBoardConfidence::High,
         });

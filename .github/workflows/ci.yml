@@ -1,3 +1,4 @@
+# Mirrors scripts/reliability-gate.sh (community-readiness Band R1).
 name: CI
 
 on:

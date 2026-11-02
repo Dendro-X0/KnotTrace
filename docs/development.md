@@ -16,7 +16,23 @@ npm run tauri dev
 
 ## Verification (run before push)
 
-From the repository root:
+### R1 cheap reliability gate (default)
+
+Matches CI’s three jobs without a full installer build. Prefer this before every push:
+
+```bash
+./scripts/reliability-gate.sh
+```
+
+| Step | Command | What it proves |
+|------|---------|----------------|
+| Core | `cargo test -p network-core --lib` | Unit tests |
+| Desktop Rust | `cargo check -p network-desktop` | Tauri crate compiles |
+| Frontend | `tsc --noEmit` + `npm run build` | Types + Vite production bundle |
+
+CI (`.github/workflows/ci.yml`) runs the same three surfaces on Linux. Docs-only pushes skip CI by design.
+
+### Full release-oriented checks
 
 ```bash
 cargo test -p network-core
@@ -27,8 +43,8 @@ cd apps/desktop && npm run tauri build
 
 | Check | What it proves |
 |-------|----------------|
-| `cargo test -p network-core` | Core logic unit tests |
-| `cargo check --workspace` | Rust workspace compiles |
+| `cargo test -p network-core` | Core logic (lib + bins) |
+| `cargo check --workspace` | Entire Rust workspace |
 | `npm run build` | TypeScript + Vite production bundle |
 | `npm run tauri build` | Full desktop installer/bundle |
 

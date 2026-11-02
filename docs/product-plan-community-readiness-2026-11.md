@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace reliable and honest enough to put in front of an
           requiring the maintainer to hand-test every surface first.
 POSTURE:  Observe-first · claim discipline · reversible assists · no fake Mbps
 BASELINE: Path Truth + expansion (CompanionShell, C1–C4, OS matrix) at v1.9.0
-DONE:     Charter written
-NEXT:     R1 Automated reliability gates (CI + local cheap proofs)
+DONE:     Charter · R1 reliability-gate script + docs
+NEXT:     C1 Public entry kit
 ```
 
 ---
@@ -80,8 +80,8 @@ Deferred forever for this charter (same list): auto node rotation, AV certificat
 
 | Order | Band | Status |
 |------:|------|--------|
-| 1 | **R1** Automated reliability gates | **Next** |
-| 2 | **C1** Public entry kit | Queued |
+| 1 | **R1** Automated reliability gates | **Done** |
+| 2 | **C1** Public entry kit | **Next** |
 | 3 | **C2** Feedback intake (issue templates) | Queued |
 | 4 | **R2** Failure UX hardening | Queued |
 | 5 | **R4** Headless regression pack | Queued |
@@ -127,4 +127,4 @@ Do not invent large new feature bands under this charter. Feature ideas from com
 - [release.md](./release.md) / [github-ci.md](./github-ci.md) — publish path  
 - [START-HERE.md](./START-HERE.md) — maintainer + power-user boot  
 
-_Last updated: 2026-11-02T00:00:00Z_
+_Last updated: 2026-11-02T03:00:00Z_

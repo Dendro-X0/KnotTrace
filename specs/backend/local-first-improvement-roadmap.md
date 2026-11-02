@@ -56,22 +56,22 @@ Reuse the factor catalog in `slowdown-factors.md`. Rank work by **user-visible i
 
 | Assist | Windows | macOS | Linux | Notes |
 |--------|---------|-------|-------|-------|
-| DNS recommend + apply/restore | Yes | **Gap** | **Gap** | Highest ROI parity work |
-| Flush resolver cache (opt-in) | Future | Future | Future | Document elevation needs |
+| DNS recommend + apply/restore | Yes | **Yes** (`networksetup`) | **Yes** (`nmcli` / `resolvectl`) | Parity shipped; see [platform-support.md](../../docs/platform-support.md) |
+| Flush resolver cache (opt-in) | Via local repair | Via local repair | Via local repair | Elevation may still prompt |
 | Prefer Ethernet guidance | Rec | Rec | Rec | No forced disable of Wi‑Fi |
-| MTU suggest (opt-in, restore) | Later | Later | Later | Never silent; tunnel-aware |
-| TCP autotuning check (Win) | Later | — | — | Detect disabled autotuning; opt-in restore |
+| MTU suggest (opt-in, restore) | **Yes** | **Yes** | **Yes** | Never silent; tunnel-aware |
+| TCP autotuning / NIC power (Win) | Observe + opt-in | — | Observe (no Win-style repair) | Local-caps path |
 | qdisc / SQM guidance | — | — | Rec only | Do not rewrite router config from app |
 
 **Policy:** observe-first; auto only for trusted DNS-class actions already gated by Protect; anything that changes MTU/TCP/link stays **manual confirm + backup + restore**.
 
-### A3. Platform slices (suggested order)
+### A3. Platform slices (status)
 
-1. **macOS + Linux DNS Assist apply/restore** — closes the largest “we diagnose but can’t help” hole (`platform-support.md`).
-2. **Link facts panel** — negotiated speed, Wi‑Fi vs Ethernet, power-save suspicion (Windows first, then Linux ethtool-class facts where available).
-3. **Windows TCP autotuning / NIC power** — detect misconfig that caps high-BDP links; opt-in repair.
-4. **MTU assist (opt-in)** — only when fragmentation risk + tunnel/proxy tags align.
-5. **Bufferbloat education + router SQM pointers** — recommendation quality, not magic buttons.
+1. **macOS + Linux DNS Assist apply/restore** — **Done** (matrix: Yes / Yes / Yes).
+2. **Link facts panel** — **Done** (speed/duplex; Wi‑Fi signal where OS allows).
+3. **Windows TCP autotuning / NIC power** — **Done** (local-caps observe + opt-in repair on Windows).
+4. **MTU assist (opt-in)** — **Done** (Windows / macOS / Linux with backup/restore).
+5. **Bufferbloat education + router SQM pointers** — ongoing copy polish; no magic buttons.
 
 ### A4. Acceptance for “local-first feels useful”
 

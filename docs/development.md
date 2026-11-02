@@ -16,12 +16,20 @@ npm run tauri dev
 
 ## Verification (run before push)
 
-### R1 cheap reliability gate (default)
+### Community gate (pre-share default)
 
-Matches CI’s three jobs without a full installer build. Prefer this before every push:
+Runs R1 then R4. Prefer before tagging a community-facing release:
 
 ```bash
-./scripts/reliability-gate.sh
+bash scripts/community-gate.sh
+```
+
+### R1 cheap reliability gate
+
+Matches CI’s three compile/test jobs without a full installer build. Prefer this before ordinary pushes:
+
+```bash
+bash scripts/reliability-gate.sh
 ```
 
 | Step | Command | What it proves |
@@ -46,6 +54,15 @@ Live Path Truth smoke without the GUI. Needs network access; writes JSON under `
 | Bundle (default) | same + `--bundle` | `schema_version: knottrace.diagnostic_bundle.v1` + `score` |
 
 Set `HEADLESS_REGRESSION_BUNDLE=0` to skip the bundle pass. Artifacts stay local (gitignored via `.tmp/`). Physical CompanionShell remains [l3-device-proof.md](./l3-device-proof.md) P2b.
+
+### S2 diagnostic bundle triage
+
+Validate a community-pasted export (file or stdin):
+
+```bash
+python scripts/validate-diagnostic-bundle.py path/to/bundle.json
+python scripts/validate-diagnostic-bundle.py - < pasted.json
+```
 
 ### R3 panic hygiene (startup + check path)
 

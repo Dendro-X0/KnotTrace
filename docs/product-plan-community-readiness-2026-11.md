@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace reliable and honest enough to put in front of an
           requiring the maintainer to hand-test every surface first.
 POSTURE:  Observe-first · claim discipline · reversible assists · no fake Mbps
 BASELINE: Path Truth + expansion (CompanionShell, C1–C4, OS matrix) at v1.9.0
-DONE:     Charter · R1 · C1 · C2 feedback intake
-NEXT:     R2 Failure UX hardening
+DONE:     Charter · R1 · C1 · C2 · R2 failure UX
+NEXT:     R4 Headless regression pack
 ```
 
 ---
@@ -83,8 +83,8 @@ Deferred forever for this charter (same list): auto node rotation, AV certificat
 | 1 | **R1** Automated reliability gates | **Done** |
 | 2 | **C1** Public entry kit | **Done** |
 | 3 | **C2** Feedback intake (issue templates) | **Done** |
-| 4 | **R2** Failure UX hardening | **Next** |
-| 5 | **R4** Headless regression pack | Queued |
+| 4 | **R2** Failure UX hardening | **Done** |
+| 5 | **R4** Headless regression pack | **Next** |
 | 6 | **R3** Panic hygiene (startup + check path) | Queued |
 | 7 | **C3** Release honesty pass | Queued |
 | 8 | **P1** Release asset verification | Queued |
@@ -112,7 +112,7 @@ Do not invent large new feature bands under this charter. Feature ideas from com
 ## 6. Success criteria (plan-level)
 
 - [x] Stranger can install from GitHub Release and complete a check without reading internal specs  
-- [ ] Failed checks and export errors show actionable copy  
+- [x] Failed checks and export errors show actionable copy  
 - [x] Issue template exists and is linked from README / START-HERE  
 - [ ] Public claims match [platform-support.md](./platform-support.md)  
 - [ ] Automated gates (R1 + R4) are green on the share tag  
@@ -128,4 +128,4 @@ Do not invent large new feature bands under this charter. Feature ideas from com
 - [START-HERE.md](./START-HERE.md) — maintainer + power-user boot  
 - [COMMUNITY.md](./COMMUNITY.md) — public tryout kit (C1)  
 
-_Last updated: 2026-11-02T15:45:00Z_
+_Last updated: 2026-11-02T16:00:00Z_

@@ -1,3 +1,4 @@
+import { CheckFailureBanner } from "@/components/CheckFailureBanner";
 import { PathBreakPanel } from "@/components/PathBreakPanel";
 import { IntegrityBoardPanel } from "@/components/IntegrityBoardPanel";
 import { DiagnosticBundlePanel } from "@/components/DiagnosticBundlePanel";
@@ -37,12 +38,19 @@ export function CompanionHomePage({ state }: CompanionHomePageProps) {
         dnsIntegrity={state.report?.dns_integrity}
         checkProfile={checkProfile}
         summary={
-          state.checkError ??
           state.report?.diagnosis?.summary ??
           state.report?.score.summary ??
           "Run a check to measure this path."
         }
       />
+
+      {state.checkError && (
+        <CheckFailureBanner
+          message={state.checkError}
+          checking={checking}
+          onRetry={() => void state.runCheck()}
+        />
+      )}
 
       <Button
         className="min-h-11 w-full"

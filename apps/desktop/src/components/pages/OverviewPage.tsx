@@ -66,10 +66,11 @@ export function OverviewPage({ state }: OverviewPageProps) {
           dnsIntegrity={state.report?.dns_integrity}
           checkProfile={checkProfile}
           summary={
-            state.checkError ??
             state.report?.diagnosis?.summary ??
             state.report?.score.summary ??
-            "Run a check to see connection health."
+            (state.checkError
+              ? "Last check failed — use Retry in the banner above."
+              : "Run a check to see connection health.")
           }
         />
 

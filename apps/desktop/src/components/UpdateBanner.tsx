@@ -41,10 +41,21 @@ export function UpdateBanner({
   if (!update?.available) {
     return (
       <div className="border-destructive/30 bg-destructive/10 flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2">
-        <p className="text-destructive min-w-0 text-xs">{error}</p>
-        <Button size="sm" variant="secondary" disabled={checking} onClick={onCheck}>
-          {checking ? "Checking..." : "Check again"}
-        </Button>
+        <div className="min-w-0 space-y-1">
+          <p className="text-destructive text-xs font-medium">Update check failed</p>
+          <p className="text-destructive/90 min-w-0 text-xs">{error}</p>
+          <p className="text-muted-foreground text-[0.68rem]">
+            You can keep using this build, retry later, or download an installer from GitHub Releases.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" disabled={checking} onClick={onCheck}>
+            {checking ? "Checking..." : "Check again"}
+          </Button>
+          <Button size="sm" variant="secondary" onClick={onOpenRelease}>
+            Open releases
+          </Button>
+        </div>
       </div>
     );
   }

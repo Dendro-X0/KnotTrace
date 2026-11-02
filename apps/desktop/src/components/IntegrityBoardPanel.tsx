@@ -34,8 +34,8 @@ export function IntegrityBoardPanel({ loading, report, compact }: IntegrityBoard
     return (
       <EmptyState
         icon={ShieldAlert}
-        title="Integrity"
-        description="Run a health check for exposure and integrity indicators (never a surveillance-safe badge)."
+        title="Integrity not ready yet"
+        description="Run a health check to load exposure indicators. Empty here is not “secure” — absence of indicators never means you are unobserved."
       />
     );
   }

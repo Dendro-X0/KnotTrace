@@ -18,11 +18,13 @@ Product direction: fix what is on the machine (DNS, link, OS caps, MTU) first; t
 
 ## First five minutes
 
-1. Run `npm run tauri dev` (see [development.md](./development.md)) or install a release build (see [release.md](./release.md)).
+1. Run `npm run tauri dev` (see [development.md](./development.md)) or install a release build (see [release.md](./release.md) / [COMMUNITY.md](./COMMUNITY.md)).
 2. Open **Overview** — wait for the first health check (tray shows status).
 3. Read **diagnosis** hints — note the slowdown shape, confidence, and any upstream pool claim.
 4. On **Network**, review **Link**, **Local caps** (Windows), **MTU assist**, **Upstream pool proof**, **Tunnel compare**, proxy path comparison, stability probes, and optional throughput.
 5. Use **DNS** / **Connect** only when you want a reversible change (DNS apply works on Windows, macOS, and Linux).
+
+Community tryouts: prefer [COMMUNITY.md](./COMMUNITY.md). Report problems via [GitHub Issues](https://github.com/Dendro-X0/KnotTrace/issues).
 
 ## Local data
 

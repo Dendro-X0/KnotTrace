@@ -50,7 +50,19 @@ export function DiagnosticBundlePanel({ state }: DiagnosticBundlePanelProps) {
           AI-ready facts from the latest check. Hostname and SSID stay out by default. No cloud upload —
           copy stays on this machine until you paste it elsewhere.
         </p>
-        {status && <p className="text-xs leading-relaxed">{status}</p>}
+        {!state.report && (
+          <p className="text-xs leading-relaxed" role="status">
+            Run a health check first — export needs a completed report on this device.
+          </p>
+        )}
+        {status && (
+          <p
+            className={`text-xs leading-relaxed ${status.toLowerCase().includes("could not") || status.toLowerCase().includes("failed") || status.toLowerCase().includes("before exporting") ? "text-destructive" : ""}`}
+            role="status"
+          >
+            {status}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

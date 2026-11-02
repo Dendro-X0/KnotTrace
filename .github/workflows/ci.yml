@@ -111,7 +111,7 @@ jobs:
         run: |
           set -euo pipefail
           # One retry — runner egress can flake without indicating a product break.
-          if ! ./scripts/headless-regression.sh; then
+          if ! bash scripts/headless-regression.sh; then
             echo "::warning::headless regression failed once; retrying"
-            ./scripts/headless-regression.sh
+            bash scripts/headless-regression.sh
           fi

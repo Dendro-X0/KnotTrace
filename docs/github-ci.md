@@ -10,11 +10,12 @@
 
 ### CI
 
-Runs on every push and pull request (Linux runners for speed):
+Runs on every push and pull request:
 
-- `cargo test -p network-core`
+- `cargo test -p network-core` (Linux)
 - `cargo check -p network-desktop` (Linux WebKit deps; catches Rust/Tauri compile breaks)
-- `npm run build` in `apps/desktop`
+- `npm run build` in `apps/desktop` (Linux)
+- `./scripts/headless-regression.sh` on **Ubuntu + macOS** (Band P2a live Path Truth L3a; one retry on egress flake)
 
 Duplicate runs on the same branch are cancelled automatically.
 

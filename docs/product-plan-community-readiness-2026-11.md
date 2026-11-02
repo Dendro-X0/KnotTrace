@@ -1,7 +1,7 @@
 # Product plan — Community readiness & reliability
 
 **Date (UTC):** 2026-11-02  
-**Status:** Chartered (successor to cross-platform expansion)  
+**Status:** **Complete** for share posture (P2b physical CompanionShell parked)  
 **Repo:** KnotTrace (`network`) only  
 **Audience:** Maintainer  
 **Depends on:** Expansion complete at **v1.9.0** — [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md)
@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace reliable and honest enough to put in front of an
           requiring the maintainer to hand-test every surface first.
 POSTURE:  Observe-first · claim discipline · reversible assists · no fake Mbps
 BASELINE: Path Truth + expansion (CompanionShell, C1–C4, OS matrix) at v1.9.0
-DONE:     Charter · R1–R4 · C1–C3 · P1 · C4 share (v1.9.1)
-NEXT:     P2 when capacity (optional)
+DONE:     Charter · R1–R4 · C1–C3 · P1 · C4 (v1.9.1) · P2a CI headless
+NEXT:     P2b physical CompanionShell when device capacity returns
 ```
 
 ---
@@ -72,7 +72,7 @@ Deferred forever for this charter (same list): auto node rotation, AV certificat
 | Band | Outcome |
 |------|---------|
 | **P1** | Confirm **v1.9.0** (or successor) GitHub Release has desktop installers; note mobile skip vs publish from Actions logs |
-| **P2** | Optional later: physical CompanionShell L3 and macOS/Linux probe L3 — **queued**, not blocking C4 if P1 + R1 are green |
+| **P2** | Split: **P2a** macOS/Linux headless probe in CI; **P2b** physical CompanionShell L3 — P2b queued for device capacity |
 
 ---
 
@@ -89,7 +89,8 @@ Deferred forever for this charter (same list): auto node rotation, AV certificat
 | 7 | **C3** Release honesty pass | **Done** |
 | 8 | **P1** Release asset verification | **Done** (v1.9.0) |
 | 9 | **C4** Community share release | **Done** (v1.9.1) |
-| 10 | **P2** Device / multi-OS L3 | When maintainer capacity returns |
+| 10 | **P2a** CI headless probe (Linux + macOS) | **Done** |
+| 11 | **P2b** Physical CompanionShell L3 | Parked — [l3-device-proof.md](./l3-device-proof.md) |
 
 Do not invent large new feature bands under this charter. Feature ideas from community feedback get a **later** charter.
 
@@ -141,4 +142,8 @@ Do not invent large new feature bands under this charter. Feature ideas from com
 
 Mobile: **Build Android** and **Build iOS** jobs were **skipped** (signing secrets path) — packaging only; device L3 still pending. Matches honesty posture in C3.
 
-_Last updated: 2026-11-02T17:20:00Z_
+### P2a verification
+
+CI job **Headless probe** runs `./scripts/headless-regression.sh` on `ubuntu-latest` and `macos-latest`. Physical CompanionShell remains P2b — see [l3-device-proof.md](./l3-device-proof.md).
+
+_Last updated: 2026-11-02T17:40:00Z_

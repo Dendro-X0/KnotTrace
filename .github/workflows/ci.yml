@@ -85,3 +85,33 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # Band P2a — multi-OS headless Path Truth L3a (community-readiness).
+  # Live network check; not a substitute for physical CompanionShell (P2b).
+  headless:
+    name: Headless probe (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            . -> target
+          shared-key: knottrace-headless-${{ matrix.os }}
+          cache-on-failure: true
+
+      - name: Headless regression pack
+        run: |
+          set -euo pipefail
+          # One retry — runner egress can flake without indicating a product break.
+          if ! ./scripts/headless-regression.sh; then
+            echo "::warning::headless regression failed once; retrying"
+            ./scripts/headless-regression.sh
+          fi

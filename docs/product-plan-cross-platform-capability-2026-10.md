@@ -13,7 +13,7 @@ GOAL:     Make KnotTrace useful on every desktop OS we ship, plus a thin
 POSTURE:  Observe-first · indicators with confidence · reversible assists
 BASELINE: Path Truth Bands 1–5 + 3D/3E + CLI + AI explain (4A–4C) shipped
 DONE:     Charter · A1–A3 · B1–B3 · C1–C4 · D1/D2 · v1.9.0
-NEXT:     Successor — [product-plan-community-readiness-2026-11.md](./product-plan-community-readiness-2026-11.md)
+NEXT:     Community readiness **complete** @ v1.9.1 — [product-plan-community-readiness-2026-11.md](./product-plan-community-readiness-2026-11.md)
 ```
 
 ---

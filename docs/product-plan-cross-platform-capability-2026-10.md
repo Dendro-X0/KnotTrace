@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace useful on every desktop OS we ship, plus a thin
           — without fake Mbps, AV claims, or Obscur coupling.
 POSTURE:  Observe-first · indicators with confidence · reversible assists
 BASELINE: Path Truth Bands 1–5 + 3D/3E + CLI + AI explain (4A–4C) shipped
-DONE:     Charter · A1–A3 · B1–B3 · C1–C4 · D1/D2 · v1.9.0 release prep
-NEXT:     Physical Android/iOS CompanionShell L3 when devices available
+DONE:     Charter · A1–A3 · B1–B3 · C1–C4 · D1/D2 · v1.9.0
+NEXT:     Successor — [product-plan-community-readiness-2026-11.md](./product-plan-community-readiness-2026-11.md)
 ```
 
 ---
@@ -138,4 +138,4 @@ Execute in order; do not skip to mobile full UI before A1.
 - [specs/backend/mobile-companion-design.md](../specs/backend/mobile-companion-design.md) — B1 backend design  
 - [future-plan-security-integrity-2026-10.md](./future-plan-security-integrity-2026-10.md) — absorbed sketch  
 
-_Last updated: 2026-10-30T17:00:00Z_
+_Last updated: 2026-11-02T00:00:00Z_

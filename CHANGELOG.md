@@ -326,6 +326,7 @@ Community-readiness share tag — reliability gates and honest public entry with
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.9.1]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/Dendro-X0/KnotTrace/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.7.1...v1.8.0

@@ -32,6 +32,21 @@ Matches CI’s three jobs without a full installer build. Prefer this before eve
 
 CI (`.github/workflows/ci.yml`) runs the same three surfaces on Linux. Docs-only pushes skip CI by design.
 
+### R4 headless regression pack
+
+Live Path Truth smoke without the GUI. Needs network access; writes JSON under `.tmp/headless-regression/`.
+
+```bash
+./scripts/headless-regression.sh
+```
+
+| Step | Command | What it proves |
+|------|---------|----------------|
+| Fast check | `network-probe check --json --fast` | JSON parses; `timestamp`, `score`, `integrity.disclaimer`, `path_break` present |
+| Bundle (default) | same + `--bundle` | `schema_version: knottrace.diagnostic_bundle.v1` + `score` |
+
+Set `HEADLESS_REGRESSION_BUNDLE=0` to skip the bundle pass. Artifacts stay local (gitignored via `.tmp/`).
+
 ### Full release-oriented checks
 
 ```bash

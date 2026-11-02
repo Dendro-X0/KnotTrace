@@ -35,7 +35,7 @@ Release automation builds desktop installers for all three platforms on tag push
 | WAN/LAN listener scope (C2) | Yes | Yes | Yes |
 | Wi‑Fi noise / TX retries (C3) | Partial (signal only; noise/retries rarely exposed) | Partial | **Yes** (`iw` + `/proc/net/wireless`) |
 | Startup network agents (C4, opt-in) | **Yes** (HKCU Run) | **Yes** (LaunchAgents) | **Yes** (XDG autostart) |
-| Mobile companion (check + export) | Shared CompanionShell (`cfg(mobile)`); desktop preview `?companion=1` | Same | Same |
+| Mobile companion (check + export) | Desktop preview `?companion=1`; mobile packaging via `cfg(mobile)` — **device L3 pending** | Same | Same |
 
 \* Requires a local Mihomo, sing-box, or compatible proxy with `external-controller` enabled.
 
@@ -74,8 +74,8 @@ Recommendations and integrity checks work everywhere. Apply/restore still requir
 
 ## Mobile roadmap
 
-- **B1–B3:** CompanionShell shared on Android/iOS via `cfg(mobile)` ([frontend-spec-mobile-companion.md](frontend-spec-mobile-companion.md)); signed APK/IPA paths unchanged
-- Device L3 (physical check + export) still pending on each OS
-- **Android**: signed APK on every release tag (upload keystore in CI secrets)
-- **iOS**: signed IPA on every release tag (distribution cert + provisioning profile)
+- **B1–B3:** CompanionShell shared UI for Android/iOS via `cfg(mobile)` ([frontend-spec-mobile-companion.md](frontend-spec-mobile-companion.md)); signed APK/IPA packaging paths exist
+- **Honesty:** packaging ≠ product claim — physical device L3 (check + export on a phone) is still pending; do not advertise phone readiness until that lands
+- **Android**: signed APK on release tags when upload keystore secrets are present (else job may skip)
+- **iOS**: signed IPA on release tags when distribution cert + profile secrets are present (else job may skip)
 - Install/trust steps: [mobile-signing.md](mobile-signing.md)

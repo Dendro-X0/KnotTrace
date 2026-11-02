@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+### Changed
+
+- **Community honesty (C3)** — README / COMMUNITY / platform-support / release notes mark CompanionShell as desktop preview + mobile packaging with device proof pending; public claims defer to the OS matrix
+
 ## [1.9.0] - 2026-10-30
 
 ### Added
@@ -14,7 +18,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 - **A1** — Path Truth OS matrix; process↔egress best-effort on Linux (`ss`) / macOS (`lsof`)
 - **A2** — Local-caps observe on Linux/macOS (repair remains Windows-only)
 - **A3** — Integrity-board kinds mapped into Protect alerts
-- **B1–B3** — Thin CompanionShell (fast check, path-break, integrity, diagnostic export); shared Android/iOS via `cfg(mobile)`; desktop preview `?companion=1`
+- **B1–B3** — Thin CompanionShell (fast check, path-break, integrity, diagnostic export); desktop preview `?companion=1`; Android/iOS packaging via `cfg(mobile)` — **device L3 proof pending** (do not claim phone readiness)
 - **C1** — Hosts file + system proxy change timeline (`config_watch_*`)
 - **C2** — WAN-facing vs LAN listener scope on the integrity board
 - **C3** — Wi‑Fi noise floor / TX-retry indicators where the OS reports them

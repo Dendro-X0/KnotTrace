@@ -14,7 +14,7 @@ KnotTrace is a **desktop** network companion (Windows primary; macOS/Linux also 
 - Offers **opt-in, reversible** assists (DNS, Connect, MTU, Windows local caps)  
 - Exports a **redacted diagnostic JSON** you can paste into an issue or an external AI  
 
-Mobile CompanionShell packaging exists; treat phone builds as **early** until device proof is noted in release notes.
+CompanionShell is a **desktop preview** (`?companion=1`) plus mobile packaging path — **not** a device-proven phone product until L3 is recorded in release notes / [platform-support.md](./platform-support.md).
 
 ## What it is not
 

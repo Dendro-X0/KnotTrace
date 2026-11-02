@@ -71,7 +71,7 @@ CI and release workflows live in `.github/workflows/`. See [docs/github-ci.md](g
 
 ## Mobile plan
 
-Android and iOS installers ship on tag pushes from v1.4.2.
+Android and iOS installers may ship on tag pushes from v1.4.2 when signing secrets are configured. Treat APK/IPA as packaging artifacts until device L3 proof is recorded — CompanionShell remains a desktop preview for public claims.
 
 - Signing policy and install steps: [mobile-signing.md](mobile-signing.md)
 - Legacy manual workflow: `.github/workflows/release-android.yml`

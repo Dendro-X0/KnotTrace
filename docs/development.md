@@ -47,6 +47,17 @@ Live Path Truth smoke without the GUI. Needs network access; writes JSON under `
 
 Set `HEADLESS_REGRESSION_BUNDLE=0` to skip the bundle pass. Artifacts stay local (gitignored via `.tmp/`).
 
+### R3 panic hygiene (startup + check path)
+
+Audit posture for community tryouts:
+
+- Desktop `perform_check` / `run_check` return `Result` and emit `health-check-failed` (no unwrap on the check path).
+- `network-probe` exits non-zero on check/serialize failure instead of panicking.
+- Path Truth `classify_local_break` no longer unwraps optional `dns_integrity` when building evidence.
+- Tauri `Builder::run` keeps a single entrypoint `.expect` (process cannot continue without a runtime).
+
+Do not add silent `.unwrap()` / `.expect()` on startup or health-check paths; surface `Result`/`String` errors to the UI or CLI.
+
 ### Full release-oriented checks
 
 ```bash

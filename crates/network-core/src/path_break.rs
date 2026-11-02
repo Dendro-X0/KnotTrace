@@ -164,7 +164,9 @@ fn classify_local_break(
     } else if local_issues.iter().any(|i| i.contains("DNS")) {
         PathBreakHop::Dns
     } else if dns_integrity_suspicious(report) {
-        evidence.push(report.dns_integrity.as_ref().unwrap().summary.clone());
+        if let Some(status) = &report.dns_integrity {
+            evidence.push(status.summary.clone());
+        }
         PathBreakHop::Dns
     } else {
         PathBreakHop::Local

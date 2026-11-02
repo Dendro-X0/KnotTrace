@@ -18,7 +18,7 @@ echo "==> [R4] network-probe check --fast --json"
 cargo run -p network-core --bin network-probe --quiet -- check --json --fast >"$REPORT_JSON"
 
 echo "==> [R4] validate report JSON keys ($REPORT_JSON)"
-python - "$REPORT_JSON" <<'PY'
+python -u - "$REPORT_JSON" <<'PY'
 import json, sys
 
 path = sys.argv[1]
@@ -60,7 +60,7 @@ if [[ "${HEADLESS_REGRESSION_BUNDLE:-1}" != "0" ]]; then
   cargo run -p network-core --bin network-probe --quiet -- check --json --fast --bundle >"$BUNDLE_JSON"
 
   echo "==> [R4] validate bundle schema ($BUNDLE_JSON)"
-  python - "$BUNDLE_JSON" <<'PY'
+  python -u - "$BUNDLE_JSON" <<'PY'
 import json, sys
 
 path = sys.argv[1]

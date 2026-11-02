@@ -70,7 +70,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
             state.report?.score.summary ??
             (state.checkError
               ? "Last check failed — use Retry in the banner above."
-              : "Run a check to see connection health.")
+              : "Click Run health check (or press Ctrl+K) to see connection health.")
           }
         />
 

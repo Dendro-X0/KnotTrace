@@ -12,4 +12,9 @@ bash "$ROOT/scripts/reliability-gate.sh"
 echo "==> [S1] community gate: R4 headless regression"
 bash "$ROOT/scripts/headless-regression.sh"
 
-echo "==> [S1] community gate OK (R1 + R4)"
+if [[ -n "${VERIFY_RELEASE_TAG:-}" ]]; then
+  echo "==> [F4] community gate: verify release assets ($VERIFY_RELEASE_TAG)"
+  bash "$ROOT/scripts/verify-release-assets.sh" "$VERIFY_RELEASE_TAG"
+fi
+
+echo "==> [S1] community gate OK (R1 + R4${VERIFY_RELEASE_TAG:+ + F1})"

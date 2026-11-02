@@ -59,7 +59,8 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md) — cross-platform expansion (**complete** in v1.9.0)
 - [product-plan-community-readiness-2026-11.md](./product-plan-community-readiness-2026-11.md) — community readiness (**complete** @ v1.9.1; P2b parked)
 - [l3-device-proof.md](./l3-device-proof.md) — P2a CI headless / P2b physical CompanionShell checklist
-- [product-plan-share-ops-2026-11.md](./product-plan-share-ops-2026-11.md) — **active** share-loop ops (gates + triage)
+- [product-plan-share-ops-2026-11.md](./product-plan-share-ops-2026-11.md) — share-loop ops (**complete**)
+- [product-plan-tryout-clarity-2026-11.md](./product-plan-tryout-clarity-2026-11.md) — tryout clarity + release asset verify (**complete**)
 - [frontend-spec-mobile-companion.md](./frontend-spec-mobile-companion.md) — mobile companion UI (B1 designed; B2 implement)
 - [../specs/backend/mobile-companion-design.md](../specs/backend/mobile-companion-design.md) — mobile companion backend (B1)
 - [../specs/backend/hosts-proxy-timeline-design.md](../specs/backend/hosts-proxy-timeline-design.md) — hosts/proxy config watch (C1)

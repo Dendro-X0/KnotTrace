@@ -13,7 +13,7 @@ GOAL:     Keep the community share loop honest and cheap to operate —
 POSTURE:  Observe-first · claim discipline · reversible assists · no fake Mbps
 BASELINE: v1.9.1 + P2a CI headless (Win/macOS/Linux)
 DONE:     Charter · S1 · S2 · S3 · S4
-NEXT:     Complete (P2b still parked under community plan)
+NEXT:     Successor complete — [product-plan-tryout-clarity-2026-11.md](./product-plan-tryout-clarity-2026-11.md)
 ```
 
 ---

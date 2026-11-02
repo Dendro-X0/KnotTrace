@@ -37,16 +37,16 @@ macOS/Linux: same Releases page — use the `.dmg` / AppImage / `.deb` / `.rpm` 
 
 ## First five minutes
 
-1. Wait for the first health check (or press **Ctrl+K** → run check).  
-2. On **Overview**, read the score, diagnosis, **Path break**, and **Integrity** panels.  
+1. Click **Run health check** in the header (or press **Ctrl+K**).  
+2. On **Overview**, read the grade/score, diagnosis summary, **Path break**, and **Integrity** panels.  
 3. Optionally open **Network** for link / tunnel / upstream-pool detail.  
 4. Use **DNS** / **Connect** / MTU / local-caps only when you want a reversible change.  
-5. If something looks wrong, export a diagnostic bundle (below) before asking for help.
+5. If something looks wrong, use **Diagnostic export → Copy JSON** (below) before asking for help.
 
 ## Export a diagnostic bundle (for help)
 
-1. Run a health check first.  
-2. On **Overview**, use **Copy JSON** / diagnostic export (hostname and SSID stay out by default).  
+1. Run a health check first (export stays disabled until a report exists).  
+2. On **Overview**, find **Diagnostic export** and click **Copy JSON** (hostname and SSID stay out by default).  
 3. Paste into a GitHub issue (preferred) or share privately. Do not post secrets, corporate hostnames you care about, or full unredacted logs.
 
 ## Feedback (preferred channel)

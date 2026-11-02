@@ -22,6 +22,17 @@ Runs R1 then R4. Prefer before tagging a community-facing release:
 
 ```bash
 bash scripts/community-gate.sh
+# optional: also verify a published tag’s installers
+VERIFY_RELEASE_TAG=v1.9.1 bash scripts/community-gate.sh
+```
+
+### F1 release asset verify
+
+Assert a GitHub Release has Windows MSI+NSIS, Linux AppImage/deb/rpm, macOS dmg, and `latest.json` (`gh` required):
+
+```bash
+bash scripts/verify-release-assets.sh v1.9.1
+bash scripts/verify-release-assets.sh          # latest non-draft release
 ```
 
 ### R1 cheap reliability gate

@@ -40,7 +40,7 @@ export function CompanionHomePage({ state }: CompanionHomePageProps) {
         summary={
           state.report?.diagnosis?.summary ??
           state.report?.score.summary ??
-          "Run a check to measure this path."
+          "Tap Run check to measure this path."
         }
       />
 

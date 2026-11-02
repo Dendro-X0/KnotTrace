@@ -4,10 +4,8 @@ Community-readiness charter splits P2 so automation can land without maintainer 
 
 | Slice | What | Status |
 |-------|------|--------|
-| **P2a** | Headless `network-probe` L3a on Linux + macOS CI runners | Automated via CI job `Headless probe` |
+| **P2a** | Headless `network-probe` L3a on Linux + macOS + Windows CI runners | Automated via CI job `Headless probe` |
 | **P2b** | Physical / emulator CompanionShell (check + export) | **Parked** until device capacity |
-
-Windows L3a is covered by local `./scripts/headless-regression.sh` (R4) and by shipping Windows installers (P1/C4).
 
 ## P2a — already gated in CI
 
@@ -15,7 +13,7 @@ Windows L3a is covered by local `./scripts/headless-regression.sh` (R4) and by s
 ./scripts/headless-regression.sh
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same script on `ubuntu-latest` and `macos-latest` (one retry on egress flake). Green matrix cells mean parse + `score` + `integrity.disclaimer` + `path_break` on those OSes.
+CI (`.github/workflows/ci.yml`) runs the same script on `ubuntu-latest`, `macos-latest`, and `windows-latest` (bash shell; one retry on egress flake). Green matrix cells mean parse + `score` + `integrity.disclaimer` + `path_break` on those OSes.
 
 ## P2b — physical CompanionShell checklist (when capacity returns)
 

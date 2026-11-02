@@ -94,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -108,6 +108,7 @@ jobs:
           cache-on-failure: true
 
       - name: Headless regression pack
+        shell: bash
         run: |
           set -euo pipefail
           # One retry — runner egress can flake without indicating a product break.

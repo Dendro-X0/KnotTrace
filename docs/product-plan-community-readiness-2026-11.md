@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace reliable and honest enough to put in front of an
           requiring the maintainer to hand-test every surface first.
 POSTURE:  Observe-first · claim discipline · reversible assists · no fake Mbps
 BASELINE: Path Truth + expansion (CompanionShell, C1–C4, OS matrix) at v1.9.0
-DONE:     Charter · R1–R4 · C1–C3 · P1 · C4 (v1.9.1) · P2a CI headless
-NEXT:     P2b physical CompanionShell when device capacity returns
+DONE:     Charter · R1–R4 · C1–C3 · P1 · C4 (v1.9.1) · P2a CI (Win/macOS/Linux)
+NEXT:     P2b physical CompanionShell when device capacity — else new charter
 ```
 
 ---
@@ -89,7 +89,7 @@ Deferred forever for this charter (same list): auto node rotation, AV certificat
 | 7 | **C3** Release honesty pass | **Done** |
 | 8 | **P1** Release asset verification | **Done** (v1.9.0) |
 | 9 | **C4** Community share release | **Done** (v1.9.1) |
-| 10 | **P2a** CI headless probe (Linux + macOS) | **Done** |
+| 10 | **P2a** CI headless probe (Linux + macOS + Windows) | **Done** |
 | 11 | **P2b** Physical CompanionShell L3 | Parked — [l3-device-proof.md](./l3-device-proof.md) |
 
 Do not invent large new feature bands under this charter. Feature ideas from community feedback get a **later** charter.
@@ -144,6 +144,6 @@ Mobile: **Build Android** and **Build iOS** jobs were **skipped** (signing secre
 
 ### P2a verification
 
-CI job **Headless probe** runs `./scripts/headless-regression.sh` on `ubuntu-latest` and `macos-latest`. Physical CompanionShell remains P2b — see [l3-device-proof.md](./l3-device-proof.md).
+CI job **Headless probe** runs `bash scripts/headless-regression.sh` on `ubuntu-latest`, `macos-latest`, and `windows-latest`. Physical CompanionShell remains P2b — see [l3-device-proof.md](./l3-device-proof.md).
 
-_Last updated: 2026-11-02T17:40:00Z_
+_Last updated: 2026-11-02T18:00:00Z_

@@ -34,7 +34,7 @@ CI (`.github/workflows/ci.yml`) runs the same three surfaces on Linux. Docs-only
 
 ### R4 / P2a headless regression pack
 
-Live Path Truth smoke without the GUI. Needs network access; writes JSON under `.tmp/headless-regression/`. CI runs the same script on Ubuntu + macOS (Band P2a).
+Live Path Truth smoke without the GUI. Needs network access; writes JSON under `.tmp/headless-regression/`. CI runs the same script on Ubuntu + macOS + Windows (Band P2a).
 
 ```bash
 ./scripts/headless-regression.sh

@@ -1,0 +1,68 @@
+name: Bug report
+description: Something broke or looks wrong in KnotTrace
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying KnotTrace. Please avoid pasting secrets, full hosts files, or unredacted SSIDs.
+        Community guide: https://github.com/Dendro-X0/KnotTrace/blob/main/docs/COMMUNITY.md
+  - type: input
+    id: version
+    attributes:
+      label: KnotTrace version
+      description: From the sidebar, About, or the GitHub Release tag you installed
+      placeholder: "1.9.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS
+        - Linux
+        - Android (CompanionShell)
+        - iOS (CompanionShell)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+      description: Include error text from the UI if any.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Overview
+        2. Run check
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: bundle
+    attributes:
+      label: Redacted diagnostic JSON (optional)
+      description: Overview → Diagnostic export → Copy JSON. Review before pasting.
+      render: json
+  - type: checkboxes
+    id: honesty
+    attributes:
+      label: Claims check
+      options:
+        - label: I understand KnotTrace does not guarantee speed or prove I am unmonitored.
+          required: true

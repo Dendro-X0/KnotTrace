@@ -1,0 +1,39 @@
+name: Feedback / idea
+description: Suggestion or experience report (not a hard bug)
+title: "[feedback] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefer a [bug report](./bug_report.yml) if something failed.
+        Guide: https://github.com/Dendro-X0/KnotTrace/blob/main/docs/COMMUNITY.md
+  - type: input
+    id: version
+    attributes:
+      label: KnotTrace version (if installed)
+      placeholder: "1.9.0"
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system (if relevant)
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Mobile
+        - N/A
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: What worked, what confused you, or what you wish existed. Feature ideas are welcome; large new bands wait for a later charter.
+    validations:
+      required: true
+  - type: checkboxes
+    id: honesty
+    attributes:
+      label: Claims check
+      options:
+        - label: I understand KnotTrace does not guarantee speed or prove I am unmonitored.
+          required: true

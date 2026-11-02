@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Community tryout guide
+    url: https://github.com/Dendro-X0/KnotTrace/blob/main/docs/COMMUNITY.md
+    about: Install, first five minutes, diagnostic export, and what KnotTrace is not.

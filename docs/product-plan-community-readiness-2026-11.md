@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace reliable and honest enough to put in front of an
           requiring the maintainer to hand-test every surface first.
 POSTURE:  Observe-first · claim discipline · reversible assists · no fake Mbps
 BASELINE: Path Truth + expansion (CompanionShell, C1–C4, OS matrix) at v1.9.0
-DONE:     Charter · R1 reliability-gate script + docs
-NEXT:     C1 Public entry kit
+DONE:     Charter · R1 · C1 · C2 feedback intake
+NEXT:     R2 Failure UX hardening
 ```
 
 ---
@@ -81,9 +81,9 @@ Deferred forever for this charter (same list): auto node rotation, AV certificat
 | Order | Band | Status |
 |------:|------|--------|
 | 1 | **R1** Automated reliability gates | **Done** |
-| 2 | **C1** Public entry kit | **Next** |
-| 3 | **C2** Feedback intake (issue templates) | Queued |
-| 4 | **R2** Failure UX hardening | Queued |
+| 2 | **C1** Public entry kit | **Done** |
+| 3 | **C2** Feedback intake (issue templates) | **Done** |
+| 4 | **R2** Failure UX hardening | **Next** |
 | 5 | **R4** Headless regression pack | Queued |
 | 6 | **R3** Panic hygiene (startup + check path) | Queued |
 | 7 | **C3** Release honesty pass | Queued |
@@ -111,9 +111,9 @@ Do not invent large new feature bands under this charter. Feature ideas from com
 
 ## 6. Success criteria (plan-level)
 
-- [ ] Stranger can install from GitHub Release and complete a check without reading internal specs  
+- [x] Stranger can install from GitHub Release and complete a check without reading internal specs  
 - [ ] Failed checks and export errors show actionable copy  
-- [ ] Issue template exists and is linked from README / START-HERE  
+- [x] Issue template exists and is linked from README / START-HERE  
 - [ ] Public claims match [platform-support.md](./platform-support.md)  
 - [ ] Automated gates (R1 + R4) are green on the share tag  
 
@@ -126,5 +126,6 @@ Do not invent large new feature bands under this charter. Feature ideas from com
 - [platform-support.md](./platform-support.md) — OS matrix  
 - [release.md](./release.md) / [github-ci.md](./github-ci.md) — publish path  
 - [START-HERE.md](./START-HERE.md) — maintainer + power-user boot  
+- [COMMUNITY.md](./COMMUNITY.md) — public tryout kit (C1)  
 
-_Last updated: 2026-11-02T03:00:00Z_
+_Last updated: 2026-11-02T15:45:00Z_

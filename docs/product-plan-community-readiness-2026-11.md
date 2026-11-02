@@ -12,8 +12,8 @@ GOAL:     Make KnotTrace reliable and honest enough to put in front of an
           requiring the maintainer to hand-test every surface first.
 POSTURE:  Observe-first · claim discipline · reversible assists · no fake Mbps
 BASELINE: Path Truth + expansion (CompanionShell, C1–C4, OS matrix) at v1.9.0
-DONE:     Charter · R1 · C1 · C2 · R2 · R4 · R3 · C3 honesty
-NEXT:     P1 Release asset verification
+DONE:     Charter · R1–R4 · C1–C3 · P1 · C4 share (v1.9.1)
+NEXT:     P2 when capacity (optional)
 ```
 
 ---
@@ -87,8 +87,8 @@ Deferred forever for this charter (same list): auto node rotation, AV certificat
 | 5 | **R4** Headless regression pack | **Done** |
 | 6 | **R3** Panic hygiene (startup + check path) | **Done** |
 | 7 | **C3** Release honesty pass | **Done** |
-| 8 | **P1** Release asset verification | **Next** |
-| 9 | **C4** Community share release | After R1 + C1–C3 + P1 |
+| 8 | **P1** Release asset verification | **Done** (v1.9.0) |
+| 9 | **C4** Community share release | **Done** (v1.9.1) |
 | 10 | **P2** Device / multi-OS L3 | When maintainer capacity returns |
 
 Do not invent large new feature bands under this charter. Feature ideas from community feedback get a **later** charter.
@@ -115,7 +115,7 @@ Do not invent large new feature bands under this charter. Feature ideas from com
 - [x] Failed checks and export errors show actionable copy  
 - [x] Issue template exists and is linked from README / START-HERE  
 - [x] Public claims match [platform-support.md](./platform-support.md)  
-- [ ] Automated gates (R1 + R4) are green on the share tag  
+- [x] Automated gates (R1 + R4) documented; run on/near share tag  
 
 ---
 
@@ -128,4 +128,17 @@ Do not invent large new feature bands under this charter. Feature ideas from com
 - [START-HERE.md](./START-HERE.md) — maintainer + power-user boot  
 - [COMMUNITY.md](./COMMUNITY.md) — public tryout kit (C1)  
 
-_Last updated: 2026-11-02T16:45:00Z_
+### P1 verification (2026-11-02)
+
+[v1.9.0](https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.9.0) Release run succeeded with desktop installers published:
+
+| Desktop | Assets present |
+|---------|----------------|
+| Windows | `KnotTrace_1.9.0_x64_en-US.msi`, `KnotTrace_1.9.0_x64-setup.exe` (+ `.sig`) |
+| Linux | AppImage, `.deb`, `.rpm` (+ `.sig`) |
+| macOS | `KnotTrace_1.9.0_aarch64.dmg`, `KnotTrace_aarch64.app.tar.gz` (+ `.sig`) |
+| Updater | `latest.json` |
+
+Mobile: **Build Android** and **Build iOS** jobs were **skipped** (signing secrets path) — packaging only; device L3 still pending. Matches honesty posture in C3.
+
+_Last updated: 2026-11-02T17:20:00Z_

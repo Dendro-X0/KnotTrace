@@ -6,9 +6,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-11-02
+
+Community-readiness share tag — reliability gates and honest public entry without claiming hand-tested every surface.
+
+### Added
+
+- **R1** — `./scripts/reliability-gate.sh` (core tests + desktop check + frontend build)
+- **R4** — `./scripts/headless-regression.sh` (`network-probe check --json --fast` + optional `--bundle` key asserts)
+- **C1–C2** — [COMMUNITY.md](docs/COMMUNITY.md) tryout kit; GitHub issue templates (bug / feedback / config)
+- **R2** — Failure UX: check failure banner with retry, export-without-report copy, integrity empty honesty, updater error + Releases CTA
+
 ### Changed
 
-- **Community honesty (C3)** — README / COMMUNITY / platform-support / release notes mark CompanionShell as desktop preview + mobile packaging with device proof pending; public claims defer to the OS matrix
+- **C3** — README / COMMUNITY / platform-support / release notes mark CompanionShell as desktop preview + mobile packaging with device proof pending
+- **R3** — Check-path panic hygiene: DNS integrity evidence collection prefers Result over unwrap
+
+### Notes
+
+- Feedback: [issue templates](https://github.com/Dendro-X0/KnotTrace/issues/new/choose)
+- Desktop installers verified on prior [v1.9.0](https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.9.0); mobile APK/IPA remain skipped until signing + device L3
 
 ## [1.9.0] - 2026-10-30
 

@@ -26,15 +26,24 @@ bash scripts/community-gate.sh
 VERIFY_RELEASE_TAG=v1.9.1 bash scripts/community-gate.sh
 ```
 
-### F1 release asset verify
+### F1 / H2 release asset + updater trust
 
-Assert a GitHub Release has Windows MSI+NSIS, Linux AppImage/deb/rpm, macOS dmg, and `latest.json` (`gh` required):
+Assert a GitHub Release has Windows MSI+NSIS, Linux AppImage/deb/rpm, macOS dmg, installer `.sig` files, and a Windows-primary `latest.json` (`gh` required):
 
 ```bash
 bash scripts/verify-release-assets.sh v1.9.1
 bash scripts/verify-release-assets.sh          # latest non-draft release
 ```
 
+### H1 / H3 diagnostic paste fixtures
+
+```bash
+python scripts/validate-diagnostic-bundle.py scripts/fixtures/diagnostic-bundle-ok.json
+# leak fixture must exit non-zero:
+python scripts/validate-diagnostic-bundle.py scripts/fixtures/diagnostic-bundle-hostname-leak.json
+```
+
+`community-gate.sh` runs both checks offline before R1/R4 finish messaging.
 ### R1 cheap reliability gate
 
 Matches CI’s three compile/test jobs without a full installer build. Prefer this before ordinary pushes:
@@ -66,9 +75,9 @@ Live Path Truth smoke without the GUI. Needs network access; writes JSON under `
 
 Set `HEADLESS_REGRESSION_BUNDLE=0` to skip the bundle pass. Artifacts stay local (gitignored via `.tmp/`). Physical CompanionShell remains [l3-device-proof.md](./l3-device-proof.md) P2b.
 
-### S2 diagnostic bundle triage
+### S2 / H1 diagnostic bundle triage
 
-Validate a community-pasted export (file or stdin):
+Validate a community-pasted export (file or stdin). Fails if `hostname` / SSID keys appear, or if `redaction.include_ssid` is true unless `ALLOW_SSID=1`:
 
 ```bash
 python scripts/validate-diagnostic-bundle.py path/to/bundle.json

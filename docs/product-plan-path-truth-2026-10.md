@@ -12,7 +12,7 @@ POSTURE:  Observe-first · indicators with confidence · reversible assists (opt
 INDEPENDENT: KnotTrace and Obscur are separate products — no code, runtime,
              packaging, or release dependencies between them.
 DONE:     Path Truth plan complete (bands + 3E + CLI + polish) · v1.8.1
-NEXT:     Tryout clarity **complete** — [product-plan-tryout-clarity-2026-11.md](./product-plan-tryout-clarity-2026-11.md); P2b parked
+NEXT:     Paste/release trust — [product-plan-paste-release-trust-2026-11.md](./product-plan-paste-release-trust-2026-11.md); P2b parked
 ```
 
 ---

@@ -59,10 +59,12 @@ Include OS, app version, what you expected vs what happened, and optional redact
 
 ## Reliability note
 
-Maintainer device testing may lag. Pre-share gate: `bash scripts/community-gate.sh` (R1 + R4). CI also runs headless Path Truth probes on Windows, macOS, and Linux. CompanionShell on phones stays **device-proof pending** — see [platform-support.md](./platform-support.md) / [l3-device-proof.md](./l3-device-proof.md). Community share claims only what the matrix and release notes support.
+Maintainer device testing may lag. Pre-share gate: `bash scripts/community-gate.sh` (R1 + R4 + paste fixtures). CI also runs headless Path Truth probes on Windows, macOS, and Linux. CompanionShell on phones stays **device-proof pending** — see [platform-support.md](./platform-support.md) / [l3-device-proof.md](./l3-device-proof.md). Community share claims only what the matrix and release notes support. In-app signed updates are **Windows-primary**; macOS/Linux install from Releases.
 
 If you pasted a diagnostic JSON into an issue, maintainers can triage with:
 
 ```bash
 python scripts/validate-diagnostic-bundle.py path/to/bundle.json
 ```
+
+The validator refuses hostname/SSID fields so public pastes stay redacted by default.

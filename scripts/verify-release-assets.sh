@@ -61,12 +61,56 @@ mac_tarballs = [
 if not any(n in names for n in mac_tarballs):
     missing.append("macOS app.tar.gz (KnotTrace_aarch64.app.tar.gz)")
 
+# Band H2 — signed updater companions for desktop installers.
+sig_required = [
+    f"KnotTrace_{version}_x64_en-US.msi.sig",
+    f"KnotTrace_{version}_x64-setup.exe.sig",
+    f"KnotTrace_{version}_amd64.AppImage.sig",
+    f"KnotTrace_{version}_amd64.deb.sig",
+    f"KnotTrace-{version}-1.x86_64.rpm.sig",
+]
+for sig in sig_required:
+    if sig not in names:
+        missing.append(f"updater signature ({sig})")
+
 if missing:
     print("present assets:", ", ".join(sorted(names)), file=sys.stderr)
     raise SystemExit("missing required assets:\n  - " + "\n  - ".join(missing))
 
-print(f"OK: {tag} has Windows MSI+NSIS, Linux AppImage+deb+rpm, macOS dmg, latest.json")
+print(f"OK: {tag} has Windows MSI+NSIS, Linux AppImage+deb+rpm, macOS dmg, latest.json, installer .sig")
 print(f"asset count: {len(names)}")
 PY
 
-echo "==> [F1] release asset verify OK"
+echo "==> [H2] verifying latest.json updater trust for $TAG"
+gh release download "$TAG" --pattern latest.json --dir "$ROOT/.tmp/release-verify" --clobber >/dev/null
+python -u - "$ROOT/.tmp/release-verify/latest.json" "$VERSION" "$TAG" <<'PY'
+import json, sys
+from pathlib import Path
+
+path, version, tag = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+data = json.loads(path.read_text(encoding="utf-8"))
+manifest_version = str(data.get("version") or "")
+if manifest_version != version:
+    raise SystemExit(f"latest.json version {manifest_version!r} != release {version!r}")
+
+platforms = data.get("platforms")
+if not isinstance(platforms, dict) or not platforms:
+    raise SystemExit("latest.json platforms missing")
+
+# Release workflow sets includeUpdaterJson on the Windows job only — Windows-primary.
+needed = {"windows-x86_64", "windows-x86_64-nsis"}
+missing = sorted(needed - set(platforms))
+if missing:
+    raise SystemExit(f"latest.json missing Windows updater platforms: {missing}")
+
+for key in needed:
+    entry = platforms.get(key) or {}
+    if not entry.get("url") or not entry.get("signature"):
+        raise SystemExit(f"latest.json platform {key} needs url + signature")
+
+extra = sorted(set(platforms) - {"windows-x86_64", "windows-x86_64-msi", "windows-x86_64-nsis"})
+note = f"; also has {extra}" if extra else " (Windows-primary in-app update)"
+print(f"OK: latest.json version={manifest_version} platforms={sorted(platforms)}{note}")
+PY
+
+echo "==> [F1/H2] release asset verify OK"

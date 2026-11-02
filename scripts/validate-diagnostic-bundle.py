@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Share-ops Band S2 — triage helper for community-pasted diagnostic JSON.
+"""Share-ops Band S2 + paste-trust Band H1 — triage helper for community-pasted diagnostic JSON.
 
 Usage:
   python scripts/validate-diagnostic-bundle.py path/to/bundle.json
   python scripts/validate-diagnostic-bundle.py -   # read stdin
 
-Exit 0 when schema keys look like knottrace.diagnostic_bundle.v1.
+Exit 0 when schema keys look like knottrace.diagnostic_bundle.v1 and default
+redaction posture holds (no hostname field; SSID not opted in unless ALLOW_SSID=1).
 """
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
+from typing import Any
 
 REQUIRED_TOP = (
     "schema_version",
@@ -32,6 +35,7 @@ REQUIRED_TOP = (
 )
 REQUIRED_SCORE = ("score", "summary")
 EXPECTED_SCHEMA = "knottrace.diagnostic_bundle.v1"
+FORBIDDEN_KEYS = frozenset({"hostname", "host_name", "computer_name", "wifi_ssid", "ssid"})
 
 
 def load(path: str) -> object:
@@ -45,6 +49,20 @@ def load(path: str) -> object:
         return json.loads(raw)
     except json.JSONDecodeError as exc:
         raise SystemExit(f"JSON unparsable: {exc}") from exc
+
+
+def walk_keys(node: Any, path: str = "$") -> list[str]:
+    hits: list[str] = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            here = f"{path}.{key}"
+            if key.lower() in FORBIDDEN_KEYS:
+                hits.append(here)
+            hits.extend(walk_keys(value, here))
+    elif isinstance(node, list):
+        for i, item in enumerate(node):
+            hits.extend(walk_keys(item, f"{path}[{i}]"))
+    return hits
 
 
 def main(argv: list[str]) -> int:
@@ -79,12 +97,32 @@ def main(argv: list[str]) -> int:
     if not isinstance(app, dict) or "version" not in app:
         raise SystemExit("app.version missing (needed for triage)")
 
+    redaction = data.get("redaction")
+    if not isinstance(redaction, dict):
+        raise SystemExit("redaction object missing")
+    include_ssid = bool(redaction.get("include_ssid"))
+    allow_ssid = os.environ.get("ALLOW_SSID", "").strip() in {"1", "true", "yes"}
+    if include_ssid and not allow_ssid:
+        raise SystemExit(
+            "redaction.include_ssid is true — refuse for public triage "
+            "(set ALLOW_SSID=1 only for private review)"
+        )
+
+    leaks = walk_keys(data)
+    # link_summary may mention ssid= when include_ssid was true; already gated above.
+    if leaks:
+        raise SystemExit(
+            "forbidden identity keys present (hostname/SSID fields are not for public paste):\n  - "
+            + "\n  - ".join(leaks)
+        )
+
     print(
         "bundle OK:",
         f"schema={schema}",
         f"os={data.get('os')}",
         f"app={app.get('version')}",
         f"score={score.get('score')}",
+        f"include_ssid={include_ssid}",
         f"integrity_flags={len(data.get('integrity_flags') or [])}",
     )
     return 0

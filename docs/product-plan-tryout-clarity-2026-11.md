@@ -13,7 +13,7 @@ GOAL:     Make a stranger’s first session match the docs, and let maintainers
 POSTURE:  Observe-first · claim discipline · no phone readiness · no fake Mbps
 BASELINE: v1.9.1 + community gate + P2a CI headless
 DONE:     Charter · F1 · F2 · F3 · F4
-NEXT:     Complete (P2b still parked)
+NEXT:     Successor — [product-plan-paste-release-trust-2026-11.md](./product-plan-paste-release-trust-2026-11.md)
 ```
 
 ---

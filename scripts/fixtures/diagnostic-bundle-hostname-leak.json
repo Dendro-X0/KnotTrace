@@ -1,0 +1,18 @@
+{
+  "schema_version": "knottrace.diagnostic_bundle.v1",
+  "exported_at": "2026-11-02T18:00:00Z",
+  "app": { "version": "1.9.1", "name": "KnotTrace" },
+  "redaction": { "include_ssid": false, "notes": [] },
+  "os": "windows",
+  "hostname": "SECRET-HOST",
+  "score": { "score": 10, "summary": "Leak fixture — must fail H1." },
+  "proxy": { "enabled": false },
+  "tor": { "detected": false },
+  "vpn_detected": false,
+  "probe_table": [],
+  "recommendations": [],
+  "integrity_flags": [],
+  "config_timeline": [],
+  "not_checked": [],
+  "ai_prompt_template": "leak"
+}

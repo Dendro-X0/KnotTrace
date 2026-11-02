@@ -1,0 +1,17 @@
+{
+  "schema_version": "knottrace.diagnostic_bundle.v1",
+  "exported_at": "2026-11-02T18:00:00Z",
+  "app": { "version": "1.9.1", "name": "KnotTrace" },
+  "redaction": { "include_ssid": false, "notes": ["SSID omitted (default).", "Hostname omitted."] },
+  "os": "windows",
+  "score": { "score": 80, "summary": "Fixture bundle for community-gate H3." },
+  "proxy": { "enabled": false },
+  "tor": { "detected": false },
+  "vpn_detected": false,
+  "probe_table": [{ "stage": "dns", "ok": true, "detail": "fixture" }],
+  "recommendations": [],
+  "integrity_flags": ["fixture"],
+  "config_timeline": [],
+  "not_checked": ["physical CompanionShell"],
+  "ai_prompt_template": "Fixture only — not a live path."
+}

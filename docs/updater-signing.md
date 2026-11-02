@@ -65,10 +65,12 @@ If you lose the private key, existing installs cannot receive signed updates —
 
 ## 2. Release artifacts
 
-The release workflow sets `includeUpdaterJson: true`. Each GitHub Release publishes:
+The Windows release job sets `includeUpdaterJson: true` (Linux/macOS jobs keep it `false` and still upload installer `.sig` files). Each GitHub Release publishes:
 
-- `latest.json` — manifest consumed by the in-app updater
-- `*.sig` — signatures beside MSI/NSIS/AppImage/APK bundles
+- `latest.json` — manifest consumed by the in-app updater (**Windows platforms today**)
+- `*.sig` — signatures beside MSI/NSIS/AppImage/deb/rpm/dmg bundles
+
+**Honesty:** in-app signed update install is **Windows-primary**. macOS/Linux users should download installers from GitHub Releases (the banner still falls back to the release page when in-app install is unavailable).
 
 Endpoint (configured in `tauri.conf.json`):
 
@@ -76,10 +78,16 @@ Endpoint (configured in `tauri.conf.json`):
 https://github.com/Dendro-X0/KnotTrace/releases/latest/download/latest.json
 ```
 
+Verify a tag’s installers + Windows `latest.json` shape:
+
+```bash
+bash scripts/verify-release-assets.sh v1.9.1
+```
+
 ## 3. In-app behavior
 
 1. On startup, KnotTrace checks the signed endpoint.
-2. If a newer version exists, the banner offers **Install update**.
+2. If a newer version exists, the banner offers **Install update** when the platform entry exists (Windows).
 3. Download → verify signature → install → restart (passive mode on Windows).
 
 If signing is misconfigured, the app falls back to the GitHub Releases API / release page. The update IPC payload uses **snake_case** field names (`latest_version`, `can_install_in_app`, `release_url`) for the React UI. Fallback update checks reuse the detected system proxy when present; if GitHub is unreachable, the banner shows the error instead of a blank “vundefined” state.

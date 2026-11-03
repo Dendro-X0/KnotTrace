@@ -1,25 +1,31 @@
 import type { ComponentType } from "react";
-import { Activity, Globe, LayoutDashboard, Network, Shield } from "lucide-react";
+import { Activity, Globe, LayoutDashboard, Network, Settings, Shield } from "lucide-react";
 
-import { DensityToggle } from "@/components/DensityToggle";
 import { GlobalSearchTrigger } from "@/components/GlobalSearch";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Separator } from "@/components/ui/separator";
+import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 import type { PageId } from "@/types";
 
-const NAV_ITEMS: Array<{
+const NAV_IDS: Array<{
   id: PageId;
-  label: string;
-  hint: string;
+  labelKey: string;
+  hintKey: string;
   icon: ComponentType<{ className?: string }>;
 }> = [
-  { id: "overview", label: "Overview", hint: "Health and trends", icon: LayoutDashboard },
-  { id: "dns", label: "DNS Assist", hint: "Resolver tuning", icon: Globe },
-  { id: "connect", label: "Connect", hint: "Proxy switching", icon: Activity },
-  { id: "protect", label: "Protect", hint: "Trust and alerts", icon: Shield },
-  { id: "network", label: "Network", hint: "Environment and probes", icon: Network },
+  { id: "overview", labelKey: "nav.overview", hintKey: "nav.hintOverview", icon: LayoutDashboard },
+  { id: "dns", labelKey: "nav.dns", hintKey: "nav.hintDns", icon: Globe },
+  { id: "connect", labelKey: "nav.connect", hintKey: "nav.hintConnect", icon: Activity },
+  { id: "protect", labelKey: "nav.protect", hintKey: "nav.hintProtect", icon: Shield },
+  { id: "network", labelKey: "nav.network", hintKey: "nav.hintNetwork", icon: Network },
 ];
+
+const SETTINGS_META = {
+  id: "settings" as const,
+  labelKey: "nav.settings",
+  hintKey: "nav.hintSettings",
+  icon: Settings,
+};
 
 interface SidebarProps {
   page: PageId;
@@ -29,18 +35,22 @@ interface SidebarProps {
 }
 
 function NavButton({
-  item,
+  id,
+  label,
+  hint,
+  icon: Icon,
   active,
   compact,
   onNavigate,
 }: {
-  item: (typeof NAV_ITEMS)[number];
+  id: PageId;
+  label: string;
+  hint: string;
+  icon: ComponentType<{ className?: string }>;
   active: boolean;
   compact: boolean;
   onNavigate: (page: PageId) => void;
 }) {
-  const Icon = item.icon;
-
   return (
     <button
       type="button"
@@ -56,19 +66,19 @@ function NavButton({
             : "text-foreground/90 hover:bg-muted/65",
       )}
       aria-current={active ? "page" : undefined}
-      aria-label={compact ? `${item.label}: ${item.hint}` : undefined}
-      title={compact ? undefined : item.hint}
-      onClick={() => onNavigate(item.id)}
+      aria-label={compact ? `${label}: ${hint}` : undefined}
+      title={compact ? undefined : hint}
+      onClick={() => onNavigate(id)}
     >
       {compact ? (
         <>
           <Icon className={cn("size-4", active ? "opacity-100" : "opacity-75")} />
-          <span className="max-w-[4.75rem] truncate text-[0.68rem] leading-tight">{item.label}</span>
+          <span className="max-w-[4.75rem] truncate text-[0.68rem] leading-tight">{label}</span>
         </>
       ) : (
         <>
           <Icon className={cn("size-[1.125rem] shrink-0", active ? "opacity-100" : "opacity-80")} />
-          <span className="min-w-0 flex-1 truncate text-sm leading-none">{item.label}</span>
+          <span className="min-w-0 flex-1 truncate text-sm leading-none">{label}</span>
         </>
       )}
     </button>
@@ -76,6 +86,8 @@ function NavButton({
 }
 
 export function Sidebar({ page, onNavigate, onOpenSearch, version }: SidebarProps) {
+  const { t } = useLocale();
+
   return (
     <aside className="surface-panel text-sidebar-foreground flex shrink-0 flex-col gap-2 overflow-x-hidden border-b border-sidebar-border py-2 sm:gap-3 sm:py-3 lg:min-h-0 lg:w-[220px] lg:border-r lg:border-b-0 lg:py-3">
       <div className="px-3">
@@ -87,9 +99,9 @@ export function Sidebar({ page, onNavigate, onOpenSearch, version }: SidebarProp
           />
           <div className="min-w-0">
             <p className="text-muted-foreground truncate text-[0.62rem] tracking-[0.08em] uppercase sm:text-[0.68rem]">
-              KnotTrace
+              {t("brand.name")}
             </p>
-            <h1 className="truncate text-sm font-semibold leading-tight">Network companion</h1>
+            <h1 className="truncate text-sm font-semibold leading-tight">{t("brand.tagline")}</h1>
           </div>
         </div>
       </div>
@@ -102,15 +114,27 @@ export function Sidebar({ page, onNavigate, onOpenSearch, version }: SidebarProp
         className="flex gap-1 overflow-x-auto px-2 pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
         aria-label="Main navigation"
       >
-        {NAV_ITEMS.map((item) => (
+        {NAV_IDS.map((item) => (
           <NavButton
             key={item.id}
-            item={item}
+            id={item.id}
+            label={t(item.labelKey)}
+            hint={t(item.hintKey)}
+            icon={item.icon}
             active={page === item.id}
             compact
             onNavigate={onNavigate}
           />
         ))}
+        <NavButton
+          id={SETTINGS_META.id}
+          label={t(SETTINGS_META.labelKey)}
+          hint={t(SETTINGS_META.hintKey)}
+          icon={SETTINGS_META.icon}
+          active={page === "settings"}
+          compact
+          onNavigate={onNavigate}
+        />
       </nav>
 
       <div className="hidden px-3 lg:block" aria-hidden>
@@ -121,10 +145,13 @@ export function Sidebar({ page, onNavigate, onOpenSearch, version }: SidebarProp
         className="hidden min-h-0 flex-1 flex-col gap-0.5 px-2 lg:flex"
         aria-label="Main navigation"
       >
-        {NAV_ITEMS.map((item) => (
+        {NAV_IDS.map((item) => (
           <NavButton
             key={item.id}
-            item={item}
+            id={item.id}
+            label={t(item.labelKey)}
+            hint={t(item.hintKey)}
+            icon={item.icon}
             active={page === item.id}
             compact={false}
             onNavigate={onNavigate}
@@ -137,24 +164,25 @@ export function Sidebar({ page, onNavigate, onOpenSearch, version }: SidebarProp
       </div>
 
       <div className="hidden space-y-2 px-2 lg:block">
-        <DensityToggle compact />
-        <ThemeToggle compact />
-      </div>
-
-      <p className="text-muted-foreground hidden px-3 text-[0.68rem] leading-snug lg:block">
-        {version ? `v${version} · ` : ""}
-        Closing the window keeps the app running in the tray.
-      </p>
-
-      <div className="space-y-2 px-2 lg:hidden">
-        <DensityToggle compact />
-        <ThemeToggle compact />
+        <NavButton
+          id={SETTINGS_META.id}
+          label={t(SETTINGS_META.labelKey)}
+          hint={t(SETTINGS_META.hintKey)}
+          icon={SETTINGS_META.icon}
+          active={page === "settings"}
+          compact={false}
+          onNavigate={onNavigate}
+        />
+        <p className="text-muted-foreground px-1 text-[0.68rem] leading-snug">
+          {version ? `${t("common.version", { version })} · ` : ""}
+          {t("brand.trayNote")}
+        </p>
       </div>
 
       <p className="text-muted-foreground px-3 text-center text-[0.62rem] leading-snug lg:hidden">
-        {version ? `v${version} · ` : ""}
-        <span className="hidden sm:inline">Closing the window keeps the app in the tray.</span>
-        <span className="sm:hidden">Runs in the tray when closed.</span>
+        {version ? `${t("common.version", { version })} · ` : ""}
+        <span className="hidden sm:inline">{t("brand.trayNote")}</span>
+        <span className="sm:hidden">{t("brand.trayNoteShort")}</span>
       </p>
     </aside>
   );

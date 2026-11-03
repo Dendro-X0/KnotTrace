@@ -1,6 +1,6 @@
 # KnotTrace for community tryouts
 
-**Current release:** [v1.9.3](https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.9.3)
+**Current release:** [v1.10.0](https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.10.0) (prep — tag when gates pass)
 
 This page is the short public entry kit (community-readiness Band **C1**). Maintainer internals stay in [START-HERE.md](./START-HERE.md).
 

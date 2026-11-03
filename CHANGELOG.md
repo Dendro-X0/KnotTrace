@@ -6,9 +6,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-11-03
+
+Share release — consumer UX calm path + bounded script-risk scan (still indicators, not AV).
+
 ### Added
 
 - **Quick / Advanced UI** — sidebar density toggle (default Quick); Overview and Network progressive disclosure without removing Path Truth depth
+- **Settings** — dedicated page for theme, language, density, and Protect opt-ins
+- **i18n** — English + Simplified Chinese JSON locales with in-app language toggle
+- **Atmosphere / bento Overview** — teal–sky theme tokens, shell gradient, Quick bento layout and motion
+- **Protect consumer-calm** — trust hero + review list; jargon moved behind Advanced / details
+- **Script risk scan (bounded)** — on-demand Protect scan over persistence, process sample, and capped user folders for script / mining-like **indicators** only (consent; not antivirus)
+
+### Fixed
+
+- **Card border hairline** — rounded cards no longer show a top-border stroke past the corner in WebView2 (clip + drop inset highlight / hover translate)
+
+### Notes
+
+- Feedback: [issue templates](https://github.com/Dendro-X0/KnotTrace/issues/new/choose)
+- Pre-share: `bash scripts/community-gate.sh` · assets: `bash scripts/verify-release-assets.sh v1.10.0`
+- Still not AV/EDR; CompanionShell device L3 remains parked
 
 ## [1.9.3] - 2026-11-03
 
@@ -362,6 +381,9 @@ Community-readiness share tag — reliability gates and honest public entry with
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.10.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.3...v1.10.0
+[1.9.3]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.2...v1.9.3
+[1.9.2]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/Dendro-X0/KnotTrace/compare/v1.8.0...v1.8.1

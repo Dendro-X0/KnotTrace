@@ -1,15 +1,15 @@
 import { ShieldAlert } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import type { IntegrityBoardReport } from "@/types";
 
 interface QuickIntegrityTeaserProps {
   loading?: boolean;
   report?: IntegrityBoardReport | null;
-  onOpenProtect: () => void;
+  onOpenProtect?: () => void;
 }
 
 function levelVariant(level: IntegrityBoardReport["level"] | undefined) {
@@ -25,9 +25,9 @@ export function QuickIntegrityTeaser({
 }: QuickIntegrityTeaserProps) {
   if (loading) {
     return (
-      <Card>
+      <Card className="h-full border-border/50">
         <CardContent className="py-3">
-          <Skeleton className="h-16 w-full rounded-lg" />
+          <Skeleton className="h-14 w-full rounded-lg" />
         </CardContent>
       </Card>
     );
@@ -37,27 +37,44 @@ export function QuickIntegrityTeaser({
   const level = report?.level ?? "none";
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <Card
+      className={cn(
+        "h-full border-border/50",
+        onOpenProtect && "cursor-pointer",
+      )}
+      onClick={onOpenProtect}
+      role={onOpenProtect ? "button" : undefined}
+      tabIndex={onOpenProtect ? 0 : undefined}
+      onKeyDown={
+        onOpenProtect
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onOpenProtect();
+              }
+            }
+          : undefined
+      }
+    >
+      <CardHeader className="pb-1.5">
         <div className="flex flex-wrap items-center gap-2">
-          <ShieldAlert className="text-muted-foreground size-4" />
-          <CardTitle className="text-sm">Integrity</CardTitle>
+          <ShieldAlert className="text-muted-foreground size-3.5" />
+          <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Integrity
+          </CardTitle>
           {count > 0 ? (
             <Badge variant={levelVariant(level)}>{count} indicator(s)</Badge>
           ) : (
-            <Badge variant="muted">No indicators this check</Badge>
+            <Badge variant="muted">Clear this check</Badge>
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent>
         <p className="text-muted-foreground text-xs leading-relaxed">
           {count > 0
-            ? "Exposure or routing indicators were found. Review them on Protect — these are not a malware verdict."
-            : "Absence of indicators does not mean you are unobserved. Open Protect for opt-in scans."}
+            ? "Exposure or routing signals found — open Protect to review. Not a malware verdict."
+            : "No indicators on this check. Absence does not mean you are unobserved."}
         </p>
-        <Button size="sm" variant="secondary" onClick={onOpenProtect}>
-          Open Protect
-        </Button>
       </CardContent>
     </Card>
   );

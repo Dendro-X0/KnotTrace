@@ -183,6 +183,7 @@ pub fn run() {
             autoruns::set_autorun_settings,
             suspicious_activity::get_suspicious_activity_settings,
             suspicious_activity::set_suspicious_activity_settings,
+            suspicious_activity::run_script_risk_scan_now,
             assist::recommend_dns,
             assist::get_dns_assist_state,
             assist::apply_dns,

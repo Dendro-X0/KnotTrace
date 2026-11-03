@@ -12,6 +12,7 @@ import { DnsPage } from "@/components/pages/DnsPage";
 import { NetworkPage } from "@/components/pages/NetworkPage";
 import { OverviewPage } from "@/components/pages/OverviewPage";
 import { ProtectPage } from "@/components/pages/ProtectPage";
+import { SettingsPage } from "@/components/pages/SettingsPage";
 import { Sidebar } from "@/components/Sidebar";
 import { useCompanion } from "@/hooks/useCompanion";
 
@@ -66,12 +67,13 @@ export function App() {
         />
         <AppHeader state={state} />
 
-        <main className="app-scroll min-h-0 overflow-x-hidden pb-2 lg:pb-0">
+        <main key={state.page} className="app-scroll motion-page-enter min-h-0 overflow-x-hidden pb-2 lg:pb-0">
           {state.page === "overview" && <OverviewPage state={state} />}
           {state.page === "dns" && <DnsPage state={state} />}
           {state.page === "connect" && <ConnectPage state={state} />}
           {state.page === "protect" && <ProtectPage state={state} />}
           {state.page === "network" && <NetworkPage state={state} />}
+          {state.page === "settings" && <SettingsPage state={state} />}
         </main>
       </div>
 

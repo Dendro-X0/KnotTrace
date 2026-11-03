@@ -6,10 +6,12 @@ import {
   Network,
   RefreshCw,
   Search,
+  Settings,
   Shield,
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { useLocale } from "@/hooks/useLocale";
 import { cn } from "@/lib/utils";
 import type { PageId } from "@/types";
 
@@ -29,55 +31,79 @@ interface GlobalSearchProps {
   onRunCheck: () => void;
 }
 
+type Translate = (key: string, vars?: Record<string, string | number | null | undefined>) => string;
+
 function buildActions(
   onNavigate: (page: PageId) => void,
   onRunCheck: () => void,
+  t: Translate,
 ): GlobalSearchAction[] {
   return [
     {
       id: "overview",
-      label: "Overview",
-      hint: "Health, trends, and next steps",
-      keywords: ["home", "dashboard", "health", "trends"],
+      label: t("nav.overview"),
+      hint: t("search.overviewHint"),
+      keywords: ["home", "dashboard", "health", "trends", "总览"],
       icon: LayoutDashboard,
       run: () => onNavigate("overview"),
     },
     {
       id: "dns",
-      label: "DNS Assist",
-      hint: "Resolver recommendations and restore",
+      label: t("nav.dns"),
+      hint: t("search.dnsHint"),
       keywords: ["dns", "resolver", "assist"],
       icon: Globe,
       run: () => onNavigate("dns"),
     },
     {
       id: "connect",
-      label: "Connect",
-      hint: "Proxy switching and node comparison",
-      keywords: ["connect", "proxy", "clash", "mihomo"],
+      label: t("nav.connect"),
+      hint: t("search.connectHint"),
+      keywords: ["connect", "proxy", "clash", "mihomo", "连接"],
       icon: Activity,
       run: () => onNavigate("connect"),
     },
     {
       id: "protect",
-      label: "Protect",
-      hint: "Alerts, Do Not Disturb, quiet hours",
-      keywords: ["protect", "dnd", "quiet", "notify", "alerts"],
+      label: t("nav.protect"),
+      hint: t("search.protectHint"),
+      keywords: ["protect", "dnd", "quiet", "notify", "alerts", "防护"],
       icon: Shield,
       run: () => onNavigate("protect"),
     },
     {
       id: "network",
-      label: "Network",
-      hint: "Environment, probes, and throughput",
-      keywords: ["network", "environment", "probe", "throughput"],
+      label: t("nav.network"),
+      hint: t("search.networkHint"),
+      keywords: ["network", "environment", "probe", "throughput", "网络"],
       icon: Network,
       run: () => onNavigate("network"),
     },
     {
+      id: "settings",
+      label: t("nav.settings"),
+      hint: t("search.settingsHint"),
+      keywords: [
+        "settings",
+        "theme",
+        "language",
+        "locale",
+        "dark",
+        "density",
+        "quick",
+        "advanced",
+        "monitor",
+        "update",
+        "设置",
+        "语言",
+      ],
+      icon: Settings,
+      run: () => onNavigate("settings"),
+    },
+    {
       id: "run-check",
-      label: "Run health check",
-      hint: "Start a manual fast check now",
+      label: t("header.runCheck"),
+      hint: t("search.runCheckHint"),
       keywords: ["check", "scan", "refresh", "health"],
       icon: RefreshCw,
       run: () => onRunCheck(),
@@ -123,6 +149,7 @@ export function useGlobalSearchShortcut(onOpen: () => void) {
 }
 
 export function GlobalSearchTrigger({ onOpen }: { onOpen: () => void }) {
+  const { t } = useLocale();
   const isMac =
     typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.platform);
 
@@ -131,12 +158,12 @@ export function GlobalSearchTrigger({ onOpen }: { onOpen: () => void }) {
       type="button"
       onClick={onOpen}
       className="text-muted-foreground hover:bg-muted/65 hover:text-foreground flex w-full items-center gap-2 rounded-md border border-border/60 bg-muted/20 px-2.5 py-2 text-left text-xs transition-colors"
-      aria-label="Open search"
+      aria-label={t("search.placeholder")}
     >
       <Search className="size-3.5 shrink-0 opacity-80" />
-      <span className="min-w-0 flex-1 truncate">Search…</span>
+      <span className="min-w-0 flex-1 truncate">{t("search.placeholder")}</span>
       <kbd className="bg-muted/50 text-muted-foreground hidden rounded px-1.5 py-0.5 font-mono text-[0.62rem] sm:inline">
-        {isMac ? "⌘K" : "Ctrl+K"}
+        {isMac ? "⌘K" : t("search.shortcut")}
       </kbd>
     </button>
   );
@@ -148,13 +175,14 @@ export function GlobalSearch({
   onNavigate,
   onRunCheck,
 }: GlobalSearchProps) {
+  const { t } = useLocale();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const actions = useMemo(
-    () => buildActions(onNavigate, onRunCheck),
-    [onNavigate, onRunCheck],
+    () => buildActions(onNavigate, onRunCheck, t),
+    [onNavigate, onRunCheck, t],
   );
 
   const filtered = useMemo(() => {

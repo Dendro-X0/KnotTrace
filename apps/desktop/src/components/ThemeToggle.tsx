@@ -1,14 +1,15 @@
 import { Monitor, Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/hooks/useLocale";
 import { useTheme } from "@/hooks/useTheme";
 import type { ThemeMode } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
-const OPTIONS: Array<{ mode: ThemeMode; label: string; icon: typeof Sun }> = [
-  { mode: "light", label: "Light", icon: Sun },
-  { mode: "dark", label: "Dark", icon: Moon },
-  { mode: "system", label: "System", icon: Monitor },
+const OPTIONS: Array<{ mode: ThemeMode; labelKey: string; icon: typeof Sun }> = [
+  { mode: "light", labelKey: "theme.light", icon: Sun },
+  { mode: "dark", labelKey: "theme.dark", icon: Moon },
+  { mode: "system", labelKey: "theme.system", icon: Monitor },
 ];
 
 export function ThemeToggle({
@@ -19,6 +20,7 @@ export function ThemeToggle({
   className?: string;
 }) {
   const { mode, setMode } = useTheme();
+  const { t } = useLocale();
 
   return (
     <div
@@ -28,9 +30,9 @@ export function ThemeToggle({
         className,
       )}
       role="group"
-      aria-label="Theme"
+      aria-label={t("theme.group")}
     >
-      {OPTIONS.map(({ mode: option, label, icon: Icon }) => {
+      {OPTIONS.map(({ mode: option, labelKey, icon: Icon }) => {
         const active = mode === option;
         return (
           <Button
@@ -47,7 +49,9 @@ export function ThemeToggle({
             onClick={() => setMode(option)}
           >
             <Icon className="size-3.5" />
-            <span className={cn("text-xs", compact ? "inline" : "hidden sm:inline")}>{label}</span>
+            <span className={cn("text-xs", compact ? "inline" : "hidden sm:inline")}>
+              {t(labelKey)}
+            </span>
           </Button>
         );
       })}

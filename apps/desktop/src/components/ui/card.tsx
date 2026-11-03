@@ -7,7 +7,8 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "surface-card text-card-foreground flex flex-col gap-4 rounded-xl border border-border/70 py-4 shadow-sm backdrop-blur-sm",
+        // overflow-hidden keeps border strokes inside the radius (WebView2 hairline bleed).
+        "surface-card text-card-foreground flex flex-col gap-4 overflow-hidden rounded-xl border border-border/70 py-4",
         className,
       )}
       {...props}

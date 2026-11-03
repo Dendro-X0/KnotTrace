@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUiDensity } from "@/hooks/useUiDensity";
 import type { CompanionState } from "@/hooks/useCompanion";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ function connectBadge(state: CompanionState) {
 }
 
 export function ConnectPage({ state }: ConnectPageProps) {
+  const { isQuick } = useUiDensity();
   const badge = connectBadge(state);
   const rec = state.connectRecommendation;
   const switchTarget = rec?.recommended_switch;
@@ -33,7 +35,7 @@ export function ConnectPage({ state }: ConnectPageProps) {
 
   return (
     <FeaturePage
-      title="Connect Assist"
+      title="Connect"
       description={state.connectSummary}
       icon={Activity}
       badge={loading ? undefined : badge}
@@ -50,6 +52,17 @@ export function ConnectPage({ state }: ConnectPageProps) {
     >
       {loading ? (
         <Skeleton className="h-24 rounded-lg" />
+      ) : isQuick ? (
+        rec?.kernel ? (
+          <p className="text-muted-foreground text-xs">
+            Controller detected:{" "}
+            <span className="text-foreground font-medium">
+              {rec.kernel.kind}
+              {rec.kernel.version ? ` ${rec.kernel.version}` : ""}
+            </span>
+            {groups.length > 0 ? ` · ${groups.length} group(s)` : ""}
+          </p>
+        ) : null
       ) : (
         <FactList
           rows={[
@@ -112,8 +125,9 @@ export function ConnectPage({ state }: ConnectPageProps) {
         </ScrollArea>
       )}
 
-      <Separator />
+      {!isQuick && <Separator />}
 
+      {!isQuick && (
       <details className="rounded-xl border border-border/70 bg-muted/15 p-3">
         <summary className="cursor-pointer text-sm font-medium">API settings</summary>
         <div className="mt-3 grid gap-3">
@@ -145,6 +159,7 @@ export function ConnectPage({ state }: ConnectPageProps) {
           </Button>
         </div>
       </details>
+      )}
     </FeaturePage>
   );
 }

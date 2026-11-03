@@ -97,9 +97,35 @@ export function NetworkPage({ state }: NetworkPageProps) {
     </Card>
   );
 
+  const internetMs = probe?.internet?.avg_ms;
+  const gatewayMs = probe?.gateway?.avg_ms;
+  const dnsMs = probe?.dns.find((sample) => sample.success)?.latency_ms;
+  const quickSummary = loading
+    ? null
+    : [
+        internetMs == null ? "Internet unavailable" : `Internet ${internetMs.toFixed(0)} ms`,
+        gatewayMs == null ? "Gateway not measured" : `Gateway ${gatewayMs.toFixed(0)} ms`,
+        dnsMs == null ? "DNS unavailable" : `DNS ${dnsMs.toFixed(0)} ms`,
+      ].join(" · ");
+
   if (isQuick) {
     return (
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-2">
+        <Card className="border-border/60 bg-card/70 xl:col-span-2">
+          <CardContent className="flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+            <div>
+              <p className="text-sm font-medium">Link snapshot</p>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {quickSummary ?? "Run a health check to measure this link."}
+              </p>
+            </div>
+            {score && (
+              <Badge variant={score.grade === "good" ? "good" : score.grade === "fair" ? "fair" : "poor"}>
+                {score.grade.toUpperCase()} · {score.score}/100
+              </Badge>
+            )}
+          </CardContent>
+        </Card>
         {probeCard}
         <LinkFactsPanel loading={loading} report={state.report?.link_facts} />
         <LocalRepairPanel
@@ -109,7 +135,7 @@ export function NetworkPage({ state }: NetworkPageProps) {
           error={state.localRepairError}
           onRun={(action) => void state.runLocalRepair(action)}
         />
-        <Card className="border-border/70 bg-card/80 xl:col-span-2">
+        <Card className="border-border/50 bg-card/50 xl:col-span-2">
           <CardContent className="text-muted-foreground py-3 text-xs leading-relaxed">
             Quick mode shows link health and common local assists. Switch to{" "}
             <span className="text-foreground font-medium">Advanced</span> in the sidebar for MTU,

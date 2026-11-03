@@ -14,7 +14,7 @@ interface QuickPathTeaserProps {
 export function QuickPathTeaser({ loading, report }: QuickPathTeaserProps) {
   if (loading) {
     return (
-      <Card>
+      <Card className="h-full border-border/50">
         <CardContent className="py-3">
           <Skeleton className="h-14 w-full rounded-lg" />
         </CardContent>
@@ -27,11 +27,13 @@ export function QuickPathTeaser({ loading, report }: QuickPathTeaserProps) {
     report?.summary ?? "Run a health check to see whether the issue looks local or on the path.";
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <Card className="h-full border-border/50">
+      <CardHeader className="pb-1.5">
         <div className="flex flex-wrap items-center gap-2">
-          <Route className="text-muted-foreground size-4" />
-          <CardTitle className="text-sm">Path</CardTitle>
+          <Route className="text-muted-foreground size-3.5" />
+          <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Path
+          </CardTitle>
           {report?.active_path && (
             <Badge variant="info">{formatTag(report.active_path)}</Badge>
           )}
@@ -39,7 +41,9 @@ export function QuickPathTeaser({ loading, report }: QuickPathTeaserProps) {
       </CardHeader>
       <CardContent className="space-y-1">
         <p className="text-sm font-medium leading-snug">{title}</p>
-        <p className="text-muted-foreground text-xs leading-relaxed">{summary}</p>
+        <p className="text-muted-foreground text-xs leading-relaxed xl:line-clamp-none line-clamp-3">
+          {summary}
+        </p>
       </CardContent>
     </Card>
   );

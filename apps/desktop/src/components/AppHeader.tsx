@@ -6,41 +6,61 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { useLocale } from "@/hooks/useLocale";
+import { useUiDensity } from "@/hooks/useUiDensity";
 import type { CompanionState } from "@/hooks/useCompanion";
-import { formatReason, PAGE_TITLES } from "@/types";
+import { formatReason } from "@/types";
 
 interface AppHeaderProps {
   state: CompanionState;
 }
 
 export function AppHeader({ state }: AppHeaderProps) {
+  const { isQuick } = useUiDensity();
+  const { t, locale } = useLocale();
   const monitorActive = state.monitorStatus?.enabled ?? true;
   const lastReason = state.monitorStatus?.last_reason ?? "";
   const monitorText = state.monitorStatus
     ? `Checks every ${state.monitorStatus.poll_interval_secs}s · last trigger: ${formatReason(lastReason)}`
     : state.monitorError ?? "Starting background monitor...";
+  const pageTitle = t(`nav.${state.page}`);
+  const checkedWhen = state.report
+    ? new Date(state.report.timestamp).toLocaleString(locale === "zh-Hans" ? "zh-CN" : "en")
+    : null;
 
   return (
     <div className="flex flex-col gap-2">
       <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0 space-y-2">
+        <div className="min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold tracking-tight">{PAGE_TITLES[state.page]}</h2>
-            <Badge variant={monitorActive ? "active" : "muted"}>
-              Monitor {monitorActive ? "active" : "paused"}
-            </Badge>
+            <h2 className="text-lg font-semibold tracking-tight">{pageTitle}</h2>
+            {!isQuick && (
+              <Badge variant={monitorActive ? "active" : "muted"}>
+                {monitorActive ? t("header.monitorActive") : t("header.monitorPaused")}
+              </Badge>
+            )}
             {state.bootstrapping && (
               <Badge variant="info" className="gap-1">
                 <Loader2 className="size-3 animate-spin" />
-                Loading
+                {t("common.loading")}
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground line-clamp-2 text-xs sm:line-clamp-none">{monitorText}</p>
-          {state.report && (
-            <p className="text-muted-foreground text-xs">
-              Last checked {new Date(state.report.timestamp).toLocaleString()}
-            </p>
+          {isQuick ? (
+            checkedWhen && (
+              <p className="text-muted-foreground text-xs">
+                {t("header.lastChecked", { when: checkedWhen })}
+              </p>
+            )
+          ) : (
+            <>
+              <p className="text-muted-foreground line-clamp-2 text-xs sm:line-clamp-none">{monitorText}</p>
+              {checkedWhen && (
+                <p className="text-muted-foreground text-xs">
+                  {t("header.lastChecked", { when: checkedWhen })}
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -51,14 +71,14 @@ export function AppHeader({ state }: AppHeaderProps) {
             {state.checking ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                <span className="sm:hidden">Checking</span>
-                <span className="hidden sm:inline">Checking...</span>
+                <span className="sm:hidden">{t("header.checkingShort")}</span>
+                <span className="hidden sm:inline">{t("header.checking")}</span>
               </>
             ) : (
               <>
                 <RefreshCw className="size-4" />
-                <span className="sm:hidden">Health check</span>
-                <span className="hidden sm:inline">Run health check</span>
+                <span className="sm:hidden">{t("header.runCheckShort")}</span>
+                <span className="hidden sm:inline">{t("header.runCheck")}</span>
               </>
             )}
           </Button>
@@ -71,8 +91,10 @@ export function AppHeader({ state }: AppHeaderProps) {
               }}
             />
             <Label htmlFor="monitor-toggle" className="text-muted-foreground text-xs">
-              <span className="hidden min-[420px]:inline">Background monitor</span>
-              <span className="min-[420px]:hidden">Monitor</span>
+              <span className="hidden min-[420px]:inline">
+                {isQuick ? t("header.monitor") : t("header.backgroundMonitor")}
+              </span>
+              <span className="min-[420px]:hidden">{t("header.monitor")}</span>
             </Label>
           </div>
         </div>
@@ -80,8 +102,8 @@ export function AppHeader({ state }: AppHeaderProps) {
       {state.checkError && (
         <CheckFailureBanner
           message={state.checkError}
-          checking={state.checking}
           onRetry={() => void state.runCheck()}
+          checking={state.checking}
         />
       )}
     </div>

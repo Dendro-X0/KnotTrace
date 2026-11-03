@@ -22,6 +22,7 @@ import type {
   DnsIntegritySettings,
   HealthReport,
   HistoryTrendPoint,
+  SuspiciousActivitySnapshot,
   LocalCapsRepairResult,
   LocalCapsState,
   LocalRepairActionKind,
@@ -516,6 +517,10 @@ export function useCompanion() {
     },
     [],
   );
+
+  const runScriptRiskScan = useCallback(async () => {
+    return invoke<SuspiciousActivitySnapshot>("run_script_risk_scan_now");
+  }, []);
 
   const deleteBenchmark = useCallback(
     async (id: string) => {
@@ -1042,6 +1047,7 @@ export function useCompanion() {
     setAutorunSettings,
     getSuspiciousActivitySettings,
     setSuspiciousActivitySettings,
+    runScriptRiskScan,
     deleteBenchmark,
     saveThroughputSettings,
     runThroughputTest,

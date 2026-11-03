@@ -66,7 +66,14 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [product-plan-suspicious-activity-indicators-2026-11.md](./product-plan-suspicious-activity-indicators-2026-11.md) — surveillance/mining **indicators** (**complete** @ v1.9.3; not AV)
 - [product-plan-share-patch-1-9-3-2026-11.md](./product-plan-share-patch-1-9-3-2026-11.md) — share patch **v1.9.3**
 - [product-plan-ui-density-modes-2026-11.md](./product-plan-ui-density-modes-2026-11.md) — Quick vs Advanced UI (**complete**)
+- [product-plan-script-risk-scan-2026-11.md](./product-plan-script-risk-scan-2026-11.md) — bounded script-risk scan (**complete**; not AV)
+- [product-plan-share-patch-1-10-0-2026-11.md](./product-plan-share-patch-1-10-0-2026-11.md) — share release **v1.10.0**
 - [frontend-spec-ui-density-modes.md](./frontend-spec-ui-density-modes.md) — Quick/Advanced panel map
+- [frontend-spec-settings-page-2026-11.md](./frontend-spec-settings-page-2026-11.md) — Settings page
+- [frontend-spec-i18n-2026-11.md](./frontend-spec-i18n-2026-11.md) — locale JSON + toggle
+- [frontend-spec-atmosphere-bento-2026-11.md](./frontend-spec-atmosphere-bento-2026-11.md) — Overview atmosphere / bento
+- [frontend-spec-consumer-calm-protect-2026-11.md](./frontend-spec-consumer-calm-protect-2026-11.md) — Protect calm trust hero
+- [frontend-spec-script-risk-scan.md](./frontend-spec-script-risk-scan.md) — Script risk UI
 - [l3-device-proof.md](./l3-device-proof.md) — P2a CI headless / P2b physical CompanionShell checklist
 - [product-plan-share-ops-2026-11.md](./product-plan-share-ops-2026-11.md) — share-loop ops (**complete**)
 - [product-plan-tryout-clarity-2026-11.md](./product-plan-tryout-clarity-2026-11.md) — tryout clarity + release asset verify (**complete**)

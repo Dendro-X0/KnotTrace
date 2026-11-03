@@ -1,6 +1,6 @@
 # KnotTrace
 
-**v1.9.3** — Desktop companion for connection health, Path Truth diagnosis, and **local-first, reversible** assists — without fake “speed boosts.”
+**v1.10.0** — Desktop companion for connection health, Path Truth diagnosis, and **local-first, reversible** assists — without fake “speed boosts.”
 
 **Trying it out?** Start here → **[docs/COMMUNITY.md](docs/COMMUNITY.md)** (install, first five minutes, diagnostic export, what it is / is not).
 
@@ -35,7 +35,8 @@ Turn off automation on the **Protect** page.
 
 - **Path Truth** — path break, integrity board, diagnostic export, local/cloud AI explain, egress timeline, CLI `network-probe check --json`
 - **Local-first assists** — DNS (Win/macOS/Linux), Connect (Clash API), MTU clamp, Windows local-caps repair; Linux/macOS local-caps **observe**
-- **Integrity depth** — hosts/proxy change timeline, WAN/LAN listener scope, Wi‑Fi noise/retries where OS allows, opt-in process↔egress and startup-agent scans
+- **Integrity depth** — hosts/proxy change timeline, WAN/LAN listener scope, Wi‑Fi noise/retries where OS allows, opt-in process↔egress, startup-agent, and bounded **script-risk** scans (indicators only; not AV)
+- **Quick / Advanced UI** — default Quick; Settings for theme, language (en / zh-Hans), and density
 - **CompanionShell** — thin check + export surface: **desktop preview** (`?companion=1`) and mobile packaging (`cfg(mobile)`); **device proof pending** (not a claimed phone product yet)
 
 ## Quick start

@@ -1,13 +1,14 @@
 import { Gauge, Layers } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/hooks/useLocale";
 import { useUiDensity } from "@/hooks/useUiDensity";
 import type { UiDensityMode } from "@/lib/uiDensity";
 import { cn } from "@/lib/utils";
 
-const OPTIONS: Array<{ mode: UiDensityMode; label: string; icon: typeof Gauge }> = [
-  { mode: "quick", label: "Quick", icon: Gauge },
-  { mode: "advanced", label: "Advanced", icon: Layers },
+const OPTIONS: Array<{ mode: UiDensityMode; labelKey: string; icon: typeof Gauge }> = [
+  { mode: "quick", labelKey: "density.quick", icon: Gauge },
+  { mode: "advanced", labelKey: "density.advanced", icon: Layers },
 ];
 
 export function DensityToggle({
@@ -18,6 +19,7 @@ export function DensityToggle({
   className?: string;
 }) {
   const { mode, setMode } = useUiDensity();
+  const { t } = useLocale();
 
   return (
     <div
@@ -27,9 +29,9 @@ export function DensityToggle({
         className,
       )}
       role="group"
-      aria-label="Interface density"
+      aria-label={t("density.group")}
     >
-      {OPTIONS.map(({ mode: option, label, icon: Icon }) => {
+      {OPTIONS.map(({ mode: option, labelKey, icon: Icon }) => {
         const active = mode === option;
         return (
           <Button
@@ -46,7 +48,9 @@ export function DensityToggle({
             onClick={() => setMode(option)}
           >
             <Icon className="size-3.5" />
-            <span className={cn("text-xs", compact ? "inline" : "hidden sm:inline")}>{label}</span>
+            <span className={cn("text-xs", compact ? "inline" : "hidden sm:inline")}>
+              {t(labelKey)}
+            </span>
           </Button>
         );
       })}

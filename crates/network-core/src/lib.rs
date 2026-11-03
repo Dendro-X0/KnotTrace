@@ -62,8 +62,8 @@ pub use autoruns::{
 };
 pub use suspicious_activity::{
     default_suspicious_activity_settings, enrich_suspicious_activity,
-    load_suspicious_activity_settings, save_suspicious_activity_settings, SuspiciousActivityError,
-    SUSPICIOUS_ACTIVITY_CONSENT,
+    load_suspicious_activity_settings, run_script_risk_scan, save_suspicious_activity_settings,
+    SuspiciousActivityError, SUSPICIOUS_ACTIVITY_CONSENT,
 };
 pub use config_watch::{
     list_config_watch_events, refresh_config_watch, snapshot_hosts_file, snapshot_proxy,

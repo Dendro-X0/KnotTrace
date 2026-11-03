@@ -7,6 +7,7 @@ import { FeaturePage } from "@/components/FeaturePage";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUiDensity } from "@/hooks/useUiDensity";
 import type { CompanionState } from "@/hooks/useCompanion";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ function dnsBadge(state: CompanionState) {
 }
 
 export function DnsPage({ state }: DnsPageProps) {
+  const { isQuick } = useUiDensity();
   const badge = dnsBadge(state);
   const loading = state.bootstrapping && !state.dnsRecommendation && !state.dnsError;
   const canApply =
@@ -35,7 +37,7 @@ export function DnsPage({ state }: DnsPageProps) {
   return (
     <FeaturePage
       title="DNS Assist"
-      description={state.dnsSummary}
+      description={state.dnsSummary || "Compare public resolvers and apply a recommended DNS when it helps."}
       icon={Globe}
       badge={loading ? undefined : badge}
       error={state.dnsError}
@@ -108,12 +110,14 @@ export function DnsPage({ state }: DnsPageProps) {
 
       <DnsIntegrityPanel integrity={state.report?.dns_integrity} />
 
-      <DnsIntegritySettingsEditor
-        domains={state.integritySettings?.verification_domains ?? []}
-        saving={state.integritySettingsSaving}
-        error={state.integritySettingsError}
-        onSave={state.saveIntegritySettings}
-      />
+      {!isQuick && (
+        <DnsIntegritySettingsEditor
+          domains={state.integritySettings?.verification_domains ?? []}
+          saving={state.integritySettingsSaving}
+          error={state.integritySettingsError}
+          onSave={state.saveIntegritySettings}
+        />
+      )}
     </FeaturePage>
   );
 }

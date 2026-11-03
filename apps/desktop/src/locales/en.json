@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "code": "en",
+    "name": "English",
+    "nativeName": "English"
+  },
+  "nav": {
+    "overview": "Overview",
+    "dns": "DNS Assist",
+    "connect": "Connect",
+    "protect": "Protect",
+    "network": "Network",
+    "settings": "Settings",
+    "hintOverview": "Health and trends",
+    "hintDns": "Resolver tuning",
+    "hintConnect": "Proxy switching",
+    "hintProtect": "Trust and alerts",
+    "hintNetwork": "Environment and probes",
+    "hintSettings": "Appearance, language, monitor"
+  },
+  "brand": {
+    "name": "KnotTrace",
+    "tagline": "Network companion",
+    "trayNote": "Closing the window keeps the app running in the tray.",
+    "trayNoteShort": "Runs in the tray when closed.",
+    "disclaimer": "KnotTrace is a network companion — indicators and assists, not antivirus."
+  },
+  "common": {
+    "details": "Details",
+    "loading": "Loading",
+    "version": "v{version}",
+    "versionUnknown": "Version unknown"
+  },
+  "header": {
+    "runCheck": "Run health check",
+    "runCheckShort": "Health check",
+    "checking": "Checking...",
+    "checkingShort": "Checking",
+    "monitor": "Monitor",
+    "backgroundMonitor": "Background monitor",
+    "monitorActive": "Monitor active",
+    "monitorPaused": "Monitor paused",
+    "lastChecked": "Last checked {when}"
+  },
+  "search": {
+    "placeholder": "Search pages and actions",
+    "shortcut": "Ctrl+K",
+    "runCheckHint": "Start a manual fast check now",
+    "settingsHint": "Theme, language, Quick/Advanced, monitor, updates",
+    "overviewHint": "Health, trends, and next steps",
+    "dnsHint": "Resolver recommendations and restore",
+    "connectHint": "Proxy switching and node comparison",
+    "protectHint": "Alerts, Do Not Disturb, quiet hours",
+    "networkHint": "Environment, probes, and throughput"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "group": "Theme"
+  },
+  "density": {
+    "label": "Detail level",
+    "quick": "Quick",
+    "advanced": "Advanced",
+    "group": "Interface density",
+    "help": "Quick keeps pages calm. Advanced shows deeper path and integrity evidence."
+  },
+  "language": {
+    "label": "Language",
+    "group": "Language",
+    "help": "UI language. More locales can be added as JSON templates under locales/."
+  },
+  "settings": {
+    "appearanceTitle": "Appearance",
+    "appearanceDescription": "How KnotTrace looks, how much detail each page shows, and which language to use.",
+    "monitoringTitle": "Monitoring",
+    "monitoringDescription": "Background checks while KnotTrace runs in the tray.",
+    "monitorLabel": "Background monitor",
+    "monitorHelp": "Periodic health checks while the app is running.",
+    "monitorPoll": "Checks about every {secs}s when enabled.",
+    "relatedTitle": "Related pages",
+    "relatedDescription": "Protection and proxy tools stay on their own pages.",
+    "linkProtect": "Protect",
+    "linkProtectHint": "Trust alerts, script risk scan, and auto-protect preferences",
+    "linkConnect": "Connect",
+    "linkConnectHint": "Proxy controller and API settings",
+    "linkDns": "DNS Assist",
+    "linkDnsHint": "Resolver recommendations and restore",
+    "aboutTitle": "About",
+    "aboutDescription": "Version and updates for this install.",
+    "checkUpdates": "Check for updates",
+    "checkingUpdates": "Checking…",
+    "installUpdate": "Install {version}",
+    "installing": "Installing…",
+    "releaseNotes": "Release notes",
+    "upToDate": "You’re on the latest checked version.",
+    "trayNote": "Closing the window keeps KnotTrace in the tray."
+  }
+}

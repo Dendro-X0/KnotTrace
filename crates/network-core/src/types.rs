@@ -276,6 +276,7 @@ pub enum IntegrityIndicatorKind {
     StartupNetworkAgent,
     ScriptHostPersistence,
     MiningLikeProcess,
+    RiskyScriptFile,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -443,6 +444,8 @@ pub struct SuspiciousActivitySnapshot {
     pub source: String,
     pub persistence_hits: Vec<SuspiciousActivityHit>,
     pub mining_hits: Vec<SuspiciousActivityHit>,
+    #[serde(default)]
+    pub disk_hits: Vec<SuspiciousActivityHit>,
     pub summary: String,
 }
 

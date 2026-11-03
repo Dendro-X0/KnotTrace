@@ -478,14 +478,11 @@ fn push_integrity_board_alerts(report: &HealthReport, alerts: &mut Vec<ProtectAl
             level,
             title: title.to_string(),
             message: format!(
-                "{} {}",
-                indicator.message,
-                "Open Network → Integrity for evidence. Absence of indicators does not mean you are unobserved."
+                "{} Absence of indicators does not mean you are unobserved.",
+                indicator.message
             ),
-            actions: vec![ProtectAction {
-                kind: ProtectActionKind::RunCheck,
-                label: "Run health check".to_string(),
-            }],
+            // Header already owns “Run health check” — avoid repeating it on every row.
+            actions: Vec::new(),
         });
         added = added.saturating_add(1);
     }
@@ -494,37 +491,40 @@ fn push_integrity_board_alerts(report: &HealthReport, alerts: &mut Vec<ProtectAl
 fn integrity_board_alert_meta(kind: IntegrityIndicatorKind) -> Option<(&'static str, AlertLevel)> {
     match kind {
         IntegrityIndicatorKind::PathForcedRouting => {
-            Some(("Forced routing / proxy path", AlertLevel::Warning))
+            Some(("Proxy path looks forced", AlertLevel::Warning))
         }
         IntegrityIndicatorKind::CertStoreDelta => {
-            Some(("Trusted root store changed", AlertLevel::Warning))
+            Some(("Trusted certificates changed", AlertLevel::Warning))
         }
         IntegrityIndicatorKind::GatewayArpChurn => {
-            Some(("Gateway ARP identity changed", AlertLevel::Warning))
+            Some(("Gateway identity changed", AlertLevel::Warning))
         }
         IntegrityIndicatorKind::HighRiskListener => {
-            Some(("High-risk listener detected", AlertLevel::Warning))
+            Some(("Open network service found", AlertLevel::Warning))
         }
         IntegrityIndicatorKind::TlsInterceptHint => {
-            Some(("TLS intercept hint on tunnel path", AlertLevel::Warning))
+            Some(("Possible TLS interception hint", AlertLevel::Warning))
         }
         IntegrityIndicatorKind::ProcessEgressHint => {
-            Some(("Processes toward current egress/proxy", AlertLevel::Info))
+            Some(("Apps talking on current path", AlertLevel::Info))
         }
         IntegrityIndicatorKind::HostsFileDelta => {
             Some(("Hosts file changed", AlertLevel::Warning))
         }
         IntegrityIndicatorKind::ProxyConfigDelta => {
-            Some(("System proxy configuration changed", AlertLevel::Warning))
+            Some(("System proxy settings changed", AlertLevel::Warning))
         }
         IntegrityIndicatorKind::StartupNetworkAgent => {
-            Some(("Network-related startup entries", AlertLevel::Info))
+            Some(("Network tool in startup", AlertLevel::Info))
         }
         IntegrityIndicatorKind::ScriptHostPersistence => {
-            Some(("Script-host persistence indicators", AlertLevel::Warning))
+            Some(("Startup script pattern found", AlertLevel::Warning))
         }
         IntegrityIndicatorKind::MiningLikeProcess => {
-            Some(("Mining-like process indicators", AlertLevel::Warning))
+            Some(("Mining-like process pattern", AlertLevel::Warning))
+        }
+        IntegrityIndicatorKind::RiskyScriptFile => {
+            Some(("Risky script file pattern", AlertLevel::Warning))
         }
         IntegrityIndicatorKind::ProxyEnabled
         | IntegrityIndicatorKind::CaptivePortal
@@ -674,22 +674,33 @@ fn grade_dropped(previous: HealthGrade, current: HealthGrade) -> bool {
 }
 
 fn summarize_status(trust_level: TrustLevel, score: &HealthScore, alert_count: usize) -> String {
-    let trust = match trust_level {
-        TrustLevel::Trusted => "trusted",
-        TrustLevel::Caution => "use caution on",
-        TrustLevel::Untrusted => "untrusted",
+    let grade = match score.grade {
+        HealthGrade::Good => "good",
+        HealthGrade::Fair => "fair",
+        HealthGrade::Poor => "poor",
     };
-
-    if alert_count == 0 {
-        format!(
-            "Network looks {trust}. Current health is {:?} ({}).",
-            score.grade, score.score
-        )
-    } else {
-        format!(
-            "Network looks {trust}. {:?} health with {alert_count} active alert(s).",
-            score.grade
-        )
+    match (trust_level, alert_count) {
+        (TrustLevel::Trusted, 0) => format!(
+            "This network looks familiar. Connection health is {grade} ({}/100).",
+            score.score
+        ),
+        (TrustLevel::Trusted, _) => format!(
+            "This network looks familiar, with {alert_count} item(s) worth a quick look. Health is {grade}."
+        ),
+        (TrustLevel::Caution, 0) => format!(
+            "Treat this network carefully. Connection health is {grade} ({}/100).",
+            score.score
+        ),
+        (TrustLevel::Caution, _) => format!(
+            "Treat this network carefully — {alert_count} item(s) need a look. Health is {grade}."
+        ),
+        (TrustLevel::Untrusted, 0) => format!(
+            "This network is unfamiliar or restricted. Connection health is {grade} ({}/100).",
+            score.score
+        ),
+        (TrustLevel::Untrusted, _) => format!(
+            "This network is unfamiliar or restricted, with {alert_count} item(s) to review. Health is {grade}."
+        ),
     }
 }
 
@@ -855,15 +866,23 @@ mod tests {
         assert!(status
             .alerts
             .iter()
-            .any(|alert| alert.title == "Trusted root store changed"));
+            .any(|alert| alert.title == "Trusted certificates changed"));
         assert!(status
             .alerts
             .iter()
-            .any(|alert| alert.title == "Gateway ARP identity changed"));
+            .any(|alert| alert.title == "Gateway identity changed"));
         assert!(!status
             .alerts
             .iter()
             .any(|alert| alert.title.contains("System proxy")));
+        assert!(status
+            .alerts
+            .iter()
+            .filter(|alert| {
+                alert.title == "Trusted certificates changed"
+                    || alert.title == "Gateway identity changed"
+            })
+            .all(|alert| alert.actions.is_empty()));
     }
 
     #[test]

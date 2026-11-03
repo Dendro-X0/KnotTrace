@@ -10,7 +10,7 @@ import { IntegrityBoardPanel } from "@/components/IntegrityBoardPanel";
 import { LocalExplainPanel } from "@/components/LocalExplainPanel";
 import { CloudExplainPanel } from "@/components/CloudExplainPanel";
 import { EgressTimelinePanel } from "@/components/EgressTimelinePanel";
-import { NextStepsPanel } from "@/components/NextStepsPanel";
+import { buildNextStepPlan, NextStepsPanel } from "@/components/NextStepsPanel";
 import { QuickIntegrityTeaser } from "@/components/QuickIntegrityTeaser";
 import { QuickPathTeaser } from "@/components/QuickPathTeaser";
 import { StatusHero } from "@/components/StatusHero";
@@ -27,6 +27,27 @@ import type { CompanionState } from "@/hooks/useCompanion";
 
 interface OverviewPageProps {
   state: CompanionState;
+}
+
+/** Plain-language hero line for Quick — avoid diagnosis jargon fighting a good grade. */
+function quickHeroSummary(state: CompanionState): string {
+  if (state.checkError) {
+    return "Last check failed — use Retry in the banner above.";
+  }
+  const report = state.report;
+  if (!report) {
+    return "Run a health check to see how this connection is doing.";
+  }
+  const grade = report.score.grade;
+  const scoreLine = report.score.summary?.trim();
+  if (grade === "good") {
+    return scoreLine || "No obvious problems on this check. You can keep using the network as usual.";
+  }
+  // Prefer score summary when present; fall back to a short diagnosis line without drowning the hero.
+  if (scoreLine) return scoreLine;
+  const diagnosis = report.diagnosis?.summary?.trim();
+  if (diagnosis) return diagnosis;
+  return "This check found something worth a closer look below.";
 }
 
 export function OverviewPage({ state }: OverviewPageProps) {
@@ -62,63 +83,111 @@ export function OverviewPage({ state }: OverviewPageProps) {
     },
   ];
 
+  const nextPlan = isQuick ? buildNextStepPlan(state) : null;
+  const integrityCount = state.report?.integrity?.indicator_count ?? 0;
+  const pathBroken = Boolean(state.report?.path_break && state.report.path_break.break_hop !== "none");
+  // When the grade is good, only surface CTAs if Path/Integrity actually need a look —
+  // avoid "Open Network" fighting a calm hero after a general_degradation diagnosis.
+  const surfaceNextCtas =
+    Boolean(nextPlan) &&
+    (grade !== "good" || integrityCount > 0 || pathBroken);
+  const primaryNext = surfaceNextCtas ? nextPlan?.actions[0] : undefined;
+  const secondaryNext = surfaceNextCtas ? nextPlan?.actions[1] : undefined;
+
   return (
     <div className="flex flex-col gap-3">
-      <section className="grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(11rem,0.85fr)]">
-        <StatusHero
-          loading={loading}
-          grade={grade}
-          score={state.report?.score.score}
-          dnsIntegrity={state.report?.dns_integrity}
-          checkProfile={checkProfile}
-          summary={
-            state.report?.diagnosis?.summary ??
-            state.report?.score.summary ??
-            (state.checkError
-              ? "Last check failed — use Retry in the banner above."
-              : "Click Run health check (or press Ctrl+K) to see connection health.")
-          }
-        />
-
-        <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-3 lg:grid-cols-1">
-          {loading
-            ? Array.from({ length: 3 }).map((_, index) => (
-                <Card key={index} className="py-3">
-                  <CardContent className="py-0">
-                    <Skeleton className="mb-2 h-3 w-16" />
-                    <Skeleton className="h-5 w-20" />
-                  </CardContent>
-                </Card>
-              ))
-            : quickStats.map((stat) => (
-                <MetricCard
-                  key={stat.label}
-                  label={stat.label}
-                  value={stat.value}
-                  icon={stat.icon}
-                  tone={stat.tone}
-                />
-              ))}
-        </div>
-      </section>
-
       {isQuick ? (
-        <section className="grid gap-3 md:grid-cols-2">
-          <div className="grid gap-3">
-            <NextStepsPanel state={state} />
-            <DiagnosticBundlePanel state={state} />
+        <section className="bento-grid motion-stagger" aria-label="Connection status">
+          <div className="bento-hero">
+            <StatusHero
+              emphasis="hero"
+              loading={loading}
+              grade={grade}
+              score={state.report?.score.score}
+              dnsIntegrity={state.report?.dns_integrity}
+              summary={quickHeroSummary(state)}
+              metrics={
+                loading
+                  ? undefined
+                  : quickStats.map((stat) => ({ label: stat.label, value: stat.value }))
+              }
+              primaryAction={
+                primaryNext
+                  ? {
+                      label: primaryNext.label,
+                      onClick: () => state.navigate(primaryNext.page),
+                    }
+                  : !loading && !state.report
+                    ? {
+                        label: "Run health check",
+                        onClick: () => void state.runCheck(),
+                      }
+                    : undefined
+              }
+              secondaryAction={
+                secondaryNext
+                  ? {
+                      label: secondaryNext.label,
+                      onClick: () => state.navigate(secondaryNext.page),
+                    }
+                  : undefined
+              }
+            />
           </div>
-          <div className="grid gap-3">
+          <div className="bento-path h-full">
             <QuickPathTeaser loading={loading} report={state.report?.path_break} />
+          </div>
+          <div className="bento-integrity h-full">
             <QuickIntegrityTeaser
               loading={loading}
               report={state.report?.integrity}
               onOpenProtect={() => state.navigate("protect")}
             />
           </div>
+          <div className="bento-export h-full">
+            <DiagnosticBundlePanel state={state} compact />
+          </div>
         </section>
       ) : (
         <>
+          <section className="grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(11rem,0.85fr)]">
+            <StatusHero
+              loading={loading}
+              grade={grade}
+              score={state.report?.score.score}
+              dnsIntegrity={state.report?.dns_integrity}
+              checkProfile={checkProfile}
+              summary={
+                state.report?.diagnosis?.summary ??
+                state.report?.score.summary ??
+                (state.checkError
+                  ? "Last check failed — use Retry in the banner above."
+                  : "Click Run health check (or press Ctrl+K) to see connection health.")
+              }
+            />
+
+            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-3 lg:grid-cols-1">
+              {loading
+                ? Array.from({ length: 3 }).map((_, index) => (
+                    <Card key={index} className="py-3">
+                      <CardContent className="py-0">
+                        <Skeleton className="mb-2 h-3 w-16" />
+                        <Skeleton className="h-5 w-20" />
+                      </CardContent>
+                    </Card>
+                  ))
+                : quickStats.map((stat) => (
+                    <MetricCard
+                      key={stat.label}
+                      label={stat.label}
+                      value={stat.value}
+                      icon={stat.icon}
+                      tone={stat.tone}
+                    />
+                  ))}
+            </div>
+          </section>
+
           <Card className="min-h-0">
             <CardHeader className="pb-2">
               <CardTitle>Diagnosis & benchmarks</CardTitle>

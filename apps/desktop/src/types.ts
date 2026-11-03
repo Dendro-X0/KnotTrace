@@ -1,6 +1,12 @@
 export type HealthGrade = "good" | "fair" | "poor";
 
-export type PageId = "overview" | "dns" | "connect" | "protect" | "network";
+export type PageId =
+  | "overview"
+  | "dns"
+  | "connect"
+  | "protect"
+  | "network"
+  | "settings";
 
 export interface HealthScore {
   grade: HealthGrade;
@@ -124,7 +130,8 @@ export type IntegrityIndicatorKind =
   | "proxy_config_delta"
   | "startup_network_agent"
   | "script_host_persistence"
-  | "mining_like_process";
+  | "mining_like_process"
+  | "risky_script_file";
 
 export interface IntegrityIndicator {
   kind: IntegrityIndicatorKind;
@@ -220,6 +227,7 @@ export interface SuspiciousActivitySnapshot {
   source: string;
   persistence_hits: SuspiciousActivityHit[];
   mining_hits: SuspiciousActivityHit[];
+  disk_hits?: SuspiciousActivityHit[];
   summary: string;
 }
 
@@ -1036,6 +1044,7 @@ export const PAGE_TITLES: Record<PageId, string> = {
   connect: "Connect",
   protect: "Protect",
   network: "Network",
+  settings: "Settings",
 };
 
 export function isPageId(value: string | null): value is PageId {
@@ -1044,7 +1053,8 @@ export function isPageId(value: string | null): value is PageId {
     value === "dns" ||
     value === "connect" ||
     value === "protect" ||
-    value === "network"
+    value === "network" ||
+    value === "settings"
   );
 }
 

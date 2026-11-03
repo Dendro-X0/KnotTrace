@@ -32,7 +32,7 @@ function thrashForbidden(state: CompanionState): boolean {
   return claim === "upstream_pool_poor" || claim === "active_path_recurring";
 }
 
-function buildPlan(state: CompanionState): NextStepPlan | null {
+export function buildNextStepPlan(state: CompanionState): NextStepPlan | null {
   const diagnosis = state.report?.diagnosis;
   if (!diagnosis) return null;
 
@@ -166,7 +166,7 @@ function prioritizeActionsForRecurrence(
 
 export function NextStepsPanel({ state }: NextStepsPanelProps) {
   const loading = state.bootstrapping && !state.report;
-  const plan = buildPlan(state);
+  const plan = buildNextStepPlan(state);
   const diagnosis = state.report?.diagnosis;
   const recurrence = (() => {
     const latestShape = diagnosis?.slowdown_shape;

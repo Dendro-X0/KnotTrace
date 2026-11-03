@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "code": "zh-Hans",
+    "name": "Chinese (Simplified)",
+    "nativeName": "简体中文"
+  },
+  "nav": {
+    "overview": "总览",
+    "dns": "DNS 助手",
+    "connect": "连接",
+    "protect": "防护",
+    "network": "网络",
+    "settings": "设置",
+    "hintOverview": "健康与趋势",
+    "hintDns": "解析器调优",
+    "hintConnect": "代理节点切换",
+    "hintProtect": "信任与告警",
+    "hintNetwork": "环境与探测",
+    "hintSettings": "外观、语言与监视"
+  },
+  "brand": {
+    "name": "KnotTrace",
+    "tagline": "网络伴侣",
+    "trayNote": "关闭窗口后应用会继续在托盘运行。",
+    "trayNoteShort": "关闭后仍在托盘运行。",
+    "disclaimer": "KnotTrace 是网络伴侣——提供指标与辅助，不是杀毒软件。"
+  },
+  "common": {
+    "details": "详情",
+    "loading": "加载中",
+    "version": "v{version}",
+    "versionUnknown": "版本未知"
+  },
+  "header": {
+    "runCheck": "运行健康检查",
+    "runCheckShort": "健康检查",
+    "checking": "检查中...",
+    "checkingShort": "检查中",
+    "monitor": "监视",
+    "backgroundMonitor": "后台监视",
+    "monitorActive": "监视已开启",
+    "monitorPaused": "监视已暂停",
+    "lastChecked": "上次检查 {when}"
+  },
+  "search": {
+    "placeholder": "搜索页面与操作",
+    "shortcut": "Ctrl+K",
+    "runCheckHint": "立即开始一次手动快速检查",
+    "settingsHint": "主题、语言、简洁/高级、监视与更新",
+    "overviewHint": "健康、趋势与下一步",
+    "dnsHint": "解析器建议与恢复",
+    "connectHint": "代理切换与节点对比",
+    "protectHint": "告警、勿扰与安静时段",
+    "networkHint": "环境、探测与吞吐"
+  },
+  "theme": {
+    "label": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统",
+    "group": "主题"
+  },
+  "density": {
+    "label": "详细程度",
+    "quick": "简洁",
+    "advanced": "高级",
+    "group": "界面密度",
+    "help": "简洁模式更安静；高级模式展示更深的路径与完整性证据。"
+  },
+  "language": {
+    "label": "语言",
+    "group": "语言",
+    "help": "界面语言。可在 locales/ 下以 JSON 模板继续扩展。"
+  },
+  "settings": {
+    "appearanceTitle": "外观",
+    "appearanceDescription": "KnotTrace 的外观、页面详细程度以及使用的语言。",
+    "monitoringTitle": "监视",
+    "monitoringDescription": "在托盘运行时的后台检查。",
+    "monitorLabel": "后台监视",
+    "monitorHelp": "应用运行时进行周期性健康检查。",
+    "monitorPoll": "启用时大约每 {secs} 秒检查一次。",
+    "relatedTitle": "相关页面",
+    "relatedDescription": "防护与代理工具仍在各自页面中。",
+    "linkProtect": "防护",
+    "linkProtectHint": "信任告警、脚本风险扫描与自动防护偏好",
+    "linkConnect": "连接",
+    "linkConnectHint": "代理控制器与 API 设置",
+    "linkDns": "DNS 助手",
+    "linkDnsHint": "解析器建议与恢复",
+    "aboutTitle": "关于",
+    "aboutDescription": "本安装的版本与更新。",
+    "checkUpdates": "检查更新",
+    "checkingUpdates": "正在检查…",
+    "installUpdate": "安装 {version}",
+    "installing": "正在安装…",
+    "releaseNotes": "发行说明",
+    "upToDate": "当前已是最近检查到的版本。",
+    "trayNote": "关闭窗口后 KnotTrace 会留在托盘中。"
+  }
+}

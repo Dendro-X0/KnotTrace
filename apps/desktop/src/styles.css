@@ -25,74 +25,79 @@
 :root,
 [data-theme="light"] {
   color-scheme: light;
-  --background: #eef3fa;
-  --foreground: #0f1c2e;
-  --card: #ffffff;
-  --card-foreground: #0f1c2e;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #e6edf7;
+  --background: #e8eef6;
+  --foreground: #0c1929;
+  --card: #f8fafc;
+  --card-foreground: #0c1929;
+  --primary: #0f766e;
+  --primary-foreground: #f0fdfa;
+  --secondary: #e2eaf4;
   --secondary-foreground: #1e3a5f;
-  --muted: #edf2f8;
-  --muted-foreground: #5b6b82;
-  --accent: #dbeafe;
-  --accent-foreground: #1d4ed8;
+  --muted: #eef3f9;
+  --muted-foreground: #5a6b80;
+  --accent: #ccfbf1;
+  --accent-foreground: #115e59;
   --destructive: #dc2626;
-  --border: #d5dfec;
-  --input: #d5dfec;
-  --ring: #60a5fa;
-  --sidebar: rgba(255, 255, 255, 0.78);
-  --sidebar-foreground: #0f1c2e;
-  --sidebar-border: #d5dfec;
-  --shell-gradient: radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 30%),
-    radial-gradient(circle at 88% 0%, color-mix(in srgb, #38bdf8 22%, transparent), transparent 26%),
-    linear-gradient(180deg, #f7faff 0%, var(--background) 42%, #e8eef8 100%);
+  --border: #cfd9e6;
+  --input: #cfd9e6;
+  --ring: #2dd4bf;
+  --sidebar: rgba(248, 250, 252, 0.82);
+  --sidebar-foreground: #0c1929;
+  --sidebar-border: #cfd9e6;
+  --shell-gradient:
+    radial-gradient(ellipse 80% 55% at 8% -10%, color-mix(in srgb, #2dd4bf 22%, transparent), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 96% 0%, color-mix(in srgb, #38bdf8 18%, transparent), transparent 50%),
+    linear-gradient(165deg, #f4f7fb 0%, var(--background) 48%, #dde7f2 100%);
   --panel-gradient: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--card) 92%, white),
-    color-mix(in srgb, var(--primary) 6%, var(--card))
+    155deg,
+    color-mix(in srgb, var(--card) 94%, white),
+    color-mix(in srgb, #99f6e4 12%, var(--card))
   );
   --card-gradient: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--card) 96%, white),
-    color-mix(in srgb, var(--accent) 35%, var(--card))
+    165deg,
+    color-mix(in srgb, var(--card) 98%, white),
+    color-mix(in srgb, var(--accent) 28%, var(--card))
   );
+  /* Outer shadow only — inset highlights + border-radius bleed in WebView2. */
+  --shadow-tile: 0 8px 24px -16px color-mix(in srgb, #0c1929 28%, transparent);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --background: #0a1018;
-  --foreground: #e8eef8;
-  --card: #121c2b;
-  --card-foreground: #e8eef8;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #1a2738;
-  --secondary-foreground: #b8cceb;
-  --muted: #182433;
-  --muted-foreground: #9db0c7;
-  --accent: #1a2d4a;
-  --accent-foreground: #93c5fd;
-  --destructive: #f87171;
-  --border: #273449;
-  --input: #273449;
-  --ring: #5b8def;
-  --sidebar: rgba(14, 22, 34, 0.9);
-  --sidebar-foreground: #e8eef8;
-  --sidebar-border: #273449;
-  --shell-gradient: radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 28%),
-    radial-gradient(circle at 88% 0%, color-mix(in srgb, #0ea5e9 14%, transparent), transparent 24%),
-    linear-gradient(180deg, #0d1522 0%, var(--background) 45%, #060a10 100%);
+  --background: #070c12;
+  --foreground: #e8eef6;
+  --card: #101820;
+  --card-foreground: #e8eef6;
+  --primary: #2dd4bf;
+  --primary-foreground: #042f2e;
+  --secondary: #15202c;
+  --secondary-foreground: #b6c9dc;
+  --muted: #121c27;
+  --muted-foreground: #8fa3b8;
+  --accent: #134e4a;
+  --accent-foreground: #99f6e4;
+  --destructive: #fb7185;
+  --border: #1e2c3a;
+  --input: #1e2c3a;
+  --ring: #5eead4;
+  --sidebar: rgba(10, 16, 24, 0.88);
+  --sidebar-foreground: #e8eef6;
+  --sidebar-border: #1e2c3a;
+  --shell-gradient:
+    radial-gradient(ellipse 70% 50% at 6% -8%, color-mix(in srgb, #14b8a6 16%, transparent), transparent 52%),
+    radial-gradient(ellipse 55% 40% at 100% 4%, color-mix(in srgb, #0284c7 12%, transparent), transparent 48%),
+    linear-gradient(170deg, #0b121a 0%, var(--background) 42%, #04070b 100%);
   --panel-gradient: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--card) 88%, #0a1018),
-    color-mix(in srgb, var(--primary) 10%, #121c2b)
+    155deg,
+    color-mix(in srgb, var(--card) 90%, #070c12),
+    color-mix(in srgb, #134e4a 22%, #101820)
   );
   --card-gradient: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--card) 94%, #0a1018),
-    color-mix(in srgb, var(--accent) 55%, var(--card))
+    165deg,
+    color-mix(in srgb, var(--card) 96%, #070c12),
+    color-mix(in srgb, var(--accent) 40%, var(--card))
   );
+  --shadow-tile: 0 12px 28px -18px color-mix(in srgb, black 70%, transparent);
 }
 
 * {
@@ -108,8 +113,9 @@ body,
 body {
   margin: 0;
   overflow: hidden;
-  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+  font-family: "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   background: var(--shell-gradient);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -121,11 +127,15 @@ summary {
 
 .surface-panel {
   background: var(--panel-gradient);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
 }
 
 .surface-card {
   background: var(--card-gradient);
+  box-shadow: var(--shadow-tile);
+  /* Isolate painting so borders/radius don't composite past the clip. */
+  isolation: isolate;
+  transform: translateZ(0);
 }
 
 .app-scroll {
@@ -160,6 +170,148 @@ summary {
   display: none;
   width: 0;
   height: 0;
+}
+
+/* Bento / brick-wall Overview */
+.bento-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+  grid-auto-flow: dense;
+  align-items: start;
+}
+
+.bento-hero {
+  grid-column: 1 / -1;
+}
+
+.bento-path,
+.bento-integrity,
+.bento-export {
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .bento-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .bento-hero {
+    grid-column: span 12;
+  }
+
+  .bento-path {
+    grid-column: span 7;
+  }
+
+  .bento-integrity {
+    grid-column: span 5;
+  }
+
+  .bento-export {
+    grid-column: span 12;
+  }
+}
+
+@media (min-width: 1280px) {
+  .bento-path {
+    grid-column: span 5;
+    grid-row: span 2;
+  }
+
+  .bento-integrity {
+    grid-column: span 4;
+  }
+
+  .bento-export {
+    grid-column: span 3;
+    align-self: stretch;
+  }
+}
+
+/* Motion */
+@keyframes motion-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.motion-page-enter {
+  animation: motion-fade-up 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.motion-stagger > * {
+  animation: motion-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.motion-stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.motion-stagger > *:nth-child(2) {
+  animation-delay: 45ms;
+}
+.motion-stagger > *:nth-child(3) {
+  animation-delay: 90ms;
+}
+.motion-stagger > *:nth-child(4) {
+  animation-delay: 135ms;
+}
+.motion-stagger > *:nth-child(5) {
+  animation-delay: 180ms;
+}
+
+[data-slot="card"] {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot="card"]:hover {
+    /* Prefer shadow (not translateY) — transforms leave hairline border ghosts in WebView2. */
+    border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+    box-shadow:
+      var(--shadow-tile),
+      0 0 0 1px color-mix(in srgb, var(--primary) 18%, transparent);
+  }
+}
+
+button,
+[role="button"],
+a {
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-page-enter,
+  .motion-stagger > * {
+    animation: none;
+  }
+
+  [data-slot="card"],
+  button,
+  [role="button"],
+  a {
+    transition: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    [data-slot="card"]:hover {
+      box-shadow: var(--shadow-tile);
+    }
+  }
 }
 
 @media (max-width: 1023px) {

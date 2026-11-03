@@ -28,7 +28,7 @@ VERIFY_RELEASE_TAG=v1.9.1 bash scripts/community-gate.sh
 
 ### F1 / H2 release asset + updater trust
 
-Assert a GitHub Release has Windows MSI+NSIS, Linux AppImage/deb/rpm, macOS dmg, installer `.sig` files, and a Windows-primary `latest.json` (`gh` required):
+Assert a GitHub Release has Windows MSI+NSIS, Linux AppImage/deb/rpm, macOS dmg, installer `.sig` files, and a multi-OS desktop `latest.json` (`gh` required):
 
 ```bash
 bash scripts/verify-release-assets.sh v1.9.1

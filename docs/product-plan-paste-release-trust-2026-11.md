@@ -12,7 +12,7 @@ GOAL:     Keep community pastes safe to triage and release/updater claims
 POSTURE:  Observe-first · claim discipline · no phone readiness · no fake Mbps
 BASELINE: v1.9.1 + community gate + F1 asset verify + P2a CI headless
 DONE:     Charter · H1 · H2 · H3 · H4
-NEXT:     Complete (P2b still parked; multi-OS updater merge deferred)
+NEXT:     Multi-OS updater — [product-plan-multi-os-updater-2026-11.md](./product-plan-multi-os-updater-2026-11.md)
 ```
 
 ---

@@ -97,20 +97,23 @@ platforms = data.get("platforms")
 if not isinstance(platforms, dict) or not platforms:
     raise SystemExit("latest.json platforms missing")
 
-# Release workflow sets includeUpdaterJson on the Windows job only — Windows-primary.
-needed = {"windows-x86_64", "windows-x86_64-nsis"}
+# Band U3 — multi-OS in-app updater platforms (single-writer latest.json).
+needed = {
+    "windows-x86_64",
+    "windows-x86_64-nsis",
+    "linux-x86_64",
+    "darwin-aarch64",
+}
 missing = sorted(needed - set(platforms))
 if missing:
-    raise SystemExit(f"latest.json missing Windows updater platforms: {missing}")
+    raise SystemExit(f"latest.json missing updater platforms: {missing}")
 
 for key in needed:
     entry = platforms.get(key) or {}
     if not entry.get("url") or not entry.get("signature"):
         raise SystemExit(f"latest.json platform {key} needs url + signature")
 
-extra = sorted(set(platforms) - {"windows-x86_64", "windows-x86_64-msi", "windows-x86_64-nsis"})
-note = f"; also has {extra}" if extra else " (Windows-primary in-app update)"
-print(f"OK: latest.json version={manifest_version} platforms={sorted(platforms)}{note}")
+print(f"OK: latest.json version={manifest_version} platforms={sorted(platforms)} (multi-OS desktop)")
 PY
 
 echo "==> [F1/H2] release asset verify OK"

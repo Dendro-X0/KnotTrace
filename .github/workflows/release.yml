@@ -130,7 +130,8 @@ jobs:
             - **Signed IPA** — ad-hoc/enterprise distribution; install via profile trust
           releaseDraft: false
           prerelease: false
-          includeUpdaterJson: true
+          # Band U2 — Windows no longer writes latest.json alone (race-free single-writer job below).
+          includeUpdaterJson: false
 
   build-linux:
     name: Build Linux (signed updater)
@@ -256,6 +257,25 @@ jobs:
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: false
+
+  publish-updater-manifest:
+    name: Publish multi-OS latest.json
+    needs: [build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
+
+      - name: Build and upload updater manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG='${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}'
+          bash scripts/build-updater-manifest.sh "$TAG" --upload
 
   build-android:
     name: Build Android (signed APK)

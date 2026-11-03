@@ -65,12 +65,14 @@ If you lose the private key, existing installs cannot receive signed updates —
 
 ## 2. Release artifacts
 
-The Windows release job sets `includeUpdaterJson: true` (Linux/macOS jobs keep it `false` and still upload installer `.sig` files). Each GitHub Release publishes:
+Desktop release jobs upload installer `.sig` files with `includeUpdaterJson: false`. A post-job single-writer (`scripts/build-updater-manifest.sh`) merges Windows MSI/NSIS, Linux AppImage, and macOS `.app.tar.gz` into one `latest.json` (avoids parallel merge races).
 
-- `latest.json` — manifest consumed by the in-app updater (**Windows platforms today**)
-- `*.sig` — signatures beside MSI/NSIS/AppImage/deb/rpm/dmg bundles
+Each GitHub Release publishes:
 
-**Honesty:** in-app signed update install is **Windows-primary**. macOS/Linux users should download installers from GitHub Releases (the banner still falls back to the release page when in-app install is unavailable).
+- `latest.json` — multi-OS desktop updater manifest (`windows-*`, `linux-x86_64*`, `darwin-aarch64`)
+- `*.sig` — signatures beside MSI/NSIS/AppImage/deb/rpm/dmg / `.app.tar.gz` bundles
+
+**Honesty:** in-app signed updates cover **desktop** Windows / Linux (AppImage) / macOS. Mobile still falls back to the release page; CompanionShell device L3 remains parked.
 
 Endpoint (configured in `tauri.conf.json`):
 

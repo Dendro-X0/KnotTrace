@@ -58,7 +58,8 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [product-plan-path-truth-2026-10.md](./product-plan-path-truth-2026-10.md) — Path Truth charter (**complete** at v1.8.1)
 - [product-plan-cross-platform-capability-2026-10.md](./product-plan-cross-platform-capability-2026-10.md) — cross-platform expansion (**complete** in v1.9.0)
 - [product-plan-community-readiness-2026-11.md](./product-plan-community-readiness-2026-11.md) — community readiness (**complete** @ v1.9.1; P2b parked)
-- [product-plan-paste-release-trust-2026-11.md](./product-plan-paste-release-trust-2026-11.md) — paste safety + Windows-primary updater honesty
+- [product-plan-paste-release-trust-2026-11.md](./product-plan-paste-release-trust-2026-11.md) — paste safety + updater honesty (prior)
+- [product-plan-multi-os-updater-2026-11.md](./product-plan-multi-os-updater-2026-11.md) — multi-OS `latest.json` merge (**complete**)
 - [l3-device-proof.md](./l3-device-proof.md) — P2a CI headless / P2b physical CompanionShell checklist
 - [product-plan-share-ops-2026-11.md](./product-plan-share-ops-2026-11.md) — share-loop ops (**complete**)
 - [product-plan-tryout-clarity-2026-11.md](./product-plan-tryout-clarity-2026-11.md) — tryout clarity + release asset verify (**complete**)

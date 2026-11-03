@@ -49,7 +49,7 @@ Builds Tauri bundles on **Windows, Linux, macOS, Android, and iOS** and publishe
 - **macOS**: `.app.tar.gz` + `.dmg`
 - **Android**: signed APK (requires `ANDROID_KEY_*` secrets)
 - **iOS**: signed IPA (requires `IOS_*` secrets)
-- `latest.json` + `.sig` files for in-app signed updates (generated on the Windows release job)
+- `latest.json` + `.sig` files for in-app signed updates (`.sig` from each desktop job; `latest.json` merged once by **Publish multi-OS latest.json**)
 
 Uses [tauri-apps/tauri-action](https://github.com/tauri-apps/tauri-action) with `includeUpdaterJson: true`.
 

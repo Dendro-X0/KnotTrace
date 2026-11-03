@@ -6,9 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.9.3] - 2026-11-03
+
+Share patch — opt-in suspicious activity indicators (script-host persistence / mining-like heuristics).
+
 ### Added
 
 - **Suspicious activity indicators (opt-in)** — Protect toggle for script-host persistence + mining-like process heuristics on the integrity board (indicators only; not antivirus)
+
+### Notes
+
+- Feedback: [issue templates](https://github.com/Dendro-X0/KnotTrace/issues/new/choose)
+- Pre-share: `bash scripts/community-gate.sh` · assets: `bash scripts/verify-release-assets.sh v1.9.3`
+- Still not AV/EDR; CompanionShell device L3 remains parked
 
 ## [1.9.2] - 2026-11-03
 

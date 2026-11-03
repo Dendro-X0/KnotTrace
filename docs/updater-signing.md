@@ -65,7 +65,7 @@ If you lose the private key, existing installs cannot receive signed updates —
 
 ## 2. Release artifacts
 
-Desktop release jobs upload installer `.sig` files with `includeUpdaterJson: false`. A post-job single-writer (`scripts/build-updater-manifest.sh`) merges Windows MSI/NSIS, Linux AppImage, and macOS `.app.tar.gz` into one `latest.json` (avoids parallel merge races).
+Desktop release jobs upload installer `.sig` files with `includeUpdaterJson: false`. A post-job single-writer (`scripts/build-updater-manifest.sh`) merges Windows MSI/NSIS, Linux AppImage, and macOS `.app.tar.gz` into one `latest.json` (avoids parallel merge races). Offline smoke: `bash scripts/build-updater-manifest.sh --from-dir scripts/fixtures/updater-sigs --version 1.9.1`.
 
 Each GitHub Release publishes:
 

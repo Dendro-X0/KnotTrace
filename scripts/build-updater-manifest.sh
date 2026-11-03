@@ -1,51 +1,81 @@
 #!/usr/bin/env bash
-# Band U1 — single-writer multi-OS latest.json from GitHub Release .sig assets.
+# Band U1 / O2 — single-writer multi-OS latest.json from GitHub Release .sig assets
+# or a local fixture directory (offline).
 # Usage:
-#   bash scripts/build-updater-manifest.sh <tag>           # write .tmp/updater-manifest/latest.json
-#   bash scripts/build-updater-manifest.sh <tag> --upload  # also replace latest.json on the release
+#   bash scripts/build-updater-manifest.sh <tag> [--upload]
+#   bash scripts/build-updater-manifest.sh --from-dir <dir> --version <x.y.z> [--repo owner/name]
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if ! command -v gh >/dev/null 2>&1; then
-  echo "gh CLI required" >&2
-  exit 1
-fi
-
-TAG="${1:-}"
+FROM_DIR=""
+VERSION=""
+TAG=""
 UPLOAD=0
-if [[ -z "$TAG" ]]; then
-  echo "usage: bash scripts/build-updater-manifest.sh <tag> [--upload]" >&2
-  exit 1
-fi
-shift || true
-for arg in "$@"; do
-  case "$arg" in
-    --upload) UPLOAD=1 ;;
-    *) echo "unknown arg: $arg" >&2; exit 1 ;;
-  esac
-done
+REPO="${GITHUB_REPOSITORY:-Dendro-X0/KnotTrace}"
 
-VERSION="${TAG#v}"
-REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+usage() {
+  echo "usage:" >&2
+  echo "  bash scripts/build-updater-manifest.sh <tag> [--upload]" >&2
+  echo "  bash scripts/build-updater-manifest.sh --from-dir <dir> --version <x.y.z> [--repo owner/name]" >&2
+  exit 1
+}
+
+if [[ "${1:-}" == "--from-dir" ]]; then
+  shift || usage
+  FROM_DIR="${1:-}"
+  shift || usage
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --version) VERSION="${2:-}"; shift 2 ;;
+      --repo) REPO="${2:-}"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; usage ;;
+    esac
+  done
+  [[ -n "$FROM_DIR" && -n "$VERSION" ]] || usage
+  TAG="v${VERSION#v}"
+elif [[ -n "${1:-}" && "${1:0:1}" != "-" ]]; then
+  TAG="$1"
+  shift || true
+  for arg in "$@"; do
+    case "$arg" in
+      --upload) UPLOAD=1 ;;
+      *) echo "unknown arg: $arg" >&2; usage ;;
+    esac
+  done
+  VERSION="${TAG#v}"
+  if ! command -v gh >/dev/null 2>&1; then
+    echo "gh CLI required for tag mode" >&2
+    exit 1
+  fi
+  REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+else
+  usage
+fi
+
 OUT_DIR="$ROOT/.tmp/updater-manifest"
 mkdir -p "$OUT_DIR"
-rm -rf "$OUT_DIR"/*
+# Keep OUT_DIR; replace contents carefully
+rm -f "$OUT_DIR/latest.json"
 WORKDIR="$OUT_DIR/assets"
+rm -rf "$WORKDIR"
 mkdir -p "$WORKDIR"
 
-echo "==> [U1] downloading updater signatures for $TAG"
-# Prefer exact updater payloads; ignore missing optional names.
-gh release download "$TAG" --repo "$REPO" --dir "$WORKDIR" --clobber \
-  --pattern "KnotTrace_${VERSION}_x64_en-US.msi.sig" \
-  --pattern "KnotTrace_${VERSION}_x64-setup.exe.sig" \
-  --pattern "KnotTrace_${VERSION}_amd64.AppImage.sig" \
-  --pattern "KnotTrace_aarch64.app.tar.gz.sig" \
-  --pattern "KnotTrace_${VERSION}_aarch64.app.tar.gz.sig" \
-  2>/dev/null || true
+if [[ -n "$FROM_DIR" ]]; then
+  echo "==> [O2] copying updater signatures from $FROM_DIR"
+  cp -R "$FROM_DIR"/. "$WORKDIR"/
+else
+  echo "==> [U1] downloading updater signatures for $TAG"
+  gh release download "$TAG" --repo "$REPO" --dir "$WORKDIR" --clobber \
+    --pattern "KnotTrace_${VERSION}_x64_en-US.msi.sig" \
+    --pattern "KnotTrace_${VERSION}_x64-setup.exe.sig" \
+    --pattern "KnotTrace_${VERSION}_amd64.AppImage.sig" \
+    --pattern "KnotTrace_aarch64.app.tar.gz.sig" \
+    --pattern "KnotTrace_${VERSION}_aarch64.app.tar.gz.sig" \
+    2>/dev/null || true
+fi
 
-# Some releases may only have a subset of patterns matched above; list what we got.
 ls -la "$WORKDIR"
 
 BASE="https://github.com/${REPO}/releases/download/${TAG}"
@@ -116,9 +146,13 @@ print("platforms:", ", ".join(sorted(platforms)))
 PY
 
 if [[ "$UPLOAD" == "1" ]]; then
+  if [[ -n "$FROM_DIR" ]]; then
+    echo "--upload is only valid with a release tag" >&2
+    exit 1
+  fi
   echo "==> [U1] uploading latest.json to release $TAG"
   gh release upload "$TAG" "$OUT_DIR/latest.json" --repo "$REPO" --clobber
   echo "uploaded latest.json"
 fi
 
-echo "==> [U1] updater manifest OK"
+echo "==> [U1/O2] updater manifest OK"

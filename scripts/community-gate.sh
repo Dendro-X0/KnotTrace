@@ -22,9 +22,14 @@ if python "$ROOT/scripts/validate-diagnostic-bundle.py" \
 fi
 echo "H1 leak fixture correctly rejected"
 
+echo "==> [O3] community gate: offline updater manifest fixture"
+bash "$ROOT/scripts/build-updater-manifest.sh" \
+  --from-dir "$ROOT/scripts/fixtures/updater-sigs" \
+  --version 1.9.1
+
 if [[ -n "${VERIFY_RELEASE_TAG:-}" ]]; then
   echo "==> [F4/H2] community gate: verify release assets ($VERIFY_RELEASE_TAG)"
   bash "$ROOT/scripts/verify-release-assets.sh" "$VERIFY_RELEASE_TAG"
 fi
 
-echo "==> [S1] community gate OK (R1 + R4 + H3${VERIFY_RELEASE_TAG:+ + F1/H2})"
+echo "==> [S1] community gate OK (R1 + R4 + H3 + O3${VERIFY_RELEASE_TAG:+ + F1/H2})"

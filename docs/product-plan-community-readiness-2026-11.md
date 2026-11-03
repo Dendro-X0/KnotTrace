@@ -13,7 +13,7 @@ GOAL:     Make KnotTrace reliable and honest enough to put in front of an
 POSTURE:  Observe-first · claim discipline · reversible assists · no fake Mbps
 BASELINE: Path Truth + expansion (CompanionShell, C1–C4, OS matrix) at v1.9.0
 DONE:     Charter · R1–R4 · C1–C3 · P1 · C4 (v1.9.1) · P2a CI (Win/macOS/Linux)
-NEXT:     P2b when device capacity — active ops: [product-plan-share-ops-2026-11.md](./product-plan-share-ops-2026-11.md)
+NEXT:     Ops complete through release polish — P2b parked ([l3-device-proof.md](./l3-device-proof.md))
 ```
 
 ---

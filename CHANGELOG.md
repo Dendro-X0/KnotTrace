@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+### Added
+
+- **Multi-OS updater** — single-writer `latest.json` for Windows + Linux AppImage + macOS (`scripts/build-updater-manifest.sh`); release job merges after desktop builds
+- **Release ops polish** — LF `.gitattributes` for shell scripts; offline updater sig fixtures in community gate / CI
+
+### Changed
+
+- In-app update honesty: desktop multi-OS (no longer Windows-primary); CompanionShell device L3 still parked
+
 ## [1.9.1] - 2026-11-02
 
 Community-readiness share tag — reliability gates and honest public entry without claiming hand-tested every surface.

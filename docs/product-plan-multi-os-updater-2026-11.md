@@ -12,7 +12,7 @@ GOAL:     Ship one race-free latest.json that covers Windows + Linux + macOS
 POSTURE:  Observe-first · claim discipline · no phone readiness · no fake Mbps
 BASELINE: v1.9.1 + Windows-primary latest.json honesty (H2)
 DONE:     Charter · U1 · U2 · U3 · U4 (v1.9.1 refreshed)
-NEXT:     P2b when device capacity — or next ops charter from feedback
+NEXT:     Release ops polish — [product-plan-release-ops-polish-2026-11.md](./product-plan-release-ops-polish-2026-11.md)
 ```
 
 ---

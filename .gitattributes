@@ -1,0 +1,4 @@
+# Shell scripts must stay LF — CRLF shebangs fail on Linux/macOS CI with "Permission denied".
+*.sh text eol=lf
+*.bash text eol=lf
+scripts/**/*.py text eol=lf

@@ -43,7 +43,7 @@ python scripts/validate-diagnostic-bundle.py scripts/fixtures/diagnostic-bundle-
 python scripts/validate-diagnostic-bundle.py scripts/fixtures/diagnostic-bundle-hostname-leak.json
 ```
 
-`community-gate.sh` runs both checks offline before R1/R4 finish messaging.
+`community-gate.sh` runs paste fixtures plus an offline updater-manifest fixture (`--from-dir scripts/fixtures/updater-sigs`) before finishing.
 ### R1 cheap reliability gate
 
 Matches CI’s three compile/test jobs without a full installer build. Prefer this before ordinary pushes:

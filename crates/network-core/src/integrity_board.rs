@@ -9,6 +9,7 @@ pub const INTEGRITY_DISCLAIMER: &str = "We found indicators consistent with expo
 
 const HIGH_RISK_PORTS: &[u16] = &[21, 23, 135, 139, 445, 3389, 5900, 5985, 5986, 5600];
 const NOT_CHECKED_PROCESS: &str = "Process ↔ egress correlation";
+const NOT_CHECKED_SUSPICIOUS: &str = "Suspicious activity heuristics (script-host / mining-like)";
 const NOT_CHECKED_COVERT: &str = "Covert kernel / firmware / ISP taps";
 const NOT_CHECKED_ARP: &str = "Gateway / ARP identity churn over time";
 const NOT_CHECKED_CERT: &str = "Trusted root certificate store deltas";
@@ -223,6 +224,7 @@ fn finalize_board(
     };
 
     let mut not_checked = vec![NOT_CHECKED_COVERT.to_string()];
+    not_checked.insert(0, NOT_CHECKED_SUSPICIOUS.to_string());
     if !process_egress.as_ref().is_some_and(|s| s.scanned) {
         not_checked.insert(0, NOT_CHECKED_PROCESS.to_string());
     }
@@ -245,6 +247,7 @@ fn finalize_board(
         cert_store,
         process_egress,
         autoruns: None,
+        suspicious_activity: None,
         not_checked,
         confidence,
     }
@@ -1342,6 +1345,7 @@ mod tests {
             }),
             process_egress: None,
                 autoruns: None,
+                suspicious_activity: None,
             not_checked: vec![],
             confidence: IntegrityBoardConfidence::Low,
         });

@@ -520,6 +520,12 @@ fn integrity_board_alert_meta(kind: IntegrityIndicatorKind) -> Option<(&'static 
         IntegrityIndicatorKind::StartupNetworkAgent => {
             Some(("Network-related startup entries", AlertLevel::Info))
         }
+        IntegrityIndicatorKind::ScriptHostPersistence => {
+            Some(("Script-host persistence indicators", AlertLevel::Warning))
+        }
+        IntegrityIndicatorKind::MiningLikeProcess => {
+            Some(("Mining-like process indicators", AlertLevel::Warning))
+        }
         IntegrityIndicatorKind::ProxyEnabled
         | IntegrityIndicatorKind::CaptivePortal
         | IntegrityIndicatorKind::DnsIntegrity => None,
@@ -840,6 +846,7 @@ mod tests {
             cert_store: None,
             process_egress: None,
                 autoruns: None,
+                suspicious_activity: None,
             not_checked: vec![],
             confidence: IntegrityBoardConfidence::Medium,
         });

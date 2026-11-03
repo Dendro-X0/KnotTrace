@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+### Added
+
+- **Suspicious activity indicators (opt-in)** — Protect toggle for script-host persistence + mining-like process heuristics on the integrity board (indicators only; not antivirus)
+
 ## [1.9.2] - 2026-11-03
 
 Share patch — multi-OS in-app updater in the release pipeline + release-ops polish.

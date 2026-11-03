@@ -10,7 +10,7 @@ KnotTrace is a **desktop** network companion (Windows primary; macOS/Linux also 
 
 - Runs health checks and shows a plain-language score + diagnosis  
 - Explains **where the path breaks** (local vs proxy/VPN/Tor hop)  
-- Surfaces **integrity indicators** (proxy on, listeners, ARP/cert deltas, …) — never a “you are safe” badge  
+- Surfaces **integrity indicators** (proxy on, listeners, ARP/cert deltas, opt-in script-host / mining-like heuristics, …) — never a “you are safe” or “malware found” badge  
 - Offers **opt-in, reversible** assists (DNS, Connect, MTU, Windows local caps)  
 - Exports a **redacted diagnostic JSON** you can paste into an issue or an external AI  
 

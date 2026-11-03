@@ -3,6 +3,7 @@
 mod ai_explain;
 mod assist;
 mod autoruns;
+mod suspicious_activity;
 mod cli_args;
 mod auto_protect_log;
 mod benchmark;
@@ -58,6 +59,11 @@ pub use diagnosis::diagnose_network;
 pub use autoruns::{
     default_autorun_settings, enrich_autoruns, load_autorun_settings, save_autorun_settings,
     AutorunError, AUTORUNS_CONSENT,
+};
+pub use suspicious_activity::{
+    default_suspicious_activity_settings, enrich_suspicious_activity,
+    load_suspicious_activity_settings, save_suspicious_activity_settings, SuspiciousActivityError,
+    SUSPICIOUS_ACTIVITY_CONSENT,
 };
 pub use config_watch::{
     list_config_watch_events, refresh_config_watch, snapshot_hosts_file, snapshot_proxy,

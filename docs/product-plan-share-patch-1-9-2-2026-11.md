@@ -12,7 +12,7 @@ GOAL:     Tag a community share patch so the multi-OS updater release job and
 POSTURE:  Observe-first · claim discipline · no phone readiness · no fake Mbps
 BASELINE: v1.9.1 + U1–U4 + O1–O4 on main
 DONE:     Charter · V1 · V2 · V3 asset verify
-NEXT:     P2b when device capacity — wait for community feedback otherwise
+NEXT:     Suspicious-activity indicators **complete** — [product-plan-suspicious-activity-indicators-2026-11.md](./product-plan-suspicious-activity-indicators-2026-11.md)
 ```
 
 ---

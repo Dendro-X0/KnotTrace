@@ -1,6 +1,7 @@
 mod ai_explain;
 mod assist;
 mod autoruns;
+mod suspicious_activity;
 mod benchmark;
 mod connect;
 mod dns_integrity;
@@ -180,6 +181,8 @@ pub fn run() {
             process_egress::set_process_egress_settings,
             autoruns::get_autorun_settings,
             autoruns::set_autorun_settings,
+            suspicious_activity::get_suspicious_activity_settings,
+            suspicious_activity::set_suspicious_activity_settings,
             assist::recommend_dns,
             assist::get_dns_assist_state,
             assist::apply_dns,

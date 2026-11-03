@@ -120,7 +120,11 @@ export type IntegrityIndicatorKind =
   | "gateway_arp_churn"
   | "cert_store_delta"
   | "process_egress_hint"
-  | "startup_network_agent";
+  | "hosts_file_delta"
+  | "proxy_config_delta"
+  | "startup_network_agent"
+  | "script_host_persistence"
+  | "mining_like_process";
 
 export interface IntegrityIndicator {
   kind: IntegrityIndicatorKind;
@@ -204,6 +208,26 @@ export interface AutorunSettings {
   consent_ack: boolean;
 }
 
+export interface SuspiciousActivityHit {
+  name: string;
+  location: string;
+  detail?: string | null;
+}
+
+export interface SuspiciousActivitySnapshot {
+  scanned: boolean;
+  enabled: boolean;
+  source: string;
+  persistence_hits: SuspiciousActivityHit[];
+  mining_hits: SuspiciousActivityHit[];
+  summary: string;
+}
+
+export interface SuspiciousActivitySettings {
+  enabled: boolean;
+  consent_ack: boolean;
+}
+
 export interface IntegrityBoardReport {
   indicator_count: number;
   level: IntegrityBoardLevel;
@@ -216,6 +240,7 @@ export interface IntegrityBoardReport {
   cert_store?: CertStoreSnapshot | null;
   process_egress?: ProcessEgressSnapshot | null;
   autoruns?: AutorunSnapshot | null;
+  suspicious_activity?: SuspiciousActivitySnapshot | null;
   not_checked: string[];
   confidence: IntegrityBoardConfidence;
 }

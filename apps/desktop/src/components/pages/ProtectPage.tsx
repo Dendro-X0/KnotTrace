@@ -17,6 +17,7 @@ import type {
   ProcessEgressSettings,
   ProtectAction,
   ProtectSettings,
+  SuspiciousActivitySettings,
 } from "@/types";
 
 interface ProtectPageProps {
@@ -85,6 +86,9 @@ export function ProtectPage({ state }: ProtectPageProps) {
   const [autoruns, setAutoruns] = useState<AutorunSettings | null>(null);
   const [autorunsError, setAutorunsError] = useState<string | null>(null);
   const [autorunsConsent, setAutorunsConsent] = useState(false);
+  const [suspicious, setSuspicious] = useState<SuspiciousActivitySettings | null>(null);
+  const [suspiciousError, setSuspiciousError] = useState<string | null>(null);
+  const [suspiciousConsent, setSuspiciousConsent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,10 +116,22 @@ export function ProtectPage({ state }: ProtectPageProps) {
           setAutorunsError(error instanceof Error ? error.message : String(error));
         }
       });
+    void state.getSuspiciousActivitySettings()
+      .then((settings) => {
+        if (!cancelled) {
+          setSuspicious(settings);
+          setSuspiciousConsent(settings.consent_ack);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setSuspiciousError(error instanceof Error ? error.message : String(error));
+        }
+      });
     return () => {
       cancelled = true;
     };
-  }, [state.getProcessEgressSettings, state.getAutorunSettings]);
+  }, [state.getProcessEgressSettings, state.getAutorunSettings, state.getSuspiciousActivitySettings]);
 
   return (
     <FeaturePage
@@ -319,6 +335,59 @@ export function ProtectPage({ state }: ProtectPageProps) {
                 })
                 .catch((error: unknown) => {
                   setAutorunsError(error instanceof Error ? error.message : String(error));
+                });
+            }}
+          />
+        </div>
+      </section>
+
+      <Separator className="shrink-0" />
+
+      <section className="grid gap-2 rounded-xl border border-border/60 bg-muted/15 px-3 py-3">
+        <h2 className="text-sm font-medium">Suspicious activity indicators (opt-in)</h2>
+        <p className="text-muted-foreground text-[0.68rem] leading-relaxed">
+          When enabled, KnotTrace looks for script-host persistence (Startup / Run) and mining-like
+          process command lines. Results are integrity indicators only — not antivirus, not removal.
+          Off by default.
+        </p>
+        {suspiciousError && <p className="text-muted-foreground text-xs">{suspiciousError}</p>}
+        <label className="flex items-start gap-2 text-xs">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={suspiciousConsent}
+            onChange={(event) => setSuspiciousConsent(event.target.checked)}
+          />
+          <span>
+            I understand KnotTrace will read local startup entries and a short process sample on this
+            device only, and will not call these malware verdicts.
+          </span>
+        </label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="suspicious-enabled" className="text-xs">
+            Enable suspicious-activity indicators
+          </Label>
+          <Switch
+            id="suspicious-enabled"
+            checked={suspicious?.enabled ?? false}
+            disabled={!suspicious}
+            onCheckedChange={(value) => {
+              if (value && !suspiciousConsent) {
+                setSuspiciousError("Ack the consent note before enabling.");
+                return;
+              }
+              void state
+                .setSuspiciousActivitySettings({
+                  enabled: value,
+                  consentAck: value ? suspiciousConsent : suspicious?.consent_ack ?? false,
+                })
+                .then((next) => {
+                  setSuspicious(next);
+                  setSuspiciousConsent(next.consent_ack);
+                  setSuspiciousError(null);
+                })
+                .catch((error: unknown) => {
+                  setSuspiciousError(error instanceof Error ? error.message : String(error));
                 });
             }}
           />

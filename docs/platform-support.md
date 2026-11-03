@@ -35,6 +35,7 @@ Release automation builds desktop installers for all three platforms on tag push
 | WAN/LAN listener scope (C2) | Yes | Yes | Yes |
 | Wi‑Fi noise / TX retries (C3) | Partial (signal only; noise/retries rarely exposed) | Partial | **Yes** (`iw` + `/proc/net/wireless`) |
 | Startup network agents (C4, opt-in) | **Yes** (HKCU Run) | **Yes** (LaunchAgents) | **Yes** (XDG autostart) |
+| Suspicious activity indicators (opt-in) | **Yes** (Run + Startup scripts + process sample) | **Best-effort** (LaunchAgents + `ps`) | **Best-effort** (XDG autostart + `ps`) |
 | Mobile companion (check + export) | Desktop preview `?companion=1`; mobile packaging via `cfg(mobile)` — **device L3 pending** | Same | Same |
 
 \* Requires a local Mihomo, sing-box, or compatible proxy with `external-controller` enabled.

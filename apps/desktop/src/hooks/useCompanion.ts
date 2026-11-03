@@ -12,6 +12,7 @@ import type {
   ConnectRecommendation,
   AiExplainSettings,
   AutorunSettings,
+  SuspiciousActivitySettings,
   ProcessEgressSettings,
   CloudExplainResult,
   DiagnosticBundle,
@@ -501,6 +502,17 @@ export function useCompanion() {
   const setAutorunSettings = useCallback(
     async (update: { enabled: boolean; consentAck: boolean }) => {
       return invoke<AutorunSettings>("set_autorun_settings", { update });
+    },
+    [],
+  );
+
+  const getSuspiciousActivitySettings = useCallback(async () => {
+    return invoke<SuspiciousActivitySettings>("get_suspicious_activity_settings");
+  }, []);
+
+  const setSuspiciousActivitySettings = useCallback(
+    async (update: { enabled: boolean; consentAck: boolean }) => {
+      return invoke<SuspiciousActivitySettings>("set_suspicious_activity_settings", { update });
     },
     [],
   );
@@ -1028,6 +1040,8 @@ export function useCompanion() {
     setProcessEgressSettings,
     getAutorunSettings,
     setAutorunSettings,
+    getSuspiciousActivitySettings,
+    setSuspiciousActivitySettings,
     deleteBenchmark,
     saveThroughputSettings,
     runThroughputTest,

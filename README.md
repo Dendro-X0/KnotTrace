@@ -1,6 +1,6 @@
 # KnotTrace
 
-**v1.9.1** — Desktop companion for connection health, Path Truth diagnosis, and **local-first, reversible** assists — without fake “speed boosts.”
+**v1.9.2** — Desktop companion for connection health, Path Truth diagnosis, and **local-first, reversible** assists — without fake “speed boosts.”
 
 **Trying it out?** Start here → **[docs/COMMUNITY.md](docs/COMMUNITY.md)** (install, first five minutes, diagnostic export, what it is / is not).
 

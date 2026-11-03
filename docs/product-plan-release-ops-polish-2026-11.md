@@ -12,7 +12,7 @@ GOAL:     Keep release/share scripts reliable offline and honest in docs —
 POSTURE:  Observe-first · claim discipline · no phone readiness · no fake Mbps
 BASELINE: v1.9.1 multi-OS latest.json + community gate
 DONE:     Charter · O1 · O2 · O3 · O4
-NEXT:     P2b when device capacity — wait for community feedback otherwise
+NEXT:     Share patch **v1.9.2** tagged — P2b still parked
 ```
 
 ---

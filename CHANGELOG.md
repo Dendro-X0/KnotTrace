@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.9.2] - 2026-11-03
+
+Share patch — multi-OS in-app updater in the release pipeline + release-ops polish.
+
 ### Added
 
 - **Multi-OS updater** — single-writer `latest.json` for Windows + Linux AppImage + macOS (`scripts/build-updater-manifest.sh`); release job merges after desktop builds
@@ -14,6 +18,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 ### Changed
 
 - In-app update honesty: desktop multi-OS (no longer Windows-primary); CompanionShell device L3 still parked
+
+### Notes
+
+- Feedback: [issue templates](https://github.com/Dendro-X0/KnotTrace/issues/new/choose)
+- Pre-share: `bash scripts/community-gate.sh` · asset check: `bash scripts/verify-release-assets.sh v1.9.2`
 
 ## [1.9.1] - 2026-11-02
 

@@ -274,6 +274,8 @@ pub enum IntegrityIndicatorKind {
     HostsFileDelta,
     ProxyConfigDelta,
     StartupNetworkAgent,
+    ScriptHostPersistence,
+    MiningLikeProcess,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -427,6 +429,39 @@ impl Default for AutorunSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SuspiciousActivityHit {
+    pub name: String,
+    pub location: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SuspiciousActivitySnapshot {
+    pub scanned: bool,
+    pub enabled: bool,
+    pub source: String,
+    pub persistence_hits: Vec<SuspiciousActivityHit>,
+    pub mining_hits: Vec<SuspiciousActivityHit>,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SuspiciousActivitySettings {
+    pub enabled: bool,
+    pub consent_ack: bool,
+}
+
+impl Default for SuspiciousActivitySettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            consent_ack: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrityBoardReport {
     pub indicator_count: u8,
     pub level: IntegrityBoardLevel,
@@ -444,6 +479,8 @@ pub struct IntegrityBoardReport {
     pub process_egress: Option<ProcessEgressSnapshot>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub autoruns: Option<AutorunSnapshot>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub suspicious_activity: Option<SuspiciousActivitySnapshot>,
     pub not_checked: Vec<String>,
     pub confidence: IntegrityBoardConfidence,
 }

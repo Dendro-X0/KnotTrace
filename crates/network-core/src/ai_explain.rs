@@ -357,6 +357,7 @@ mod tests {
                 cert_store: None,
                 process_egress: None,
                 autoruns: None,
+                suspicious_activity: None,
                 not_checked: vec![],
                 confidence: IntegrityBoardConfidence::Low,
             }),
@@ -461,6 +462,7 @@ mod tests {
             cert_store: None,
             process_egress: None,
                 autoruns: None,
+                suspicious_activity: None,
             not_checked: vec![],
             confidence: IntegrityBoardConfidence::High,
         });

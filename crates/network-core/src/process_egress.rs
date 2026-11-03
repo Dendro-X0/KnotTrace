@@ -598,6 +598,7 @@ mod tests {
                 cert_store: None,
                 process_egress: None,
                 autoruns: None,
+                suspicious_activity: None,
                 not_checked: vec!["Process ↔ egress correlation".to_string()],
                 confidence: IntegrityBoardConfidence::Low,
             }),

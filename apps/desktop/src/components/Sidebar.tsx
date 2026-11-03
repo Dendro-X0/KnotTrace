@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { Activity, Globe, LayoutDashboard, Network, Shield } from "lucide-react";
 
+import { DensityToggle } from "@/components/DensityToggle";
 import { GlobalSearchTrigger } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Separator } from "@/components/ui/separator";
@@ -135,7 +136,8 @@ export function Sidebar({ page, onNavigate, onOpenSearch, version }: SidebarProp
         <Separator />
       </div>
 
-      <div className="hidden px-2 lg:block">
+      <div className="hidden space-y-2 px-2 lg:block">
+        <DensityToggle compact />
         <ThemeToggle compact />
       </div>
 
@@ -144,7 +146,8 @@ export function Sidebar({ page, onNavigate, onOpenSearch, version }: SidebarProp
         Closing the window keeps the app running in the tray.
       </p>
 
-      <div className="px-2 lg:hidden">
+      <div className="space-y-2 px-2 lg:hidden">
+        <DensityToggle compact />
         <ThemeToggle compact />
       </div>
 

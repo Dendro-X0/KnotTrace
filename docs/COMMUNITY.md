@@ -37,9 +37,9 @@ macOS/Linux: same Releases page — use the `.dmg` / AppImage / `.deb` / `.rpm` 
 
 ## First five minutes
 
-1. Click **Run health check** in the header (or press **Ctrl+K**).  
-2. On **Overview**, read the grade/score, diagnosis summary, **Path break**, and **Integrity** panels.  
-3. Optionally open **Network** for link / tunnel / upstream-pool detail.  
+1. Click **Run health check** in the header (or press **Ctrl+K**). The UI starts in **Quick** mode (sidebar).  
+2. On **Overview**, read the grade/score, next steps, and short Path / Integrity teasers.  
+3. Switch to **Advanced** when you want full Path Truth detail, or open **Network** for link / local repair (Quick) vs the full probe grid (Advanced).  
 4. Use **DNS** / **Connect** / MTU / local-caps only when you want a reversible change.  
 5. If something looks wrong, use **Diagnostic export → Copy JSON** (below) before asking for help.
 

@@ -11,6 +11,8 @@ import { LocalExplainPanel } from "@/components/LocalExplainPanel";
 import { CloudExplainPanel } from "@/components/CloudExplainPanel";
 import { EgressTimelinePanel } from "@/components/EgressTimelinePanel";
 import { NextStepsPanel } from "@/components/NextStepsPanel";
+import { QuickIntegrityTeaser } from "@/components/QuickIntegrityTeaser";
+import { QuickPathTeaser } from "@/components/QuickPathTeaser";
 import { StatusHero } from "@/components/StatusHero";
 import { TrendCharts } from "@/components/TrendCharts";
 import { UpstreamPoolPanel } from "@/components/UpstreamPoolPanel";
@@ -20,6 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatLatency, gradeBadgeVariant } from "@/components/shared";
+import { useUiDensity } from "@/hooks/useUiDensity";
 import type { CompanionState } from "@/hooks/useCompanion";
 
 interface OverviewPageProps {
@@ -27,12 +30,15 @@ interface OverviewPageProps {
 }
 
 export function OverviewPage({ state }: OverviewPageProps) {
+  const { isQuick } = useUiDensity();
   const grade = state.report?.score.grade;
   const firstDnsSample = state.report?.probe.dns.find((sample) => sample.success);
   const loading = state.bootstrapping && !state.report;
   const lastReason = state.monitorStatus?.last_reason ?? "";
   const checkProfile = state.monitorStatus
-    ? (lastReason.startsWith("manual") ? "fast" : "full")
+    ? lastReason.startsWith("manual")
+      ? "fast"
+      : "full"
     : undefined;
 
   const quickStats = [
@@ -96,115 +102,146 @@ export function OverviewPage({ state }: OverviewPageProps) {
         </div>
       </section>
 
-      <Card className="min-h-0">
-        <CardHeader className="pb-2">
-          <CardTitle>Diagnosis & benchmarks</CardTitle>
-        </CardHeader>
-        <CardContent className="grid min-h-0 items-start gap-3 md:grid-cols-2">
-          {loading ? (
-            <>
-              <Skeleton className="h-40 rounded-lg" />
-              <Skeleton className="h-40 rounded-lg" />
-            </>
-          ) : (
-            <>
-              <div className="grid min-h-0 min-w-0 gap-3">
-                <NetworkDiagnosisPanel diagnosis={state.report?.diagnosis} />
-                <PathBreakPanel loading={loading} report={state.report?.path_break} compact />
-                <IntegrityBoardPanel loading={loading} report={state.report?.integrity} compact />
-                <EgressTimelinePanel loading={loading} report={state.report?.egress_timeline} compact />
-                <LocalExplainPanel state={state} />
-                <CloudExplainPanel state={state} />
-                <DiagnosticBundlePanel state={state} />
-              </div>
-              <div className="grid min-h-0 gap-3">
-                <UpstreamPoolPanel
-                  loading={loading}
-                  proxyEnabled={state.report?.environment.proxy.enabled}
-                  proof={state.report?.upstream_pool}
-                  compact
-                />
-                <NextStepsPanel state={state} />
-                <BenchmarkPanel
-                  snapshots={state.benchmarkSnapshots}
-                  saving={state.benchmarkSaving}
-                  error={state.benchmarkError}
-                  onSave={state.saveBenchmark}
-                  onDelete={state.deleteBenchmark}
-                />
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="min-h-0">
-        <CardHeader className="pb-2">
-          <CardTitle>Trends</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} className="h-24 rounded-lg" />
-              ))}
-            </div>
-          ) : (
-            <TrendCharts points={state.trends} error={state.trendsError} />
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="min-h-0">
-        <CardHeader className="pb-2">
-          <CardTitle>Recent checks</CardTitle>
-        </CardHeader>
-        <CardContent className="min-h-0">
-          {loading ? (
-            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton key={index} className="h-20 rounded-lg" />
-              ))}
-            </div>
-          ) : state.historyError ? (
-            <EmptyState
-              icon={Clock3}
-              title="History unavailable"
-              description={state.historyError}
+      {isQuick ? (
+        <section className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3">
+            <NextStepsPanel state={state} />
+            <DiagnosticBundlePanel state={state} />
+          </div>
+          <div className="grid gap-3">
+            <QuickPathTeaser loading={loading} report={state.report?.path_break} />
+            <QuickIntegrityTeaser
+              loading={loading}
+              report={state.report?.integrity}
+              onOpenProtect={() => state.navigate("protect")}
             />
-          ) : state.history.length === 0 ? (
-            <EmptyState
-              icon={Clock3}
-              title="No saved checks yet"
-              description="Run a health check to start building your connection history."
-              action={
-                <Button size="sm" onClick={() => void state.runCheck()} disabled={state.checking}>
-                  Run health check
-                </Button>
-              }
-            />
-          ) : (
-            <ScrollArea className="max-h-[24rem] lg:max-h-none">
-              <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-                {state.history.map((item) => (
-                  <div
-                    key={item.timestamp}
-                    className="rounded-lg border border-border/70 bg-muted/20 p-2.5"
-                  >
-                    <Badge variant={gradeBadgeVariant(item.score.grade)} className="mb-1">
-                      {item.score.grade.toUpperCase()}
-                    </Badge>
-                    <p className="truncate text-xs">{item.score.summary}</p>
-                    <p className="text-muted-foreground mt-1 text-[0.68rem]">
-                      {new Date(item.timestamp).toLocaleString()}
-                    </p>
+          </div>
+        </section>
+      ) : (
+        <>
+          <Card className="min-h-0">
+            <CardHeader className="pb-2">
+              <CardTitle>Diagnosis & benchmarks</CardTitle>
+            </CardHeader>
+            <CardContent className="grid min-h-0 items-start gap-3 md:grid-cols-2">
+              {loading ? (
+                <>
+                  <Skeleton className="h-40 rounded-lg" />
+                  <Skeleton className="h-40 rounded-lg" />
+                </>
+              ) : (
+                <>
+                  <div className="grid min-h-0 min-w-0 gap-3">
+                    <NetworkDiagnosisPanel diagnosis={state.report?.diagnosis} />
+                    <PathBreakPanel loading={loading} report={state.report?.path_break} compact />
+                    <IntegrityBoardPanel
+                      loading={loading}
+                      report={state.report?.integrity}
+                      compact
+                    />
+                    <EgressTimelinePanel
+                      loading={loading}
+                      report={state.report?.egress_timeline}
+                      compact
+                    />
+                    <LocalExplainPanel state={state} />
+                    <CloudExplainPanel state={state} />
+                    <DiagnosticBundlePanel state={state} />
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
-        </CardContent>
-      </Card>
+                  <div className="grid min-h-0 gap-3">
+                    <UpstreamPoolPanel
+                      loading={loading}
+                      proxyEnabled={state.report?.environment.proxy.enabled}
+                      proof={state.report?.upstream_pool}
+                      compact
+                    />
+                    <NextStepsPanel state={state} />
+                    <BenchmarkPanel
+                      snapshots={state.benchmarkSnapshots}
+                      saving={state.benchmarkSaving}
+                      error={state.benchmarkError}
+                      onSave={state.saveBenchmark}
+                      onDelete={state.deleteBenchmark}
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="min-h-0">
+            <CardHeader className="pb-2">
+              <CardTitle>Trends</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <Skeleton key={index} className="h-24 rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <TrendCharts points={state.trends} error={state.trendsError} />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="min-h-0">
+            <CardHeader className="pb-2">
+              <CardTitle>Recent checks</CardTitle>
+            </CardHeader>
+            <CardContent className="min-h-0">
+              {loading ? (
+                <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <Skeleton key={index} className="h-20 rounded-lg" />
+                  ))}
+                </div>
+              ) : state.historyError ? (
+                <EmptyState
+                  icon={Clock3}
+                  title="History unavailable"
+                  description={state.historyError}
+                />
+              ) : state.history.length === 0 ? (
+                <EmptyState
+                  icon={Clock3}
+                  title="No saved checks yet"
+                  description="Run a health check to start building your connection history."
+                  action={
+                    <Button
+                      size="sm"
+                      onClick={() => void state.runCheck()}
+                      disabled={state.checking}
+                    >
+                      Run health check
+                    </Button>
+                  }
+                />
+              ) : (
+                <ScrollArea className="max-h-[24rem] lg:max-h-none">
+                  <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+                    {state.history.map((item) => (
+                      <div
+                        key={item.timestamp}
+                        className="rounded-lg border border-border/70 bg-muted/20 p-2.5"
+                      >
+                        <Badge variant={gradeBadgeVariant(item.score.grade)} className="mb-1">
+                          {item.score.grade.toUpperCase()}
+                        </Badge>
+                        <p className="truncate text-xs">{item.score.summary}</p>
+                        <p className="text-muted-foreground mt-1 text-[0.68rem]">
+                          {new Date(item.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

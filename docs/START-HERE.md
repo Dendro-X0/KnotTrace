@@ -19,9 +19,9 @@ Product direction: fix what is on the machine (DNS, link, OS caps, MTU) first; t
 ## First five minutes
 
 1. Run `npm run tauri dev` (see [development.md](./development.md)) or install a release build (see [release.md](./release.md) / [COMMUNITY.md](./COMMUNITY.md)).
-2. Open **Overview** — wait for the first health check (tray shows status).
-3. Read **diagnosis** hints — note the slowdown shape, confidence, and any upstream pool claim.
-4. On **Network**, review **Link**, **Local caps** (Windows), **MTU assist**, **Upstream pool proof**, **Tunnel compare**, proxy path comparison, stability probes, and optional throughput.
+2. Open **Overview** — wait for the first health check (tray shows status). UI defaults to **Quick** mode (sidebar toggle).
+3. Read the score and next steps; Path / Integrity appear as short teasers. Switch to **Advanced** for full diagnosis, upstream proof, trends, and benchmarks.
+4. On **Network** in Quick: link + local repair. In Advanced: caps, MTU, path break, integrity evidence, throughput, etc.
 5. Use **DNS** / **Connect** only when you want a reversible change (DNS apply works on Windows, macOS, and Linux).
 
 Community tryouts: prefer [COMMUNITY.md](./COMMUNITY.md). Report problems via [GitHub Issues](https://github.com/Dendro-X0/KnotTrace/issues).
@@ -65,6 +65,8 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [product-plan-share-patch-1-9-2-2026-11.md](./product-plan-share-patch-1-9-2-2026-11.md) — share patch **v1.9.2**
 - [product-plan-suspicious-activity-indicators-2026-11.md](./product-plan-suspicious-activity-indicators-2026-11.md) — surveillance/mining **indicators** (**complete** @ v1.9.3; not AV)
 - [product-plan-share-patch-1-9-3-2026-11.md](./product-plan-share-patch-1-9-3-2026-11.md) — share patch **v1.9.3**
+- [product-plan-ui-density-modes-2026-11.md](./product-plan-ui-density-modes-2026-11.md) — Quick vs Advanced UI (**complete**)
+- [frontend-spec-ui-density-modes.md](./frontend-spec-ui-density-modes.md) — Quick/Advanced panel map
 - [l3-device-proof.md](./l3-device-proof.md) — P2a CI headless / P2b physical CompanionShell checklist
 - [product-plan-share-ops-2026-11.md](./product-plan-share-ops-2026-11.md) — share-loop ops (**complete**)
 - [product-plan-tryout-clarity-2026-11.md](./product-plan-tryout-clarity-2026-11.md) — tryout clarity + release asset verify (**complete**)

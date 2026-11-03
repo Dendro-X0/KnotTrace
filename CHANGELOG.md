@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+### Added
+
+- **Quick / Advanced UI** — sidebar density toggle (default Quick); Overview and Network progressive disclosure without removing Path Truth depth
+
 ## [1.9.3] - 2026-11-03
 
 Share patch — opt-in suspicious activity indicators (script-host persistence / mining-like heuristics).

@@ -14,7 +14,7 @@ GOAL:     Surface opt-in indicators that *may* be consistent with unknown
 POSTURE:  Observe-first · indicators with confidence · reversible / no kill
 BASELINE: Integrity board, listeners, autoruns, process↔egress @ v1.9.2
 DONE:     Charter · I1 · I2 · I3 · I4 · I5
-NEXT:     Shipped @ **v1.9.3** — P2b still parked
+NEXT:     UI density **complete** — [product-plan-ui-density-modes-2026-11.md](./product-plan-ui-density-modes-2026-11.md)
 ```
 
 ---

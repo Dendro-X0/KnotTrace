@@ -48,8 +48,8 @@ export function UpdateBanner({
             You can keep using this build, retry later, or download an installer from GitHub Releases.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="secondary" disabled={checking} onClick={onCheck}>
+        <div className="flex items-center gap-2">
+          <Button size="sm" disabled={checking} onClick={onCheck}>
             {checking ? "Checking..." : "Check again"}
           </Button>
           <Button size="sm" variant="secondary" onClick={onOpenRelease}>

@@ -16,15 +16,28 @@ import { EgressTimelinePanel } from "@/components/EgressTimelinePanel";
 import { ProxyPathPanel } from "@/components/ProxyPathPanel";
 import { ThroughputPanel } from "@/components/ThroughputPanel";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUiDensity } from "@/hooks/useUiDensity";
 import type { CompanionState } from "@/hooks/useCompanion";
+import { cn } from "@/lib/utils";
 import { formatTag } from "@/types";
 
 interface NetworkPageProps {
   state: CompanionState;
+}
+
+const ADVANCED_SECTIONS = [
+  { id: "network-link", label: "Link & local" },
+  { id: "network-path", label: "Path" },
+  { id: "network-integrity", label: "Integrity" },
+  { id: "network-throughput", label: "Throughput" },
+] as const;
+
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export function NetworkPage({ state }: NetworkPageProps) {
@@ -91,6 +104,11 @@ export function NetworkPage({ state }: NetworkPageProps) {
             icon={Radar}
             title="No probe data yet"
             description="Latency and DNS measurements will appear here after your first health check."
+            action={
+              <Button size="sm" disabled={state.checking} onClick={() => void state.runCheck()}>
+                {state.checking ? "Checking…" : "Run health check"}
+              </Button>
+            }
           />
         )}
       </CardContent>
@@ -146,123 +164,191 @@ export function NetworkPage({ state }: NetworkPageProps) {
     );
   }
 
-  return (
-    <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-2">
-      <Card className="min-h-0 border-border/70 bg-card/80">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
-              <Network className="size-4" />
-            </div>
-            <CardTitle>Environment</CardTitle>
+  const environmentCard = (
+    <Card className="min-h-0 border-border/70 bg-card/80">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
+            <Network className="size-4" />
           </div>
-          <div className="flex flex-wrap justify-end gap-1">
-            {(env?.tags ?? []).map((tag) => (
-              <Badge key={tag} variant="info">
-                {formatTag(tag)}
-              </Badge>
+          <CardTitle>Environment</CardTitle>
+        </div>
+        <div className="flex flex-wrap justify-end gap-1">
+          {(env?.tags ?? []).map((tag) => (
+            <Badge key={tag} variant="info">
+              {formatTag(tag)}
+            </Badge>
+          ))}
+        </div>
+      </CardHeader>
+      <CardContent className="min-h-0">
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-4 w-full" />
             ))}
           </div>
-        </CardHeader>
-        <CardContent className="min-h-0">
-          {loading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton key={index} className="h-4 w-full" />
-              ))}
-            </div>
-          ) : env ? (
-            <ScrollArea className="max-h-[28rem]">
-              <FactList
-                rows={[
-                  { label: "Host", value: env.hostname },
-                  { label: "Active interface", value: env.active_interface ?? "Unknown" },
-                  { label: "Default gateway", value: env.default_gateway ?? "Not detected" },
-                  {
-                    label: "Proxy",
-                    value: env.proxy.enabled
-                      ? `${env.proxy.server ?? "enabled"} (${env.proxy.source})`
-                      : "Off",
-                  },
-                  {
-                    label: "DNS servers",
-                    value:
-                      env.dns_servers.map((server) => server.address).join(", ") ||
-                      "System default",
-                  },
-                  {
-                    label: "Tor",
-                    value: env.tor?.detected
-                      ? `${env.tor.socks_endpoint ?? "detected"} (${env.tor.source})${
-                          env.tor.socks_reachable ? " · reachable" : " · unreachable"
-                        }`
-                      : "Not detected",
-                  },
-                ]}
-              />
-            </ScrollArea>
-          ) : (
-            <EmptyState
-              icon={Network}
-              title="No environment snapshot"
-              description="Run a health check to capture interface, gateway, proxy, and DNS details."
+        ) : env ? (
+          <ScrollArea className="max-h-[28rem]">
+            <FactList
+              rows={[
+                { label: "Host", value: env.hostname },
+                { label: "Active interface", value: env.active_interface ?? "Unknown" },
+                { label: "Default gateway", value: env.default_gateway ?? "Not detected" },
+                {
+                  label: "Proxy",
+                  value: env.proxy.enabled
+                    ? `${env.proxy.server ?? "enabled"} (${env.proxy.source})`
+                    : "Off",
+                },
+                {
+                  label: "DNS servers",
+                  value:
+                    env.dns_servers.map((server) => server.address).join(", ") || "System default",
+                },
+                {
+                  label: "Tor",
+                  value: env.tor?.detected
+                    ? `${env.tor.socks_endpoint ?? "detected"} (${env.tor.source})${
+                        env.tor.socks_reachable ? " · reachable" : " · unreachable"
+                      }`
+                    : "Not detected",
+                },
+              ]}
             />
-          )}
-        </CardContent>
-      </Card>
+          </ScrollArea>
+        ) : (
+          <EmptyState
+            icon={Network}
+            title="No environment snapshot"
+            description="Run a health check to capture interface, gateway, proxy, and DNS details."
+            action={
+              <Button size="sm" disabled={state.checking} onClick={() => void state.runCheck()}>
+                {state.checking ? "Checking…" : "Run health check"}
+              </Button>
+            }
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
 
-      {probeCard}
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <nav
+        aria-label="Network sections"
+        className="bg-background/85 sticky top-0 z-10 -mx-0.5 flex flex-wrap gap-1.5 rounded-xl border border-border/50 px-2 py-2 backdrop-blur-sm"
+      >
+        {ADVANCED_SECTIONS.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            className={cn(
+              "rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+              "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+            )}
+            onClick={() => scrollToSection(section.id)}
+          >
+            {section.label}
+          </button>
+        ))}
+      </nav>
 
-      <StabilityProbesPanel stability={state.report?.stability} />
-      <LinkFactsPanel loading={loading} report={state.report?.link_facts} />
-      <LocalRepairPanel
-        loading={loading}
-        report={state.report?.local_repair}
-        runningAction={state.localRepairRunning}
-        error={state.localRepairError}
-        onRun={(action) => void state.runLocalRepair(action)}
-      />
-      <LocalCapsPanel
-        loading={loading}
-        report={state.report?.local_caps}
-        state={state.localCapsState}
-        applying={state.localCapsApplying}
-        restoring={state.localCapsRestoring}
-        error={state.localCapsError}
-        onApply={() => void state.applyLocalCaps()}
-        onRestore={() => void state.restoreLocalCaps()}
-      />
-      <MtuAssistPanel
-        loading={loading}
-        report={state.report?.mtu_assist}
-        state={state.mtuAssistState}
-        applying={state.mtuAssistApplying}
-        restoring={state.mtuAssistRestoring}
-        error={state.mtuAssistError}
-        onApply={() => void state.applyMtuAssist()}
-        onRestore={() => void state.restoreMtuAssist()}
-      />
-      <NetworkInsightsPanel
-        loading={loading}
-        egress={state.report?.egress}
-        networkContext={state.report?.network_context}
-        recommendations={state.report?.recommendations}
-      />
-      <PathBreakPanel loading={loading} report={state.report?.path_break} />
-      <IntegrityBoardPanel loading={loading} report={state.report?.integrity} />
-      <EgressTimelinePanel loading={loading} report={state.report?.egress_timeline} />
-      <ProxyPathPanel
-        loading={loading}
-        proxyEnabled={env?.proxy.enabled}
-        report={state.report?.proxy_path_report}
-      />
-      <UpstreamPoolPanel
-        loading={loading}
-        proxyEnabled={env?.proxy.enabled}
-        proof={state.report?.upstream_pool}
-      />
-      <TunnelComparePanel loading={loading} report={state.report?.tunnel_compare} />
-      <ThroughputPanel state={state} />
+      <div className="flex min-h-0 flex-col gap-5">
+        <section id="network-link" className="scroll-mt-14 space-y-2">
+          <h2 className="text-muted-foreground px-0.5 text-[0.68rem] font-semibold tracking-wide uppercase">
+            Link & local
+          </h2>
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            {environmentCard}
+            {probeCard}
+            <StabilityProbesPanel stability={state.report?.stability} />
+            <LinkFactsPanel loading={loading} report={state.report?.link_facts} />
+            <LocalRepairPanel
+              loading={loading}
+              report={state.report?.local_repair}
+              runningAction={state.localRepairRunning}
+              error={state.localRepairError}
+              onRun={(action) => void state.runLocalRepair(action)}
+            />
+            <LocalCapsPanel
+              loading={loading}
+              report={state.report?.local_caps}
+              state={state.localCapsState}
+              applying={state.localCapsApplying}
+              restoring={state.localCapsRestoring}
+              error={state.localCapsError}
+              onApply={() => void state.applyLocalCaps()}
+              onRestore={() => void state.restoreLocalCaps()}
+            />
+            <MtuAssistPanel
+              loading={loading}
+              report={state.report?.mtu_assist}
+              state={state.mtuAssistState}
+              applying={state.mtuAssistApplying}
+              restoring={state.mtuAssistRestoring}
+              error={state.mtuAssistError}
+              onApply={() => void state.applyMtuAssist()}
+              onRestore={() => void state.restoreMtuAssist()}
+            />
+          </div>
+        </section>
+
+        <section id="network-path" className="scroll-mt-14 space-y-2">
+          <h2 className="text-muted-foreground px-0.5 text-[0.68rem] font-semibold tracking-wide uppercase">
+            Path
+          </h2>
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            <NetworkInsightsPanel
+              loading={loading}
+              egress={state.report?.egress}
+              networkContext={state.report?.network_context}
+              recommendations={state.report?.recommendations}
+            />
+            <PathBreakPanel
+              loading={loading}
+              report={state.report?.path_break}
+              checking={state.checking}
+              onRunCheck={() => void state.runCheck()}
+            />
+            <ProxyPathPanel
+              loading={loading}
+              proxyEnabled={env?.proxy.enabled}
+              report={state.report?.proxy_path_report}
+            />
+            <UpstreamPoolPanel
+              loading={loading}
+              proxyEnabled={env?.proxy.enabled}
+              proof={state.report?.upstream_pool}
+            />
+            <TunnelComparePanel loading={loading} report={state.report?.tunnel_compare} />
+            <EgressTimelinePanel loading={loading} report={state.report?.egress_timeline} />
+          </div>
+        </section>
+
+        <section id="network-integrity" className="scroll-mt-14 space-y-2">
+          <h2 className="text-muted-foreground px-0.5 text-[0.68rem] font-semibold tracking-wide uppercase">
+            Integrity
+          </h2>
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            <IntegrityBoardPanel
+              loading={loading}
+              report={state.report?.integrity}
+              checking={state.checking}
+              onRunCheck={() => void state.runCheck()}
+            />
+          </div>
+        </section>
+
+        <section id="network-throughput" className="scroll-mt-14 space-y-2">
+          <h2 className="text-muted-foreground px-0.5 text-[0.68rem] font-semibold tracking-wide uppercase">
+            Throughput
+          </h2>
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            <ThroughputPanel state={state} />
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

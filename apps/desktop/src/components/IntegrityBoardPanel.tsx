@@ -2,6 +2,7 @@ import { ShieldAlert } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { IntegrityBoardReport } from "@/types";
@@ -10,6 +11,8 @@ interface IntegrityBoardPanelProps {
   loading?: boolean;
   report?: IntegrityBoardReport | null;
   compact?: boolean;
+  checking?: boolean;
+  onRunCheck?: () => void;
 }
 
 function levelVariant(level: IntegrityBoardReport["level"]) {
@@ -25,7 +28,13 @@ function severityVariant(severity: "info" | "warning" | "critical") {
   return "info" as const;
 }
 
-export function IntegrityBoardPanel({ loading, report, compact }: IntegrityBoardPanelProps) {
+export function IntegrityBoardPanel({
+  loading,
+  report,
+  compact,
+  checking,
+  onRunCheck,
+}: IntegrityBoardPanelProps) {
   if (loading) {
     return <Skeleton className={compact ? "h-28 rounded-lg" : "h-44 rounded-lg"} />;
   }
@@ -36,6 +45,13 @@ export function IntegrityBoardPanel({ loading, report, compact }: IntegrityBoard
         icon={ShieldAlert}
         title="Integrity not ready yet"
         description="Run a health check to load exposure indicators. Empty here is not “secure” — absence of indicators never means you are unobserved."
+        action={
+          onRunCheck ? (
+            <Button size="sm" disabled={checking} onClick={onRunCheck}>
+              {checking ? "Checking…" : "Run health check"}
+            </Button>
+          ) : undefined
+        }
       />
     );
   }

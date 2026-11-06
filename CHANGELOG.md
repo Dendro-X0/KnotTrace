@@ -6,6 +6,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-11-06
+
+Share patch — desktop trust + Path Truth Quick honesty (A1–B3). Still indicators, not AV.
+
+### Added
+
+- **Advanced Network section nav (A2)** — sticky Link / Path / Integrity / Throughput jump pills; Quick Network unchanged
+
+### Changed
+
+- **Empty / failure CTAs (A1)** — one primary action on export-without-report, integrity/path empty, check retry, Protect needs-check, script-risk empty, trends/next-steps
+- **Next-step ranking (B1)** — shared Quick/Advanced planner ranks by diagnosis confidence + shape; drops low-confidence clutter; Connect/DNS Assist only when eligible (`page_start` still offers DNS review)
+- **Captive + bufferbloat Quick (B2)** — hotspot sign-in / Network guidance (no DNS-first); under-load lag named as bufferbloat in Quick hero and next steps
+- **Settings & chrome (A3)** — Quick header drops monitor toggle (Settings owns it); Overview Quick no longer doubles Run check; next-step / hero copy in en + zh-Hans
+- **Tunnel / Tor Quick honesty (B3)** — Path teaser expectation when VPN/Tor/proxy active; local-OK tunnels get “slower is expected” next steps (Network only, no Connect speed CTA)
+
+### Notes
+
+- Feedback: [issue templates](https://github.com/Dendro-X0/KnotTrace/issues/new/choose)
+- Pre-share: `bash scripts/community-gate.sh` · assets: `bash scripts/verify-release-assets.sh v1.10.1`
+- Still not AV/EDR; CompanionShell device L3 remains parked
+- Charter: [product-plan-desktop-trust-path-truth-2026-11.md](docs/product-plan-desktop-trust-path-truth-2026-11.md) · share plan: [product-plan-share-patch-1-10-1-2026-11.md](docs/product-plan-share-patch-1-10-1-2026-11.md)
+
 ## [1.10.0] - 2026-11-03
 
 Share release — consumer UX calm path + bounded script-risk scan (still indicators, not AV).
@@ -381,6 +404,7 @@ Community-readiness share tag — reliability gates and honest public entry with
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.10.1]: https://github.com/Dendro-X0/KnotTrace/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.1...v1.9.2

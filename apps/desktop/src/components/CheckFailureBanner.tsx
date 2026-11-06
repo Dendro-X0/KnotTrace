@@ -25,7 +25,7 @@ export function CheckFailureBanner({ message, checking, onRetry }: CheckFailureB
           </p>
         </div>
       </div>
-      <Button size="sm" variant="secondary" disabled={checking} onClick={onRetry}>
+      <Button size="sm" disabled={checking} onClick={onRetry}>
         <RefreshCw className="size-4" />
         {checking ? "Retrying…" : "Retry check"}
       </Button>

@@ -188,7 +188,14 @@ export function ScriptRiskPanel({ state }: ScriptRiskPanelProps) {
         </div>
       </div>
 
-      {snapshot?.scanned && (
+      {!snapshot?.scanned ? (
+        <div className="border-t border-border/40 px-4 py-3.5 sm:px-5">
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            No scan yet. Use <span className="text-foreground font-medium">Run scan</span> above
+            after ticking permission — indicators only, not antivirus.
+          </p>
+        </div>
+      ) : (
         <div className="space-y-3 border-t border-border/40 px-4 py-3.5 sm:px-5">
           <p className="text-sm leading-relaxed">{snapshot.summary}</p>
           <HitList title="Startup / script hosts" hits={snapshot.persistence_hits} />
@@ -196,7 +203,8 @@ export function ScriptRiskPanel({ state }: ScriptRiskPanelProps) {
           <HitList title="Scripts on disk" hits={snapshot.disk_hits ?? []} />
           {hitCount === 0 && (
             <p className="text-muted-foreground text-[0.68rem] leading-relaxed">
-              No matches in this sample. That does not mean the PC is malware-free.
+              No matches in this sample. That does not mean the PC is malware-free. Run scan again
+              anytime from the button above.
             </p>
           )}
         </div>

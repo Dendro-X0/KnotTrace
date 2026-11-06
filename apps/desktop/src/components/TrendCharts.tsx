@@ -2,6 +2,7 @@ import { LineChart } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { HistoryTrendPoint } from "@/types";
 
 function buildPath(
@@ -85,9 +86,11 @@ function MiniChart({ title, values, color, maxValue, unit, formatLatest }: MiniC
 interface TrendChartsProps {
   points: HistoryTrendPoint[];
   error?: string | null;
+  checking?: boolean;
+  onRunCheck?: () => void;
 }
 
-export function TrendCharts({ points, error }: TrendChartsProps) {
+export function TrendCharts({ points, error, checking, onRunCheck }: TrendChartsProps) {
   if (error) {
     return (
       <EmptyState
@@ -95,6 +98,13 @@ export function TrendCharts({ points, error }: TrendChartsProps) {
         title="Trend data unavailable"
         description={error}
         className="py-8"
+        action={
+          onRunCheck ? (
+            <Button size="sm" disabled={checking} onClick={onRunCheck}>
+              {checking ? "Checking…" : "Run health check"}
+            </Button>
+          ) : undefined
+        }
       />
     );
   }
@@ -106,6 +116,13 @@ export function TrendCharts({ points, error }: TrendChartsProps) {
         title="Not enough trend data"
         description="Run a few health checks to see score and latency trends over time."
         className="py-8"
+        action={
+          onRunCheck ? (
+            <Button size="sm" disabled={checking} onClick={onRunCheck}>
+              {checking ? "Checking…" : "Run health check"}
+            </Button>
+          ) : undefined
+        }
       />
     );
   }

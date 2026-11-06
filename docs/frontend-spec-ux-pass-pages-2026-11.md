@@ -47,11 +47,13 @@ KnotTrace reads as a capable **network companion**, but several pages still feel
    Integrity settings are Advanced-adjacent.  
    **Fix:** Quick = ranking + apply/restore + integrity status panel; settings editor Advanced-only.
 
-### P2 — Polish (later)
+### P2 — Polish (absorbed by A+B charter)
 
 7. Sidebar “Network” vs Overview path language still overlaps conceptually.  
 8. Advanced Network remains a vertical panel avalanche — needs section anchors or tabs later.  
 9. Empty states are honest; tighten CTAs to one primary action each.
+
+Owned by [product-plan-desktop-trust-path-truth-2026-11.md](./product-plan-desktop-trust-path-truth-2026-11.md) (**A1** / **A2**); not a separate UX-pass band.
 
 ## Non-goals
 

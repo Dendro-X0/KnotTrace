@@ -19,12 +19,14 @@ Product direction: fix what is on the machine (DNS, link, OS caps, MTU) first; t
 ## First five minutes
 
 1. Run `npm run tauri dev` (see [development.md](./development.md)) or install a release build (see [release.md](./release.md) / [COMMUNITY.md](./COMMUNITY.md)).
-2. Open **Overview** — wait for the first health check (tray shows status). UI defaults to **Quick** mode (sidebar toggle).
-3. Read the score and next steps; Path / Integrity appear as short teasers. Switch to **Advanced** for full diagnosis, upstream proof, trends, and benchmarks.
-4. On **Network** in Quick: link + local repair. In Advanced: caps, MTU, path break, integrity evidence, throughput, etc.
-5. Use **DNS** / **Connect** only when you want a reversible change (DNS apply works on Windows, macOS, and Linux).
+2. Open **Overview** — wait for the first health check (tray shows status). UI defaults to **Quick** mode.
+3. Read the score and ranked next steps; Path / Integrity appear as short teasers (Path may state tunnel expectation when VPN/Tor/proxy is active). Theme, language, density, and monitor live under **Settings**.
+4. Switch to **Advanced** for full diagnosis, upstream proof, trends, and benchmarks. On **Network** Advanced: use Link / Path / Integrity / Throughput jump pills.
+5. Use **DNS** / **Connect** only when you want a reversible change (DNS apply works on Windows, macOS, and Linux). Captive and tunnel-honesty cases steer away from DNS-first / “speed up Tor” CTAs.
 
 Community tryouts: prefer [COMMUNITY.md](./COMMUNITY.md). Report problems via [GitHub Issues](https://github.com/Dendro-X0/KnotTrace/issues).
+
+**Active release prep:** [product-plan-share-patch-1-10-1-2026-11.md](./product-plan-share-patch-1-10-1-2026-11.md) (**v1.10.1** ready to tag). Charter: [product-plan-desktop-trust-path-truth-2026-11.md](./product-plan-desktop-trust-path-truth-2026-11.md) — **A1–A3 · B1–B3 · D1 · V\*** done locally.
 
 ## Local data
 
@@ -68,6 +70,17 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [product-plan-ui-density-modes-2026-11.md](./product-plan-ui-density-modes-2026-11.md) — Quick vs Advanced UI (**complete**)
 - [product-plan-script-risk-scan-2026-11.md](./product-plan-script-risk-scan-2026-11.md) — bounded script-risk scan (**complete**; not AV)
 - [product-plan-share-patch-1-10-0-2026-11.md](./product-plan-share-patch-1-10-0-2026-11.md) — share release **v1.10.0**
+- [product-plan-share-patch-1-10-1-2026-11.md](./product-plan-share-patch-1-10-1-2026-11.md) — share patch **v1.10.1** (ready to tag)
+- [product-plan-desktop-trust-path-truth-2026-11.md](./product-plan-desktop-trust-path-truth-2026-11.md) — desktop trust (A) + Path Truth sharpen (B) — **complete @ v1.10.1**
+- [frontend-spec-empty-failure-ctas-2026-11.md](./frontend-spec-empty-failure-ctas-2026-11.md) — empty/failure one-CTA map (A1)
+- [frontend-spec-network-advanced-nav-2026-11.md](./frontend-spec-network-advanced-nav-2026-11.md) — Advanced Network section nav (A2)
+- [frontend-spec-next-step-ranking-2026-11.md](./frontend-spec-next-step-ranking-2026-11.md) — next-step ranking (B1)
+- [../specs/backend/next-step-ranking-design.md](../specs/backend/next-step-ranking-design.md) — B1 ranking contract
+- [frontend-spec-captive-bufferbloat-quick-2026-11.md](./frontend-spec-captive-bufferbloat-quick-2026-11.md) — captive + bufferbloat Quick (B2)
+- [../specs/backend/captive-bufferbloat-quick-design.md](../specs/backend/captive-bufferbloat-quick-design.md) — B2 Quick surfacing contract
+- [frontend-spec-settings-chrome-a3-2026-11.md](./frontend-spec-settings-chrome-a3-2026-11.md) — Settings/chrome consistency (A3)
+- [frontend-spec-tunnel-tor-quick-2026-11.md](./frontend-spec-tunnel-tor-quick-2026-11.md) — tunnel/Tor Quick honesty (B3)
+- [../specs/backend/tunnel-tor-quick-honesty-design.md](../specs/backend/tunnel-tor-quick-honesty-design.md) — B3 honesty contract
 - [frontend-spec-ui-density-modes.md](./frontend-spec-ui-density-modes.md) — Quick/Advanced panel map
 - [frontend-spec-settings-page-2026-11.md](./frontend-spec-settings-page-2026-11.md) — Settings page
 - [frontend-spec-i18n-2026-11.md](./frontend-spec-i18n-2026-11.md) — locale JSON + toggle

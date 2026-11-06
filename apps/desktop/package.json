@@ -1,7 +1,7 @@
 {
   "name": "knottrace-desktop",
   "private": true,
-  "version": "1.10.0",
+  "version": "1.10.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "smoke:gui": "node ./scripts/gui-click-smoke.mjs",
+    "test:unit": "node --experimental-strip-types --test src/lib/*.test.ts",
     "lockfile:verify": "npm ci"
   },
   "dependencies": {

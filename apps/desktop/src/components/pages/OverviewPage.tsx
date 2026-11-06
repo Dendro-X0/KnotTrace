@@ -10,7 +10,7 @@ import { IntegrityBoardPanel } from "@/components/IntegrityBoardPanel";
 import { LocalExplainPanel } from "@/components/LocalExplainPanel";
 import { CloudExplainPanel } from "@/components/CloudExplainPanel";
 import { EgressTimelinePanel } from "@/components/EgressTimelinePanel";
-import { buildNextStepPlan, NextStepsPanel } from "@/components/NextStepsPanel";
+import { NextStepsPanel } from "@/components/NextStepsPanel";
 import { QuickIntegrityTeaser } from "@/components/QuickIntegrityTeaser";
 import { QuickPathTeaser } from "@/components/QuickPathTeaser";
 import { StatusHero } from "@/components/StatusHero";
@@ -24,34 +24,20 @@ import { Badge } from "@/components/ui/badge";
 import { formatLatency, gradeBadgeVariant } from "@/components/shared";
 import { useUiDensity } from "@/hooks/useUiDensity";
 import type { CompanionState } from "@/hooks/useCompanion";
+import { useLocale } from "@/hooks/useLocale";
+import {
+  buildNextStepPlan,
+  buildQuickHeroSummary,
+  shouldSurfaceQuickNextCtas,
+} from "@/lib/nextStepPlan";
 
 interface OverviewPageProps {
   state: CompanionState;
 }
 
-/** Plain-language hero line for Quick — avoid diagnosis jargon fighting a good grade. */
-function quickHeroSummary(state: CompanionState): string {
-  if (state.checkError) {
-    return "Last check failed — use Retry in the banner above.";
-  }
-  const report = state.report;
-  if (!report) {
-    return "Run a health check to see how this connection is doing.";
-  }
-  const grade = report.score.grade;
-  const scoreLine = report.score.summary?.trim();
-  if (grade === "good") {
-    return scoreLine || "No obvious problems on this check. You can keep using the network as usual.";
-  }
-  // Prefer score summary when present; fall back to a short diagnosis line without drowning the hero.
-  if (scoreLine) return scoreLine;
-  const diagnosis = report.diagnosis?.summary?.trim();
-  if (diagnosis) return diagnosis;
-  return "This check found something worth a closer look below.";
-}
-
 export function OverviewPage({ state }: OverviewPageProps) {
   const { isQuick } = useUiDensity();
+  const { t } = useLocale();
   const grade = state.report?.score.grade;
   const firstDnsSample = state.report?.probe.dns.find((sample) => sample.success);
   const loading = state.bootstrapping && !state.report;
@@ -84,15 +70,13 @@ export function OverviewPage({ state }: OverviewPageProps) {
   ];
 
   const nextPlan = isQuick ? buildNextStepPlan(state) : null;
-  const integrityCount = state.report?.integrity?.indicator_count ?? 0;
-  const pathBroken = Boolean(state.report?.path_break && state.report.path_break.break_hop !== "none");
-  // When the grade is good, only surface CTAs if Path/Integrity actually need a look —
-  // avoid "Open Network" fighting a calm hero after a general_degradation diagnosis.
-  const surfaceNextCtas =
-    Boolean(nextPlan) &&
-    (grade !== "good" || integrityCount > 0 || pathBroken);
+  // Good-grade checks stay calm unless Path/Integrity/captive/bufferbloat need a look.
+  const surfaceNextCtas = shouldSurfaceQuickNextCtas(state, nextPlan);
   const primaryNext = surfaceNextCtas ? nextPlan?.actions[0] : undefined;
   const secondaryNext = surfaceNextCtas ? nextPlan?.actions[1] : undefined;
+  const heroSummary = buildQuickHeroSummary(state);
+  const heroSummaryText =
+    heroSummary.kind === "key" ? t(heroSummary.key) : heroSummary.text;
 
   return (
     <div className="flex flex-col gap-3">
@@ -105,7 +89,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
               grade={grade}
               score={state.report?.score.score}
               dnsIntegrity={state.report?.dns_integrity}
-              summary={quickHeroSummary(state)}
+              summary={heroSummaryText}
               metrics={
                 loading
                   ? undefined
@@ -114,20 +98,15 @@ export function OverviewPage({ state }: OverviewPageProps) {
               primaryAction={
                 primaryNext
                   ? {
-                      label: primaryNext.label,
+                      label: t(primaryNext.labelKey),
                       onClick: () => state.navigate(primaryNext.page),
                     }
-                  : !loading && !state.report
-                    ? {
-                        label: "Run health check",
-                        onClick: () => void state.runCheck(),
-                      }
-                    : undefined
+                  : undefined
               }
               secondaryAction={
                 secondaryNext
                   ? {
-                      label: secondaryNext.label,
+                      label: t(secondaryNext.labelKey),
                       onClick: () => state.navigate(secondaryNext.page),
                     }
                   : undefined
@@ -135,12 +114,18 @@ export function OverviewPage({ state }: OverviewPageProps) {
             />
           </div>
           <div className="bento-path h-full">
-            <QuickPathTeaser loading={loading} report={state.report?.path_break} />
+            <QuickPathTeaser
+              loading={loading}
+              report={state.report?.path_break}
+              tunnelCompare={state.report?.tunnel_compare}
+            />
           </div>
           <div className="bento-integrity h-full">
             <QuickIntegrityTeaser
               loading={loading}
               report={state.report?.integrity}
+              checking={state.checking}
+              onRunCheck={() => void state.runCheck()}
               onOpenProtect={() => state.navigate("protect")}
             />
           </div>
@@ -202,11 +187,19 @@ export function OverviewPage({ state }: OverviewPageProps) {
                 <>
                   <div className="grid min-h-0 min-w-0 gap-3">
                     <NetworkDiagnosisPanel diagnosis={state.report?.diagnosis} />
-                    <PathBreakPanel loading={loading} report={state.report?.path_break} compact />
+                    <PathBreakPanel
+                      loading={loading}
+                      report={state.report?.path_break}
+                      compact
+                      checking={state.checking}
+                      onRunCheck={() => void state.runCheck()}
+                    />
                     <IntegrityBoardPanel
                       loading={loading}
                       report={state.report?.integrity}
                       compact
+                      checking={state.checking}
+                      onRunCheck={() => void state.runCheck()}
                     />
                     <EgressTimelinePanel
                       loading={loading}
@@ -250,7 +243,12 @@ export function OverviewPage({ state }: OverviewPageProps) {
                   ))}
                 </div>
               ) : (
-                <TrendCharts points={state.trends} error={state.trendsError} />
+                <TrendCharts
+                  points={state.trends}
+                  error={state.trendsError}
+                  checking={state.checking}
+                  onRunCheck={() => void state.runCheck()}
+                />
               )}
             </CardContent>
           </Card>

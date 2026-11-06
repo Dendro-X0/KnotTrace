@@ -1,6 +1,7 @@
 import { ShieldAlert } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,8 @@ import type { IntegrityBoardReport } from "@/types";
 interface QuickIntegrityTeaserProps {
   loading?: boolean;
   report?: IntegrityBoardReport | null;
+  checking?: boolean;
+  onRunCheck?: () => void;
   onOpenProtect?: () => void;
 }
 
@@ -21,6 +24,8 @@ function levelVariant(level: IntegrityBoardReport["level"] | undefined) {
 export function QuickIntegrityTeaser({
   loading,
   report,
+  checking,
+  onRunCheck,
   onOpenProtect,
 }: QuickIntegrityTeaserProps) {
   if (loading) {
@@ -33,24 +38,48 @@ export function QuickIntegrityTeaser({
     );
   }
 
-  const count = report?.indicator_count ?? 0;
-  const level = report?.level ?? "none";
+  if (!report) {
+    return (
+      <Card className="h-full border-border/50">
+        <CardHeader className="pb-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <ShieldAlert className="text-muted-foreground size-3.5" />
+            <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Integrity
+            </CardTitle>
+            <Badge variant="muted">Needs a check</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Run a health check to load exposure indicators. Empty is not “secure.”
+          </p>
+          {onRunCheck && (
+            <Button size="sm" disabled={checking} onClick={onRunCheck}>
+              {checking ? "Checking…" : "Run health check"}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const count = report.indicator_count;
+  const level = report.level;
+  const openable = Boolean(onOpenProtect) && count > 0;
 
   return (
     <Card
-      className={cn(
-        "h-full border-border/50",
-        onOpenProtect && "cursor-pointer",
-      )}
-      onClick={onOpenProtect}
-      role={onOpenProtect ? "button" : undefined}
-      tabIndex={onOpenProtect ? 0 : undefined}
+      className={cn("h-full border-border/50", openable && "cursor-pointer")}
+      onClick={openable ? onOpenProtect : undefined}
+      role={openable ? "button" : undefined}
+      tabIndex={openable ? 0 : undefined}
       onKeyDown={
-        onOpenProtect
+        openable
           ? (event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                onOpenProtect();
+                onOpenProtect?.();
               }
             }
           : undefined

@@ -2,6 +2,7 @@ import { GitBranch } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PathBreakReport } from "@/types";
@@ -10,6 +11,8 @@ interface PathBreakPanelProps {
   loading?: boolean;
   report?: PathBreakReport | null;
   compact?: boolean;
+  checking?: boolean;
+  onRunCheck?: () => void;
 }
 
 function confidenceVariant(confidence: PathBreakReport["confidence"]) {
@@ -28,7 +31,13 @@ function label(value: string) {
   return value.replace(/_/g, " ");
 }
 
-export function PathBreakPanel({ loading, report, compact }: PathBreakPanelProps) {
+export function PathBreakPanel({
+  loading,
+  report,
+  compact,
+  checking,
+  onRunCheck,
+}: PathBreakPanelProps) {
   if (loading) {
     return <Skeleton className={compact ? "h-28 rounded-lg" : "h-40 rounded-lg"} />;
   }
@@ -39,6 +48,13 @@ export function PathBreakPanel({ loading, report, compact }: PathBreakPanelProps
         icon={GitBranch}
         title="Path break"
         description="Run a health check to classify Direct / proxy / VPN / Tor and where the path fails."
+        action={
+          onRunCheck ? (
+            <Button size="sm" disabled={checking} onClick={onRunCheck}>
+              {checking ? "Checking…" : "Run health check"}
+            </Button>
+          ) : undefined
+        }
       />
     );
   }

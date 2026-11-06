@@ -234,8 +234,10 @@ export function ProtectPage({ state }: ProtectPageProps) {
                     </p>
                     {alerts.length > 0 ? (
                       <Badge variant="caution">{alerts.length} to review</Badge>
-                    ) : (
+                    ) : status ? (
                       <Badge variant="muted">All clear here</Badge>
+                    ) : (
+                      <Badge variant="muted">Needs a check</Badge>
                     )}
                   </div>
                   <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
@@ -245,6 +247,18 @@ export function ProtectPage({ state }: ProtectPageProps) {
                   </p>
                 </div>
               </div>
+
+              {!status && !state.protectError && (
+                <div className="border-t border-border/40 pt-3">
+                  <Button
+                    size="sm"
+                    disabled={state.checking}
+                    onClick={() => void state.runCheck()}
+                  >
+                    {state.checking ? "Checking…" : "Run health check"}
+                  </Button>
+                </div>
+              )}
 
               {alerts.length > 0 && (
                 <ul className="grid gap-1.5 border-t border-border/40 pt-3">

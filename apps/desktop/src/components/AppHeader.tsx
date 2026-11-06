@@ -21,8 +21,11 @@ export function AppHeader({ state }: AppHeaderProps) {
   const monitorActive = state.monitorStatus?.enabled ?? true;
   const lastReason = state.monitorStatus?.last_reason ?? "";
   const monitorText = state.monitorStatus
-    ? `Checks every ${state.monitorStatus.poll_interval_secs}s · last trigger: ${formatReason(lastReason)}`
-    : state.monitorError ?? "Starting background monitor...";
+    ? t("header.monitorDetail", {
+        secs: state.monitorStatus.poll_interval_secs,
+        reason: formatReason(lastReason),
+      })
+    : (state.monitorError ?? t("header.monitorStarting"));
   const pageTitle = t(`nav.${state.page}`);
   const checkedWhen = state.report
     ? new Date(state.report.timestamp).toLocaleString(locale === "zh-Hans" ? "zh-CN" : "en")
@@ -82,21 +85,20 @@ export function AppHeader({ state }: AppHeaderProps) {
               </>
             )}
           </Button>
-          <div className="flex items-center justify-between gap-2 rounded-xl border border-border/70 bg-card/60 px-3 py-2 shadow-sm min-[420px]:justify-start">
-            <Switch
-              id="monitor-toggle"
-              checked={monitorActive}
-              onCheckedChange={(checked) => {
-                void state.setMonitorEnabled(checked).catch(() => undefined);
-              }}
-            />
-            <Label htmlFor="monitor-toggle" className="text-muted-foreground text-xs">
-              <span className="hidden min-[420px]:inline">
-                {isQuick ? t("header.monitor") : t("header.backgroundMonitor")}
-              </span>
-              <span className="min-[420px]:hidden">{t("header.monitor")}</span>
-            </Label>
-          </div>
+          {!isQuick && (
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-border/70 bg-card/60 px-3 py-2 shadow-sm min-[420px]:justify-start">
+              <Switch
+                id="monitor-toggle"
+                checked={monitorActive}
+                onCheckedChange={(checked) => {
+                  void state.setMonitorEnabled(checked).catch(() => undefined);
+                }}
+              />
+              <Label htmlFor="monitor-toggle" className="text-muted-foreground text-xs">
+                {t("header.backgroundMonitor")}
+              </Label>
+            </div>
+          )}
         </div>
       </header>
       {state.checkError && (

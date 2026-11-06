@@ -14,7 +14,7 @@ interface DiagnosticBundlePanelProps {
 export function DiagnosticBundlePanel({ state, compact = false }: DiagnosticBundlePanelProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const disabled = busy || !state.report;
+  const hasReport = Boolean(state.report);
 
   async function handleExport() {
     setBusy(true);
@@ -47,15 +47,26 @@ export function DiagnosticBundlePanel({ state, compact = false }: DiagnosticBund
             </div>
             <CardTitle className={compact ? "text-sm" : "text-base"}>Diagnostic export</CardTitle>
           </div>
-          <Button
-            size="sm"
-            variant="secondary"
-            className={compact ? "w-full" : undefined}
-            disabled={disabled}
-            onClick={() => void handleExport()}
-          >
-            {busy ? "Exporting…" : "Copy JSON"}
-          </Button>
+          {hasReport ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              className={compact ? "w-full" : undefined}
+              disabled={busy}
+              onClick={() => void handleExport()}
+            >
+              {busy ? "Exporting…" : "Copy JSON"}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              className={compact ? "w-full" : undefined}
+              disabled={state.checking}
+              onClick={() => void state.runCheck()}
+            >
+              {state.checking ? "Checking…" : "Run health check"}
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -69,9 +80,9 @@ export function DiagnosticBundlePanel({ state, compact = false }: DiagnosticBund
             ? "Redacted check facts for sharing. Nothing uploads until you paste elsewhere."
             : "AI-ready facts from the latest check. Hostname and SSID stay out by default. No cloud upload — copy stays on this machine until you paste it elsewhere."}
         </p>
-        {!state.report && (
+        {!hasReport && (
           <p className="text-xs leading-relaxed" role="status">
-            Run a health check first — export needs a completed report on this device.
+            Export needs a completed report on this device — run a health check first.
           </p>
         )}
         {status && (

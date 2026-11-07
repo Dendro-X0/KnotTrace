@@ -1,7 +1,7 @@
 # Product plan — Share patch v1.10.2
 
 **Date (UTC):** 2026-11-06  
-**Status:** **Ready to tag** (local gates green after version bump)  
+**Status:** **Tagged** (awaiting GitHub Release assets)  
 **Repo:** KnotTrace (`network`) only  
 **Depends on:** [product-plan-path-exit-clarity-2026-11.md](./product-plan-path-exit-clarity-2026-11.md) P1–P3 · U1–U3 · L1 · D1
 
@@ -9,17 +9,17 @@
 GOAL:     Tag v1.10.2 so path/exit clarity (site/geo, journal, tunnel∩bloat,
           Connect honesty, Path focus, tryout line, probe-language) ships.
 POSTURE:  Indicators only · not antivirus · P2b parked · CompanionShell desktop preview
-DONE:     Charter · version stamp · community-gate
-NEXT:     Commit/tag/push · after CI Release: verify-release-assets.sh v1.10.2
+DONE:     Charter · V1 · community-gate · commit/tag
+NEXT:     Push · after CI Release: verify-release-assets.sh v1.10.2 · stamp V3
 ```
 
-_Gate note: community-gate green 2026-11-07 (R1 + R4 + H3 + O3)._
+_Gate note: community-gate green 2026-11-07; commit `bcd887a` + tag `v1.10.2`._
 
 | Order | Band | Status |
 |------:|------|--------|
 | 1 | Version + CHANGELOG + docs stamp | **Done** |
 | 2 | `bash scripts/community-gate.sh` | **Done** (R1 + R4 + H3 + O3) |
-| 3 | Commit `Release v1.10.2` · tag · push | Pending |
+| 3 | Commit `Release v1.10.2` · tag · push | Tag done (`bcd887a` · `v1.10.2`); push next |
 | 4 | `verify-release-assets.sh v1.10.2` · stamp | Pending after GitHub Release |
 
 ### Ships in this release
@@ -32,4 +32,4 @@ _Gate note: community-gate green 2026-11-07 (R1 + R4 + H3 + O3)._
 - Tryout one-liner (U3)
 - Probe-language honesty (L1)
 
-_Last updated: 2026-11-07T06:35:00Z_
+_Last updated: 2026-11-07T06:40:00Z_

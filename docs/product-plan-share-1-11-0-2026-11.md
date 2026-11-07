@@ -1,7 +1,7 @@
 # Product plan — Share release v1.11.0
 
 **Date (UTC):** 2026-11-07  
-**Status:** **Gate green** (awaiting commit/tag/push)  
+**Status:** **Tagged** (awaiting GitHub Release assets)  
 **Repo:** KnotTrace (`network`) only  
 **Depends on:** hub polish · Overview trust · pages harmony · script-risk interactive · custom window chrome
 
@@ -9,17 +9,17 @@
 GOAL:     Tag v1.11.0 so the hub UI surface (frameless chrome, Overview trust,
           cross-page harmony, interactive Script risk, search overlay fix) ships.
 POSTURE:  Indicators only · not antivirus · no quarantine/kill · Path Truth
-DONE:     V1 stamp · community-gate
-NEXT:     commit/tag/push · verify-release-assets after CI
+DONE:     V1 stamp · community-gate · commit/tag/push
+NEXT:     After CI Release: verify-release-assets.sh v1.11.0 · stamp V3
 ```
 
-_Gate note: community-gate green 2026-11-07 (R1 + R4 + H3 + O3)._
+_Gate note: community-gate green 2026-11-07; pushed `10a5a7f` + tag `v1.11.0`._
 
 | Order | Band | Status |
 |------:|------|--------|
 | 1 | Version + CHANGELOG + docs stamp | **Done** |
 | 2 | `bash scripts/community-gate.sh` | **Done** |
-| 3 | Commit `Release v1.11.0` · tag · push | Pending |
+| 3 | Commit `Release v1.11.0` · tag · push | **Done** (`10a5a7f` · `v1.11.0`) |
 | 4 | `verify-release-assets.sh v1.11.0` · stamp | Pending after GitHub Release |
 
 ### Ships in this release

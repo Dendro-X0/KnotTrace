@@ -35,6 +35,13 @@ export type CaptiveSignal = "confirmed" | "suspected" | "none";
 
 export type BufferbloatGradeSignal = "moderate" | "severe" | "other";
 
+/** Plain Quick layer for partial site / geo failures (P1). */
+export type SiteFailureLayer =
+  | "local"
+  | "dns"
+  | "active_path"
+  | "destination_or_policy";
+
 /** Narrow snapshot so ranking is unit-testable without Companion UI methods. */
 export interface NextStepInput {
   shape: SlowdownShape;
@@ -47,8 +54,16 @@ export interface NextStepInput {
   captiveState: CaptiveSignal;
   bufferbloatGrade: BufferbloatGradeSignal;
   activePath: string | null;
+  /** Tunnel honesty: local_ok and break_hop none. */
   localOk: boolean;
+  /** Raw path_break.local_ok for site/geo layering (ignores remote hops). */
+  pathLocalOk: boolean;
   torSocksDown: boolean;
+  breakHop: string | null;
+  likelyProviderSide: boolean;
+  proxyOnlyFailures: boolean;
+  directAlsoFails: boolean;
+  environmentClass: string | null;
 }
 
 /** Structural subset of CompanionState used by the planner. */
@@ -67,6 +82,12 @@ export interface NextStepStateSource {
       break_hop?: string | null;
       local_ok?: boolean | null;
       active_path?: string | null;
+      environment_class?: string | null;
+    } | null;
+    proxy_path_report?: {
+      likely_provider_side?: boolean | null;
+      proxy_only_failure_count?: number | null;
+      direct_failure_count?: number | null;
     } | null;
     tunnel_compare?: {
       tor_detected?: boolean | null;
@@ -103,6 +124,12 @@ const KEY = {
   partialThrashSummary: "nextSteps.copy.partialThrashSummary",
   partialTitle: "nextSteps.copy.partialTitle",
   partialSummary: "nextSteps.copy.partialSummary",
+  partialLocalTitle: "nextSteps.copy.partialLocalTitle",
+  partialLocalSummary: "nextSteps.copy.partialLocalSummary",
+  partialDnsTitle: "nextSteps.copy.partialDnsTitle",
+  partialDnsSummary: "nextSteps.copy.partialDnsSummary",
+  partialDestinationTitle: "nextSteps.copy.partialDestinationTitle",
+  partialDestinationSummary: "nextSteps.copy.partialDestinationSummary",
   restrictedTitle: "nextSteps.copy.restrictedTitle",
   restrictedSummary: "nextSteps.copy.restrictedSummary",
   tunnelThrashTitle: "nextSteps.copy.tunnelThrashTitle",
@@ -113,6 +140,8 @@ const KEY = {
   tunnelHonestySummary: "nextSteps.copy.tunnelHonestySummary",
   tunnelLocalFirstTitle: "nextSteps.copy.tunnelLocalFirstTitle",
   tunnelLocalFirstSummary: "nextSteps.copy.tunnelLocalFirstSummary",
+  tunnelBufferbloatTitle: "nextSteps.copy.tunnelBufferbloatTitle",
+  tunnelBufferbloatSummary: "nextSteps.copy.tunnelBufferbloatSummary",
   torSocksDownTitle: "nextSteps.copy.torSocksDownTitle",
   torSocksDownSummary: "nextSteps.copy.torSocksDownSummary",
   linkLocalTitle: "nextSteps.copy.linkLocalTitle",
@@ -127,7 +156,12 @@ const KEY = {
   heroCaptiveSuspected: "nextSteps.hero.captiveSuspected",
   heroBufferbloat: "nextSteps.hero.bufferbloat",
   heroTunnelExpected: "nextSteps.hero.tunnelExpected",
+  heroTunnelBufferbloat: "nextSteps.hero.tunnelBufferbloat",
   heroTorSocksDown: "nextSteps.hero.torSocksDown",
+  heroPartialLocal: "nextSteps.hero.partialLocal",
+  heroPartialDns: "nextSteps.hero.partialDns",
+  heroPartialActivePath: "nextSteps.hero.partialActivePath",
+  heroPartialDestination: "nextSteps.hero.partialDestination",
   heroCheckFailed: "nextSteps.hero.checkFailed",
   heroNoReport: "nextSteps.hero.noReport",
   heroGoodDefault: "nextSteps.hero.goodDefault",
@@ -181,9 +215,17 @@ export function isPromotedBufferbloat(
   return shape === "under_load_lag" || grade === "moderate" || grade === "severe";
 }
 
+/** Tunnel/proxy active (or tunnel_overhead shape) plus promoted bufferbloat — both factors. */
+export function isTunnelBufferbloatOverlap(input: NextStepInput): boolean {
+  if (input.torSocksDown) return false;
+  if (!isPromotedBufferbloat(input.shape, input.bufferbloatGrade)) return false;
+  return isTunnelActivePath(input.activePath) || input.shape === "tunnel_overhead";
+}
+
 /** Tunnel/proxy active and local stack OK — slower is expected, not a local repair job. */
 export function isTunnelHonestyCase(input: NextStepInput): boolean {
   if (input.torSocksDown || input.thrashForbidden) return false;
+  if (isTunnelBufferbloatOverlap(input)) return false;
   if (input.shape === "tunnel_overhead") {
     // Diagnosis says overhead: honesty unless we know local is broken on a tunnel path.
     return !isTunnelActivePath(input.activePath) || input.localOk;
@@ -196,6 +238,100 @@ export function isTunnelLocalFirstCase(input: NextStepInput): boolean {
   return isTunnelActivePath(input.activePath) && !input.localOk;
 }
 
+/** P1: map partial site failure onto a plain Quick layer. */
+export function classifySiteFailureLayer(input: NextStepInput): SiteFailureLayer | null {
+  if (input.shape !== "partial_site_failure") return null;
+
+  if (input.breakHop === "dns") return "dns";
+  if (!input.pathLocalOk || input.breakHop === "local") return "local";
+
+  if (
+    input.thrashForbidden ||
+    input.likelyProviderSide ||
+    input.proxyOnlyFailures ||
+    (isTunnelActivePath(input.activePath) && input.pathLocalOk)
+  ) {
+    return "active_path";
+  }
+
+  return "destination_or_policy";
+}
+
+function siteFailureCopy(input: NextStepInput): { titleKey: string; summaryKey: string } | null {
+  const layer = classifySiteFailureLayer(input);
+  if (!layer) return null;
+
+  switch (layer) {
+    case "local":
+      return { titleKey: KEY.partialLocalTitle, summaryKey: KEY.partialLocalSummary };
+    case "dns":
+      return { titleKey: KEY.partialDnsTitle, summaryKey: KEY.partialDnsSummary };
+    case "active_path":
+      if (input.thrashForbidden) {
+        return { titleKey: KEY.partialThrashTitle, summaryKey: KEY.partialThrashSummary };
+      }
+      return { titleKey: KEY.partialTitle, summaryKey: KEY.partialSummary };
+    case "destination_or_policy":
+      return {
+        titleKey: KEY.partialDestinationTitle,
+        summaryKey: KEY.partialDestinationSummary,
+      };
+  }
+}
+
+function siteFailureHeroKey(input: NextStepInput): string | null {
+  const layer = classifySiteFailureLayer(input);
+  if (!layer) return null;
+  switch (layer) {
+    case "local":
+      return KEY.heroPartialLocal;
+    case "dns":
+      return KEY.heroPartialDns;
+    case "active_path":
+      return KEY.heroPartialActivePath;
+    case "destination_or_policy":
+      return KEY.heroPartialDestination;
+  }
+}
+
+function pushSiteFailureActions(actions: NextStepAction[], input: NextStepInput) {
+  const layer = classifySiteFailureLayer(input);
+  if (!layer) return;
+
+  const network: NextStepAction = { labelKey: KEY.actionNetwork, page: "network" };
+  const protect: NextStepAction = { labelKey: KEY.actionProtect, page: "protect" };
+  const dns: NextStepAction = { labelKey: KEY.actionDns, page: "dns" };
+  const connect: NextStepAction = { labelKey: KEY.actionConnect, page: "connect" };
+  const overviewClaim: NextStepAction = { labelKey: KEY.actionOverviewClaim, page: "overview" };
+
+  switch (layer) {
+    case "local":
+      pushUnique(actions, network);
+      if (input.integrityCount > 0) pushUnique(actions, protect);
+      break;
+    case "dns":
+      if (input.dnsAssistEligible) {
+        pushUnique(actions, dns);
+        pushUnique(actions, network);
+      } else {
+        pushUnique(actions, network);
+        pushUnique(actions, dns);
+      }
+      break;
+    case "active_path":
+      pushUnique(actions, network);
+      if (input.connectAssistEligible) {
+        pushUnique(actions, connect);
+      } else if (input.thrashForbidden) {
+        pushUnique(actions, overviewClaim);
+      }
+      break;
+    case "destination_or_policy":
+      pushUnique(actions, network);
+      break;
+  }
+}
+
 export function extractNextStepInput(state: NextStepStateSource): NextStepInput | null {
   const diagnosis = state.report?.diagnosis;
   if (!diagnosis) return null;
@@ -203,6 +339,7 @@ export function extractNextStepInput(state: NextStepStateSource): NextStepInput 
   const thrashForbidden = thrashForbiddenFromState(state);
   const path = state.report?.path_break;
   const tunnel = state.report?.tunnel_compare;
+  const proxy = state.report?.proxy_path_report;
   return {
     shape: diagnosis.slowdown_shape,
     confidence: diagnosis.confidence,
@@ -216,7 +353,13 @@ export function extractNextStepInput(state: NextStepStateSource): NextStepInput 
     bufferbloatGrade: normalizeBufferbloatGrade(state.report?.stability?.bufferbloat?.grade),
     activePath: path?.active_path ?? null,
     localOk: isLocalPathOk(path),
+    pathLocalOk: path?.local_ok === true,
     torSocksDown: Boolean(tunnel?.tor_detected && tunnel.tor_socks_reachable === false),
+    breakHop: path?.break_hop ?? null,
+    likelyProviderSide: proxy?.likely_provider_side === true,
+    proxyOnlyFailures: (proxy?.proxy_only_failure_count ?? 0) > 0,
+    directAlsoFails: (proxy?.direct_failure_count ?? 0) > 0,
+    environmentClass: path?.environment_class ?? null,
   };
 }
 
@@ -232,9 +375,19 @@ function shapeCopy(input: NextStepInput): { titleKey: string; summaryKey: string
     return { titleKey: KEY.captiveSuspectedTitle, summaryKey: KEY.captiveSuspectedSummary };
   }
 
+  if (isTunnelBufferbloatOverlap(input)) {
+    return {
+      titleKey: KEY.tunnelBufferbloatTitle,
+      summaryKey: KEY.tunnelBufferbloatSummary,
+    };
+  }
+
   if (isPromotedBufferbloat(input.shape, input.bufferbloatGrade)) {
     return { titleKey: KEY.bufferbloatTitle, summaryKey: KEY.bufferbloatSummary };
   }
+
+  const siteFailure = siteFailureCopy(input);
+  if (siteFailure) return siteFailure;
 
   if (input.torSocksDown) {
     return { titleKey: KEY.torSocksDownTitle, summaryKey: KEY.torSocksDownSummary };
@@ -258,9 +411,7 @@ function shapeCopy(input: NextStepInput): { titleKey: string; summaryKey: string
     case "under_load_lag":
       return { titleKey: KEY.bufferbloatTitle, summaryKey: KEY.bufferbloatSummary };
     case "partial_site_failure":
-      if (input.thrashForbidden) {
-        return { titleKey: KEY.partialThrashTitle, summaryKey: KEY.partialThrashSummary };
-      }
+      // Defensive: classifier should have returned above.
       return { titleKey: KEY.partialTitle, summaryKey: KEY.partialSummary };
     case "restricted_network":
       return { titleKey: KEY.restrictedTitle, summaryKey: KEY.restrictedSummary };
@@ -288,11 +439,16 @@ function candidatePool(input: NextStepInput): NextStepAction[] {
   const network: NextStepAction = { labelKey: KEY.actionNetwork, page: "network" };
   const protect: NextStepAction = { labelKey: KEY.actionProtect, page: "protect" };
   const dns: NextStepAction = { labelKey: KEY.actionDns, page: "dns" };
-  const connect: NextStepAction = { labelKey: KEY.actionConnect, page: "connect" };
   const overviewClaim: NextStepAction = { labelKey: KEY.actionOverviewClaim, page: "overview" };
   const overviewBenchmark: NextStepAction = { labelKey: KEY.actionBenchmark, page: "overview" };
 
   const captive = isCaptiveSignal(input.captiveState);
+
+  if (!captive && isTunnelBufferbloatOverlap(input)) {
+    pushUnique(actions, network);
+    pushUnique(actions, overviewBenchmark);
+    return actions;
+  }
 
   switch (input.shape) {
     case "page_start":
@@ -305,12 +461,7 @@ function candidatePool(input: NextStepInput): NextStepAction[] {
       pushUnique(actions, overviewBenchmark);
       break;
     case "partial_site_failure":
-      pushUnique(actions, network);
-      if (input.connectAssistEligible) {
-        pushUnique(actions, connect);
-      } else if (input.thrashForbidden) {
-        pushUnique(actions, overviewClaim);
-      }
+      pushSiteFailureActions(actions, input);
       break;
     case "restricted_network":
       if (captive) {
@@ -342,15 +493,24 @@ function candidatePool(input: NextStepInput): NextStepAction[] {
       break;
   }
 
+  const siteLayer = classifySiteFailureLayer(input);
   if (
-    input.torSocksDown ||
-    isTunnelHonestyCase(input) ||
-    isTunnelLocalFirstCase(input)
+    !siteLayer &&
+    !isTunnelBufferbloatOverlap(input) &&
+    (input.torSocksDown || isTunnelHonestyCase(input) || isTunnelLocalFirstCase(input))
   ) {
     return [network];
   }
 
-  if (!captive && input.shape !== "page_start" && input.dnsAssistEligible) {
+  if (
+    !captive &&
+    input.shape !== "page_start" &&
+    !siteLayer &&
+    !isTunnelBufferbloatOverlap(input) &&
+    input.dnsAssistEligible
+  ) {
+    pushUnique(actions, dns);
+  } else if (siteLayer === "local" && input.dnsAssistEligible) {
     pushUnique(actions, dns);
   }
 
@@ -365,9 +525,12 @@ function preferredPageForRecurrence(input: NextStepInput): PageId | null {
   switch (input.shape) {
     case "page_start":
       return "dns";
-    case "partial_site_failure":
-      if (input.thrashForbidden) return "network";
-      return input.connectAssistEligible ? "connect" : "network";
+    case "partial_site_failure": {
+      const layer = classifySiteFailureLayer(input);
+      if (layer === "dns") return "dns";
+      if (layer === "active_path" && input.connectAssistEligible) return "connect";
+      return "network";
+    }
     case "restricted_network":
       return isCaptiveSignal(input.captiveState) ? "network" : "protect";
     case "under_load_lag":
@@ -435,8 +598,20 @@ export function buildQuickHeroSummary(state: NextStepStateSource): QuickHeroSumm
 
   const shape = report.diagnosis?.slowdown_shape;
   const grade = normalizeBufferbloatGrade(report.stability?.bufferbloat?.grade);
+  const overlapInput = extractNextStepInput(state);
+  if (overlapInput && isTunnelBufferbloatOverlap(overlapInput)) {
+    return { kind: "key", key: KEY.heroTunnelBufferbloat };
+  }
   if ((shape && isPromotedBufferbloat(shape, grade)) || grade !== "other") {
     return { kind: "key", key: KEY.heroBufferbloat };
+  }
+
+  if (shape === "partial_site_failure") {
+    const input = extractNextStepInput(state);
+    if (input) {
+      const heroKey = siteFailureHeroKey(input);
+      if (heroKey) return { kind: "key", key: heroKey };
+    }
   }
 
   const tunnel = report.tunnel_compare;
@@ -452,6 +627,14 @@ export function buildQuickHeroSummary(state: NextStepStateSource): QuickHeroSumm
   }
   if (shape === "tunnel_overhead") {
     return { kind: "key", key: KEY.heroTunnelExpected };
+  }
+
+  // High-traffic shaped diagnoses: prefer localized next-step summary over English Rust text.
+  if (shape && shape !== "general_degradation") {
+    const plan = buildNextStepPlan(state);
+    if (plan?.summaryKey) {
+      return { kind: "key", key: plan.summaryKey };
+    }
   }
 
   const scoreGrade = report.score?.grade;

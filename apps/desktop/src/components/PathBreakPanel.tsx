@@ -1,6 +1,7 @@
 import { GitBranch } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
+import { EnglishProbeNote } from "@/components/EnglishProbeNote";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,6 +71,7 @@ export function PathBreakPanel({
             <CardTitle className={compact ? "text-base" : undefined}>Path break</CardTitle>
           </div>
           <div className="flex flex-wrap items-center gap-1">
+            <EnglishProbeNote />
             <Badge variant="info">{label(report.active_path)}</Badge>
             <Badge variant={hopVariant(report.break_hop, report.local_ok)}>
               {label(report.break_hop)}

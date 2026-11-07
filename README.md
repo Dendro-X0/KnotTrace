@@ -1,6 +1,6 @@
 # KnotTrace
 
-**v1.10.1** — Desktop companion for connection health, Path Truth diagnosis, and **local-first, reversible** assists — without fake “speed boosts.”
+**v1.10.2** — Desktop companion for connection health, Path Truth diagnosis, and **local-first, reversible** assists — without fake “speed boosts.”
 
 **Trying it out?** Start here → **[docs/COMMUNITY.md](docs/COMMUNITY.md)** (install, first five minutes, diagnostic export, what it is / is not).
 
@@ -8,7 +8,7 @@
 
 | | |
 |--|--|
-| **Job** | Show *what kind of problem*, *where the path breaks*, and *safe next steps* |
+| **Job** | Path truth — *what kind of problem*, *where the path breaks*, and calm next steps (not a speed boost) |
 | **Posture** | Observe-first · indicators with confidence · opt-in assists |
 | **Not** | Mbps guarantees · AV/EDR · “you are unmonitored” |
 | **OS matrix** | [docs/platform-support.md](docs/platform-support.md) |
@@ -38,6 +38,7 @@ Turn off automation on the **Protect** page.
 - **Integrity depth** — hosts/proxy change timeline, WAN/LAN listener scope, Wi‑Fi noise/retries where OS allows, opt-in process↔egress, startup-agent, and bounded **script-risk** scans (indicators only; not AV)
 - **Quick / Advanced UI** — default Quick; Settings for theme, language (en / zh-Hans), density, and monitor
 - **Path Truth Quick honesty** — ranked next steps; captive/bufferbloat plain copy; tunnel “slower is expected” when local looks OK
+- **Path / exit clarity** — site/geo Quick playbook; path/exit journal; tunnel∩bufferbloat line; Connect diagnosis-only without API; Network Path start-here; tryout one-liner; zh-Hans English-measurement labels
 - **CompanionShell** — thin check + export surface: **desktop preview** (`?companion=1`) and mobile packaging (`cfg(mobile)`); **device proof pending** (not a claimed phone product yet)
 
 ## Quick start
@@ -72,7 +73,9 @@ Full setup: **[docs/START-HERE.md](docs/START-HERE.md)** · **[docs/development.
 | [docs/development.md](docs/development.md) | Dev setup + R1 reliability gate |
 | [docs/release.md](docs/release.md) | Installer build |
 | [docs/platform-support.md](docs/platform-support.md) | OS feature matrix |
-| [docs/product-plan-share-patch-1-10-1-2026-11.md](docs/product-plan-share-patch-1-10-1-2026-11.md) | Share patch **v1.10.1** (ready to tag) |
+| [docs/product-plan-path-exit-clarity-2026-11.md](docs/product-plan-path-exit-clarity-2026-11.md) | Path/exit clarity — **complete @ v1.10.2** |
+| [docs/product-plan-share-patch-1-10-2-2026-11.md](docs/product-plan-share-patch-1-10-2-2026-11.md) | Share patch **v1.10.2** |
+| [docs/product-plan-share-patch-1-10-1-2026-11.md](docs/product-plan-share-patch-1-10-1-2026-11.md) | Share patch **v1.10.1** |
 | [docs/product-plan-desktop-trust-path-truth-2026-11.md](docs/product-plan-desktop-trust-path-truth-2026-11.md) | Desktop trust + Path Truth Quick (complete @ v1.10.1) |
 | [docs/product-plan-community-readiness-2026-11.md](docs/product-plan-community-readiness-2026-11.md) | Community readiness (complete @ v1.9.1) |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |

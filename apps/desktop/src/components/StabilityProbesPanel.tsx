@@ -1,5 +1,6 @@
 import { Activity, Gauge } from "lucide-react";
 
+import { EnglishProbeNote } from "@/components/EnglishProbeNote";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { StabilityProbeResult } from "@/types";
@@ -35,7 +36,10 @@ export function StabilityProbesPanel({ stability }: StabilityProbesPanelProps) {
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">Stability probes</CardTitle>
-          <Badge variant="muted">{stability.duration_ms} ms</Badge>
+          <div className="flex flex-wrap items-center gap-1">
+            <EnglishProbeNote />
+            <Badge variant="muted">{stability.duration_ms} ms</Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-2">

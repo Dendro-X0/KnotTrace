@@ -44,6 +44,48 @@
     "monitorDetail": "大约每 {secs} 秒检查一次 · 上次触发：{reason}",
     "monitorStarting": "正在启动后台监视…"
   },
+  "pathJournal": {
+    "title": "路径 / 出口日志",
+    "empty": "多跑几次健康检查后，这里会显示最近的路径、出口 IP、形态与评分。"
+  },
+  "overviewTip": {
+    "pathTruth": "KnotTrace 的工作是路径真相——中断在哪里——不是网络加速。",
+    "dismiss": "知道了"
+  },
+  "probeLanguage": {
+    "englishMeasurements": "英文测量原文"
+  },
+  "pathFocus": {
+    "startHere": "从这里开始",
+    "reason": {
+      "tunnel": "当前为隧道或代理路径——先看隧道对比（开销 vs 直连）。",
+      "upstream": "上游池结论显示受损——先看池证明，再考虑换节点。",
+      "proxy": "出现仅代理路径站点失败——先在代理路径对比代理与直连。",
+      "pathBreak": "路径中断显示非 none 跃点——先看路径中断分类。",
+      "egress": "公网出口不稳定或已变更——先看出口时间线。",
+      "default": "先从路径中断开始，了解活动路径与跃点分类。"
+    },
+    "panel": {
+      "insights": "网络洞察",
+      "pathBreak": "路径中断",
+      "proxyPath": "代理路径",
+      "upstreamPool": "上游池证明",
+      "tunnelCompare": "隧道对比",
+      "egressTimeline": "出口时间线"
+    }
+  },
+  "connectPage": {
+    "badgeUnsupported": "仅诊断",
+    "unsupportedTitle": "没有可控制的代理 API",
+    "unsupportedSummary": "连接助手需要启用了 external-controller 的 Mihomo 或 sing-box（或在高级设置中保存 API 地址）。KnotTrace 仍会诊断路径与代理，但不会在没有 API 时切换节点。",
+    "measuredTitle": "没有 Connect 时仍在测量",
+    "measuredPath": "路径中断与活动路径",
+    "measuredProxy": "代理路径对比与上游池证明",
+    "measuredTunnel": "隧道对比（VPN / Tor / 代理 vs 直连）",
+    "openNetwork": "请到网络页或总览查看这些证据——没有 API 时，本页不会伪造“应用/切换”操作。",
+    "noGroupsTitle": "已找到控制器，但暂无分组",
+    "noGroupsSummary": "代理 API 有响应，但未列出可切换分组。请检查控制器配置后重新打开连接页。"
+  },
   "nextSteps": {
     "title": "下一步做什么",
     "analyzing": "正在分析最近一次检查…",
@@ -69,7 +111,12 @@
       "captiveSuspected": "此网络可能需要登录页。完成门户登录（或更换网络）后再重新检查。",
       "bufferbloat": "负载下延迟升高（缓冲膨胀）——不是单纯的带宽问题。通话卡顿时请检查路由器的 SQM/QoS。",
       "tunnelExpected": "当前走 VPN、Tor 或代理路径。变慢是预期的——本机修复不会让这条隧道变快。",
-      "torSocksDown": "Tor SOCKS 不可达。请修复或等待 Tor 客户端引导——这不能说明运营商链路已断。"
+      "tunnelBufferbloat": "隧道开销与负载下卡顿（缓冲膨胀）同时存在——不只是其中一个。请在网络页查看隧道对比与稳定性。",
+      "torSocksDown": "Tor SOCKS 不可达。请修复或等待 Tor 客户端引导——这不能说明运营商链路已断。",
+      "partialLocal": "部分站点失败，但中断更像本机问题——先修本地跃点，再归咎目标站或节点。",
+      "partialDns": "部分站点失败且呈 DNS 形态。先检查解析器，不要靠频繁换节点。",
+      "partialActivePath": "部分站点在当前活动路径失败。先对比上游池/隧道证据，再考虑一次谨慎的连接切换。",
+      "partialDestination": "本机路径看起来正常但部分站点失败——更像目标站、过滤或策略限制，不是本机修复能解决的。"
     },
     "path": {
       "expectationLocalFirst": "先修复本机/路径中断。在本地跃点恢复前，隧道开销只是次要因素。",
@@ -91,8 +138,14 @@
       "pageStartSummary": "更像是页面开始加载前的延迟，而不是带宽不足。先检查 DNS 完整性，再确认是否卡在热点登录或代理延迟。",
       "partialThrashTitle": "不要频繁换节点 — 上游池质量较差",
       "partialThrashSummary": "仅代理路径失败在多次检查或出口 IP 间重复。先查看上游池证明；快速换节点不会修好弱池。",
-      "partialTitle": "对比当前路径",
+      "partialTitle": "活动路径对部分站点受损",
       "partialSummary": "部分站点似乎只在此路径失败。先看上游池证明；仅当结论是活动路径问题时，再考虑一次谨慎的连接助手切换。",
+      "partialLocalTitle": "本机路径先有问题",
+      "partialLocalSummary": "虽有站点失败，但中断更像本机（网关、网卡或客户端）。先修复本地跃点，再归咎目标站或换节点。",
+      "partialDnsTitle": "这些站点失败更像 DNS",
+      "partialDnsSummary": "可达性失败呈 DNS 形态。先查看 DNS 完整性/助手，不要靠频繁换节点或假定地区封锁。",
+      "partialDestinationTitle": "可能是目标站或策略限制",
+      "partialDestinationSummary": "本机路径看起来正常，但部分目标失败。可能是目标站故障、过滤或地区/策略限制——打开网络页查看路径证据；本机修复无法解除。",
       "restrictedTitle": "调优前先确认网络访问",
       "restrictedSummary": "访客或公共网络 — 完成任何门户登录，在可信前避免敏感流量，然后重新检查。",
       "tunnelThrashTitle": "隧道受上游质量限制",
@@ -103,6 +156,8 @@
       "tunnelHonestySummary": "这里的 VPN、Tor 或代理开销很正常。本机 DNS 或网卡修复不会加速这条隧道——打开网络页查看隧道对比证据。",
       "tunnelLocalFirstTitle": "先修复本机路径，再归咎隧道",
       "tunnelLocalFirstSummary": "存在隧道，但中断更像本机问题。先修复本地跃点；不要指望换节点修好损坏的本机路径。",
+      "tunnelBufferbloatTitle": "隧道开销与负载下卡顿同时出现",
+      "tunnelBufferbloatSummary": "VPN/Tor/代理路径会带来预期开销，同时负载下延迟也会升高（缓冲膨胀）。打开网络页查看隧道对比与稳定性——本机“加速”修复无法单独解决任一问题。",
       "torSocksDownTitle": "Tor 客户端需要处理",
       "torSocksDownSummary": "Tor SOCKS 不可达。等待引导或修复 Tor 客户端——这不是运营商中断信号。",
       "linkLocalTitle": "先检查本机链路",

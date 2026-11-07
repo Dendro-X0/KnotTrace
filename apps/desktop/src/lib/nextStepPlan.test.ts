@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   buildNextStepPlanFromInput,
   buildQuickHeroSummary,
+  classifySiteFailureLayer,
   shouldSurfaceQuickNextCtas,
   type NextStepInput,
   type NextStepPlan,
@@ -22,7 +23,13 @@ function base(overrides: Partial<NextStepInput> = {}): NextStepInput {
     bufferbloatGrade: "other",
     activePath: null,
     localOk: false,
+    pathLocalOk: true,
     torSocksDown: false,
+    breakHop: null,
+    likelyProviderSide: false,
+    proxyOnlyFailures: false,
+    directAlsoFails: false,
+    environmentClass: null,
     ...overrides,
   };
 }
@@ -53,6 +60,8 @@ describe("buildNextStepPlanFromInput", () => {
         shape: "partial_site_failure",
         confidence: "high",
         connectAssistEligible: false,
+        proxyOnlyFailures: true,
+        breakHop: "tcp",
       }),
     );
     assert.ok(plan.actions.every((action) => action.page !== "connect"));
@@ -65,6 +74,8 @@ describe("buildNextStepPlanFromInput", () => {
         shape: "partial_site_failure",
         confidence: "high",
         connectAssistEligible: true,
+        proxyOnlyFailures: true,
+        breakHop: "tcp",
       }),
     );
     assert.deepEqual(
@@ -120,10 +131,81 @@ describe("buildNextStepPlanFromInput", () => {
         confidence: "high",
         connectAssistEligible: true,
         recurrenceCount: 3,
+        proxyOnlyFailures: true,
+        breakHop: "tcp",
       }),
     );
     assert.equal(plan.actions[0]?.page, "connect");
     assert.equal(plan.prioritized, true);
+  });
+
+  it("names local layer for partial site with local break", () => {
+    const input = base({
+      shape: "partial_site_failure",
+      confidence: "high",
+      pathLocalOk: false,
+      breakHop: "local",
+      connectAssistEligible: true,
+    });
+    assert.equal(classifySiteFailureLayer(input), "local");
+    const plan = buildNextStepPlanFromInput(input);
+    assert.equal(plan.titleKey, "nextSteps.copy.partialLocalTitle");
+    assert.ok(plan.actions.every((action) => action.page !== "connect"));
+    assert.equal(plan.actions[0]?.page, "network");
+  });
+
+  it("names DNS layer and prefers DNS Assist when eligible", () => {
+    const input = base({
+      shape: "partial_site_failure",
+      confidence: "high",
+      breakHop: "dns",
+      pathLocalOk: false,
+      dnsAssistEligible: true,
+      connectAssistEligible: true,
+    });
+    assert.equal(classifySiteFailureLayer(input), "dns");
+    const plan = buildNextStepPlanFromInput(input);
+    assert.equal(plan.titleKey, "nextSteps.copy.partialDnsTitle");
+    assert.equal(plan.actions[0]?.page, "dns");
+    assert.ok(plan.actions.every((action) => action.page !== "connect"));
+  });
+
+  it("names destination/policy when Direct path sites fail without proxy-only", () => {
+    const input = base({
+      shape: "partial_site_failure",
+      confidence: "high",
+      activePath: "direct",
+      pathLocalOk: true,
+      localOk: false,
+      breakHop: "tls",
+      directAlsoFails: true,
+      connectAssistEligible: true,
+    });
+    assert.equal(classifySiteFailureLayer(input), "destination_or_policy");
+    const plan = buildNextStepPlanFromInput(input);
+    assert.equal(plan.titleKey, "nextSteps.copy.partialDestinationTitle");
+    assert.deepEqual(
+      plan.actions.map((action) => action.page),
+      ["network"],
+    );
+  });
+
+  it("prefers site/geo playbook over tunnel honesty for partial shape", () => {
+    const plan = buildNextStepPlanFromInput(
+      base({
+        shape: "partial_site_failure",
+        confidence: "medium",
+        activePath: "vpn_tunnel",
+        pathLocalOk: true,
+        localOk: true,
+        breakHop: "tcp",
+        proxyOnlyFailures: true,
+        connectAssistEligible: true,
+      }),
+    );
+    assert.equal(plan.titleKey, "nextSteps.copy.partialTitle");
+    assert.ok(plan.actions.some((action) => action.page === "connect"));
+    assert.notEqual(plan.titleKey, "nextSteps.copy.tunnelHonestyTitle");
   });
 
   it("uses soft copy for low-confidence shaped diagnoses", () => {
@@ -165,6 +247,43 @@ describe("buildNextStepPlanFromInput", () => {
     assert.equal(plan.titleKey, "nextSteps.copy.bufferbloatTitle");
     assert.equal(plan.summaryKey, "nextSteps.copy.bufferbloatSummary");
     assert.equal(plan.actions[0]?.page, "network");
+  });
+
+  it("combines tunnel and bufferbloat instead of naming only one", () => {
+    const plan = buildNextStepPlanFromInput(
+      base({
+        shape: "under_load_lag",
+        confidence: "high",
+        bufferbloatGrade: "moderate",
+        activePath: "vpn_tunnel",
+        localOk: true,
+        pathLocalOk: true,
+        connectAssistEligible: true,
+        dnsAssistEligible: true,
+      }),
+    );
+    assert.equal(plan.titleKey, "nextSteps.copy.tunnelBufferbloatTitle");
+    assert.equal(plan.summaryKey, "nextSteps.copy.tunnelBufferbloatSummary");
+    assert.deepEqual(
+      plan.actions.map((action) => action.page),
+      ["network", "overview"],
+    );
+    assert.ok(plan.actions.every((action) => action.page !== "connect"));
+    assert.ok(plan.actions.every((action) => action.page !== "dns"));
+  });
+
+  it("keeps bufferbloat-only copy on Direct path", () => {
+    const plan = buildNextStepPlanFromInput(
+      base({
+        shape: "under_load_lag",
+        confidence: "high",
+        bufferbloatGrade: "severe",
+        activePath: "direct",
+        localOk: true,
+        pathLocalOk: true,
+      }),
+    );
+    assert.equal(plan.titleKey, "nextSteps.copy.bufferbloatTitle");
   });
 
   it("uses tunnel honesty with Network-only and no Connect when local OK", () => {
@@ -234,6 +353,27 @@ describe("buildQuickHeroSummary", () => {
     assert.deepEqual(summary, { kind: "key", key: "nextSteps.hero.bufferbloat" });
   });
 
+  it("names combined tunnel and bufferbloat in hero when both evidenced", () => {
+    const summary = buildQuickHeroSummary({
+      trends: [],
+      report: {
+        score: { grade: "fair", summary: "Connection is a bit slow." },
+        stability: { bufferbloat: { grade: "severe" } },
+        path_break: {
+          active_path: "tor_socks",
+          local_ok: true,
+          break_hop: "none",
+        },
+        diagnosis: {
+          slowdown_shape: "under_load_lag",
+          confidence: "high",
+          summary: "Under load lag.",
+        },
+      },
+    });
+    assert.deepEqual(summary, { kind: "key", key: "nextSteps.hero.tunnelBufferbloat" });
+  });
+
   it("names tunnel expected when VPN path is active and local OK", () => {
     const summary = buildQuickHeroSummary({
       trends: [],
@@ -252,6 +392,44 @@ describe("buildQuickHeroSummary", () => {
       },
     });
     assert.deepEqual(summary, { kind: "key", key: "nextSteps.hero.tunnelExpected" });
+  });
+
+  it("names destination layer in hero for partial site on Direct", () => {
+    const summary = buildQuickHeroSummary({
+      trends: [],
+      report: {
+        score: { grade: "fair", summary: "Some sites fail." },
+        path_break: {
+          active_path: "direct",
+          local_ok: true,
+          break_hop: "http",
+        },
+        diagnosis: {
+          slowdown_shape: "partial_site_failure",
+          confidence: "high",
+          summary: "Partial site failure.",
+        },
+      },
+    });
+    assert.deepEqual(summary, { kind: "key", key: "nextSteps.hero.partialDestination" });
+  });
+
+  it("prefers localized shape summary over English score text for page_start", () => {
+    const summary = buildQuickHeroSummary({
+      trends: [],
+      report: {
+        score: { grade: "fair", summary: "English score summary from Rust." },
+        diagnosis: {
+          slowdown_shape: "page_start",
+          confidence: "high",
+          summary: "English diagnosis from Rust.",
+        },
+      },
+    });
+    assert.deepEqual(summary, {
+      kind: "key",
+      key: "nextSteps.copy.pageStartSummary",
+    });
   });
 });
 

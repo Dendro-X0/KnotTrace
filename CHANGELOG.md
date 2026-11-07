@@ -6,6 +6,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+### Planned
+
+- (none — path/exit clarity shipped in v1.10.2)
+
+## [1.10.2] - 2026-11-07
+
+Share patch — path / exit clarity for proxy·VPN power users (P1–P3 · U1–U3 · L1). Still indicators, not AV.
+
+### Changed
+
+- **Site / geo Quick playbook (P1)** — on `partial_site_failure`, Quick names local / DNS / active path / destination-or-policy and ranks one primary next step; Advanced Path evidence unchanged ([design](specs/backend/site-geo-quick-playbook-design.md))
+- **Path / exit journal (P2)** — Overview Quick/Advanced compact recent history (active path, egress IP, shape, grade); trends project `active_path` from stored path-break ([design](specs/backend/path-exit-journal-design.md))
+- **Tunnel ∩ bufferbloat Quick (P3)** — when tunnel path and moderate/severe bufferbloat both show, one combined hero/next-step line (not only one factor) ([design](specs/backend/tunnel-bufferbloat-overlap-design.md))
+- **Connect unsupported honesty (U1)** — no controllable proxy API → diagnosis-only empty state (what is still measured); Switch only when a real recommendation exists ([design](specs/backend/connect-unsupported-honesty-design.md))
+- **Path evidence focus (U2)** — Advanced Network Path: one start-here panel; other path cards quiet accordion; drop duplicate Path Run-check CTA ([design](specs/backend/path-evidence-focus-design.md))
+- **Tryout one-liner (U3)** — COMMUNITY job line + dismissible Overview tip: path truth, not speed boost ([design](specs/backend/tryout-one-liner-design.md))
+- **Probe-language honesty (L1)** — Quick prefers localized shape summaries; zh-Hans labels remaining English probe text (“英文测量原文”) on Advanced diagnosis/path/stability ([design](specs/backend/probe-language-honesty-design.md))
+
+### Notes
+
+- Feedback: [issue templates](https://github.com/Dendro-X0/KnotTrace/issues/new/choose)
+- Pre-share: `bash scripts/community-gate.sh` · assets: `bash scripts/verify-release-assets.sh v1.10.2`
+- Still not AV/EDR; CompanionShell device L3 remains parked
+- Charter: [product-plan-path-exit-clarity-2026-11.md](docs/product-plan-path-exit-clarity-2026-11.md) · share plan: [product-plan-share-patch-1-10-2-2026-11.md](docs/product-plan-share-patch-1-10-2-2026-11.md)
+
 ## [1.10.1] - 2026-11-06
 
 Share patch — desktop trust + Path Truth Quick honesty (A1–B3). Still indicators, not AV.
@@ -404,6 +429,7 @@ Community-readiness share tag — reliability gates and honest public entry with
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.10.2]: https://github.com/Dendro-X0/KnotTrace/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/Dendro-X0/KnotTrace/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.2...v1.9.3

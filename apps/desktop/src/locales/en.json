@@ -44,6 +44,48 @@
     "monitorDetail": "Checks every {secs}s · last trigger: {reason}",
     "monitorStarting": "Starting background monitor..."
   },
+  "pathJournal": {
+    "title": "Path / exit journal",
+    "empty": "Run a few health checks to see recent path, egress IP, shape, and grade."
+  },
+  "overviewTip": {
+    "pathTruth": "KnotTrace’s job is path truth — where the break is — not a speed boost.",
+    "dismiss": "Got it"
+  },
+  "probeLanguage": {
+    "englishMeasurements": "English measurements"
+  },
+  "pathFocus": {
+    "startHere": "Start here",
+    "reason": {
+      "tunnel": "A tunnel or proxy path is active — begin with Tunnel compare for overhead vs Direct.",
+      "upstream": "Upstream pool claim looks impaired — review pool proof before thrashing nodes.",
+      "proxy": "Proxy-only site failures show up — compare proxy vs Direct on Proxy path.",
+      "pathBreak": "Path break shows a hop other than none — start with that classification.",
+      "egress": "Public egress looks unstable or changed — open Egress timeline first.",
+      "default": "Start with Path break for the active path and hop classification."
+    },
+    "panel": {
+      "insights": "Network insights",
+      "pathBreak": "Path break",
+      "proxyPath": "Proxy path",
+      "upstreamPool": "Upstream pool proof",
+      "tunnelCompare": "Tunnel compare",
+      "egressTimeline": "Egress timeline"
+    }
+  },
+  "connectPage": {
+    "badgeUnsupported": "Diagnosis only",
+    "unsupportedTitle": "No controllable proxy API",
+    "unsupportedSummary": "Connect Assist needs Mihomo or sing-box with external-controller (or a saved API URL in Advanced). KnotTrace still diagnoses path and proxy without switching nodes.",
+    "measuredTitle": "Still measured without Connect",
+    "measuredPath": "Path break and active path",
+    "measuredProxy": "Proxy path comparisons and upstream pool proof",
+    "measuredTunnel": "Tunnel compare (VPN / Tor / proxy vs Direct)",
+    "openNetwork": "Open Network or Overview for that evidence — this page does not invent an Apply action without an API.",
+    "noGroupsTitle": "Controller found, no groups yet",
+    "noGroupsSummary": "The proxy API responded but no switchable groups were listed. Check the controller config, then re-open Connect."
+  },
   "nextSteps": {
     "title": "What to do next",
     "analyzing": "Analyzing your latest check…",
@@ -69,7 +111,12 @@
       "captiveSuspected": "Sign-in may be required on this network. Finish any portal (or switch networks), then re-check.",
       "bufferbloat": "Latency jumps under load (bufferbloat) — not a raw speed problem. Check router SQM/QoS if calls lag during downloads.",
       "tunnelExpected": "A VPN, Tor, or proxy path is active. Slower is expected — local repair will not speed up this tunnel.",
-      "torSocksDown": "Tor SOCKS is not reachable. Fix or wait for the Tor client bootstrap — this is not evidence your ISP link is down."
+      "tunnelBufferbloat": "Tunnel overhead and under-load lag (bufferbloat) are both in play — not only one. Check Network for tunnel compare and stability.",
+      "torSocksDown": "Tor SOCKS is not reachable. Fix or wait for the Tor client bootstrap — this is not evidence your ISP link is down.",
+      "partialLocal": "Some sites fail, but the break looks local first — fix the local hop before blaming a destination or node.",
+      "partialDns": "Some sites fail with a DNS-shaped break. Check resolvers before thrashing proxy nodes.",
+      "partialActivePath": "Some sites fail on the active path. Compare Upstream pool / tunnel evidence before a careful Connect change.",
+      "partialDestination": "Some sites fail while the local path looks OK — likely destination, filter, or policy, not a local repair job."
     },
     "path": {
       "expectationLocalFirst": "Fix the local/path break first. Tunnel overhead is secondary until the local hop is healthy.",
@@ -91,8 +138,14 @@
       "pageStartSummary": "This looks more like a page-start delay than a raw bandwidth issue. Check DNS integrity first, then confirm the path is not behind a hotspot sign-in or proxy delay.",
       "partialThrashTitle": "Stop thrashing nodes — upstream pool looks poor",
       "partialThrashSummary": "Proxy-only failures recur across checks or exit IPs. Review Upstream pool proof; changing nodes rapidly will not fix a weak pool.",
-      "partialTitle": "Compare the current path",
+      "partialTitle": "Active path is impaired for some sites",
       "partialSummary": "Some sites appear to fail only on this route. Check Upstream pool proof first, then consider at most one careful Connect Assist change if the claim is active-path only.",
+      "partialLocalTitle": "Local path looks broken first",
+      "partialLocalSummary": "Site failures are present, but the break looks local (gateway, NIC, or client). Repair the local hop before blaming a destination or switching nodes.",
+      "partialDnsTitle": "DNS looks involved in these site failures",
+      "partialDnsSummary": "Reachability failures look DNS-shaped. Review DNS integrity / Assist before thrashing proxy nodes or assuming geo block.",
+      "partialDestinationTitle": "Site or policy may be blocking",
+      "partialDestinationSummary": "The local path looks OK while some destinations fail. This can be destination outage, filter, or geo/policy — open Network for path evidence; local repair will not unblock it.",
       "restrictedTitle": "Verify access before tuning",
       "restrictedSummary": "Guest or public network — finish any portal, avoid sensitive traffic until trusted, then re-check.",
       "tunnelThrashTitle": "Tunnel path is limited by upstream quality",
@@ -103,6 +156,8 @@
       "tunnelHonestySummary": "VPN, Tor, or proxy overhead is normal here. Local DNS or NIC repair will not speed up this tunnel — open Network for tunnel compare evidence.",
       "tunnelLocalFirstTitle": "Fix local path before blaming the tunnel",
       "tunnelLocalFirstSummary": "A tunnel is present, but the break looks local. Repair the local hop first; do not expect a node switch to fix a broken local path.",
+      "tunnelBufferbloatTitle": "Tunnel overhead and under-load lag both show up",
+      "tunnelBufferbloatSummary": "A VPN/Tor/proxy path adds expected overhead, and latency also jumps under load (bufferbloat). Open Network for tunnel compare and stability — local “speed” repair will not fix either alone.",
       "torSocksDownTitle": "Tor client needs attention",
       "torSocksDownSummary": "Tor SOCKS is not reachable. Wait for bootstrap or fix the Tor client — this is not an ISP outage signal.",
       "linkLocalTitle": "Check the local link first",

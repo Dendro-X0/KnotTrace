@@ -1,5 +1,6 @@
 import { Route } from "lucide-react";
 
+import { EnglishProbeNote } from "@/components/EnglishProbeNote";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,6 +49,7 @@ export function QuickPathTeaser({ loading, report, tunnelCompare }: QuickPathTea
               {formatTag(report.active_path)}
             </Badge>
           )}
+          {report ? <EnglishProbeNote /> : null}
         </div>
       </CardHeader>
       <CardContent className="space-y-1">

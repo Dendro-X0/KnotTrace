@@ -1,6 +1,7 @@
 import { Stethoscope } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
+import { EnglishProbeNote } from "@/components/EnglishProbeNote";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -43,6 +44,7 @@ export function NetworkDiagnosisPanel({ diagnosis }: NetworkDiagnosisPanelProps)
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">Network diagnosis</CardTitle>
           <div className="flex flex-wrap items-center gap-1">
+            <EnglishProbeNote />
             <Badge variant="info">{shapeLabel(diagnosis.slowdown_shape)}</Badge>
             <Badge variant={confidenceVariant(diagnosis.confidence)}>
               {diagnosis.confidence} confidence

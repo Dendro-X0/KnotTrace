@@ -11,6 +11,9 @@ import { LocalExplainPanel } from "@/components/LocalExplainPanel";
 import { CloudExplainPanel } from "@/components/CloudExplainPanel";
 import { EgressTimelinePanel } from "@/components/EgressTimelinePanel";
 import { NextStepsPanel } from "@/components/NextStepsPanel";
+import { EnglishProbeNote } from "@/components/EnglishProbeNote";
+import { PathExitJournal } from "@/components/PathExitJournal";
+import { PathTruthTip } from "@/components/PathTruthTip";
 import { QuickIntegrityTeaser } from "@/components/QuickIntegrityTeaser";
 import { QuickPathTeaser } from "@/components/QuickPathTeaser";
 import { StatusHero } from "@/components/StatusHero";
@@ -77,62 +80,72 @@ export function OverviewPage({ state }: OverviewPageProps) {
   const heroSummary = buildQuickHeroSummary(state);
   const heroSummaryText =
     heroSummary.kind === "key" ? t(heroSummary.key) : heroSummary.text;
+  const heroShowsEnglishText = heroSummary.kind === "text";
 
   return (
     <div className="flex flex-col gap-3">
       {isQuick ? (
-        <section className="bento-grid motion-stagger" aria-label="Connection status">
-          <div className="bento-hero">
-            <StatusHero
-              emphasis="hero"
-              loading={loading}
-              grade={grade}
-              score={state.report?.score.score}
-              dnsIntegrity={state.report?.dns_integrity}
-              summary={heroSummaryText}
-              metrics={
-                loading
-                  ? undefined
-                  : quickStats.map((stat) => ({ label: stat.label, value: stat.value }))
-              }
-              primaryAction={
-                primaryNext
-                  ? {
-                      label: t(primaryNext.labelKey),
-                      onClick: () => state.navigate(primaryNext.page),
-                    }
-                  : undefined
-              }
-              secondaryAction={
-                secondaryNext
-                  ? {
-                      label: t(secondaryNext.labelKey),
-                      onClick: () => state.navigate(secondaryNext.page),
-                    }
-                  : undefined
-              }
-            />
-          </div>
-          <div className="bento-path h-full">
-            <QuickPathTeaser
-              loading={loading}
-              report={state.report?.path_break}
-              tunnelCompare={state.report?.tunnel_compare}
-            />
-          </div>
-          <div className="bento-integrity h-full">
-            <QuickIntegrityTeaser
-              loading={loading}
-              report={state.report?.integrity}
-              checking={state.checking}
-              onRunCheck={() => void state.runCheck()}
-              onOpenProtect={() => state.navigate("protect")}
-            />
-          </div>
-          <div className="bento-export h-full">
-            <DiagnosticBundlePanel state={state} compact />
-          </div>
-        </section>
+        <>
+          <PathTruthTip />
+          <section className="bento-grid motion-stagger" aria-label="Connection status">
+            <div className="bento-hero">
+              <StatusHero
+                emphasis="hero"
+                loading={loading}
+                grade={grade}
+                score={state.report?.score.score}
+                dnsIntegrity={state.report?.dns_integrity}
+                summary={heroSummaryText}
+                footer={heroShowsEnglishText ? <EnglishProbeNote variant="note" /> : undefined}
+                metrics={
+                  loading
+                    ? undefined
+                    : quickStats.map((stat) => ({ label: stat.label, value: stat.value }))
+                }
+                primaryAction={
+                  primaryNext
+                    ? {
+                        label: t(primaryNext.labelKey),
+                        onClick: () => state.navigate(primaryNext.page),
+                      }
+                    : undefined
+                }
+                secondaryAction={
+                  secondaryNext
+                    ? {
+                        label: t(secondaryNext.labelKey),
+                        onClick: () => state.navigate(secondaryNext.page),
+                      }
+                    : undefined
+                }
+              />
+            </div>
+            <div className="bento-path h-full">
+              <QuickPathTeaser
+                loading={loading}
+                report={state.report?.path_break}
+                tunnelCompare={state.report?.tunnel_compare}
+              />
+            </div>
+            <div className="bento-integrity h-full">
+              <QuickIntegrityTeaser
+                loading={loading}
+                report={state.report?.integrity}
+                checking={state.checking}
+                onRunCheck={() => void state.runCheck()}
+                onOpenProtect={() => state.navigate("protect")}
+              />
+            </div>
+            <div className="bento-export h-full">
+              <DiagnosticBundlePanel state={state} compact />
+            </div>
+          </section>
+          <PathExitJournal
+            loading={loading}
+            points={state.trends}
+            compact
+          />
+        </>
       ) : (
         <>
           <section className="grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(11rem,0.85fr)]">
@@ -149,6 +162,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
                   ? "Last check failed — use Retry in the banner above."
                   : "Click Run health check (or press Ctrl+K) to see connection health.")
               }
+              footer={<EnglishProbeNote variant="note" />}
             />
 
             <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-3 lg:grid-cols-1">
@@ -206,6 +220,7 @@ export function OverviewPage({ state }: OverviewPageProps) {
                       report={state.report?.egress_timeline}
                       compact
                     />
+                    <PathExitJournal loading={loading} points={state.trends} />
                     <LocalExplainPanel state={state} />
                     <CloudExplainPanel state={state} />
                     <DiagnosticBundlePanel state={state} />

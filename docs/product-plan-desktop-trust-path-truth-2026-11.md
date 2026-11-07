@@ -12,7 +12,7 @@ GOAL:     Make the desktop app feel trustworthy and calm for strangers (A),
           and make Path Truth answers sharper when the path is the problem (B).
 POSTURE:  Observe-first · indicators only · reversible assists · no fake Mbps
 DONE:     Charter · A1 · A2 · A3 · B1 · B2 · B3 · D1 · V* prep (v1.10.1)
-NEXT:     Maintainer: commit · tag v1.10.1 · push · verify-release-assets
+NEXT:     Successor complete @ v1.10.2 — [product-plan-path-exit-clarity-2026-11.md](./product-plan-path-exit-clarity-2026-11.md) · [product-plan-share-patch-1-10-2-2026-11.md](./product-plan-share-patch-1-10-2-2026-11.md)
 PARKED:   P2b CompanionShell device proof · Obscur · AV · auto node rotation
 ```
 

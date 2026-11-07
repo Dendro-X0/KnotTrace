@@ -8,25 +8,25 @@ Product direction: fix what is on the machine (DNS, link, OS caps, MTU) first; t
 
 | Page | Purpose |
 |------|---------|
-| **Overview** | Health score, fast/full check, diagnosis, **Path break**, **Integrity**, **Egress timeline**, local/cloud **Explain**, diagnostic export, upstream pool, next steps, trends, benchmarks |
+| **Overview** | Health score, fast/full check, diagnosis, **Path break**, **Integrity**, **Egress timeline**, **path/exit journal**, local/cloud **Explain**, diagnostic export, upstream pool, ranked next steps, trends, benchmarks |
 | **DNS Assist** | Recommend and apply a faster DNS resolver (Windows, macOS, Linux) |
-| **Connect** | Discover Mihomo/sing-box API and switch proxy nodes (manual / Protect opt-in) |
+| **Connect** | Discover Mihomo/sing-box API and switch proxy nodes (manual / Protect opt-in); diagnosis-only when no controllable API |
 | **Protect** | Trust level, alerts, notifications, opt-in auto-apply, **process↔egress** opt-in |
-| **Network** | Environment, Link (+ Wi‑Fi), Local repair, Local caps (Windows), MTU assist, Path break, Integrity, Egress timeline, Tunnel compare, proxy path + upstream pool, probes, throughput |
+| **Network** | Environment, Link (+ Wi‑Fi), Local repair, Local caps (Windows), MTU assist, Path (start-here focus + quiet accordion), Integrity, Egress timeline, Tunnel compare, proxy path + upstream pool, probes, throughput |
 
 **Default posture:** observe first. The background monitor runs full health checks; manual checks use a faster profile. DNS, Connect, MTU, and local-caps changes stay manual unless you enable Protect auto-apply (DNS/proxy only — **never** MTU or local caps). Proxy path / upstream pool proof is detect-only — it does not switch nodes for you.
 
 ## First five minutes
 
 1. Run `npm run tauri dev` (see [development.md](./development.md)) or install a release build (see [release.md](./release.md) / [COMMUNITY.md](./COMMUNITY.md)).
-2. Open **Overview** — wait for the first health check (tray shows status). UI defaults to **Quick** mode.
-3. Read the score and ranked next steps; Path / Integrity appear as short teasers (Path may state tunnel expectation when VPN/Tor/proxy is active). Theme, language, density, and monitor live under **Settings**.
-4. Switch to **Advanced** for full diagnosis, upstream proof, trends, and benchmarks. On **Network** Advanced: use Link / Path / Integrity / Throughput jump pills.
-5. Use **DNS** / **Connect** only when you want a reversible change (DNS apply works on Windows, macOS, and Linux). Captive and tunnel-honesty cases steer away from DNS-first / “speed up Tor” CTAs.
+2. Open **Overview** — wait for the first health check (tray shows status). UI defaults to **Quick** mode; a dismissible tip states the job is **path truth**, not a speed boost.
+3. Read the score and ranked next steps; Path / Integrity teasers plus a compact **path/exit journal**. Partial-site cases name local / DNS / active path / destination; tunnel+bufferbloat can share one combined line.
+4. Switch to **Advanced** for full diagnosis, upstream proof, trends, and benchmarks. On **Network** Advanced: Link / Path / Integrity / Throughput pills; Path opens one **start here** panel with the rest quiet.
+5. Use **DNS** / **Connect** only when you want a reversible change. No controllable proxy API → Connect stays diagnosis-only (no dead Switch). Captive / tunnel honesty steer away from DNS-first / “speed up Tor.” zh-Hans labels remaining English probe narratives.
 
 Community tryouts: prefer [COMMUNITY.md](./COMMUNITY.md). Report problems via [GitHub Issues](https://github.com/Dendro-X0/KnotTrace/issues).
 
-**Active release prep:** [product-plan-share-patch-1-10-1-2026-11.md](./product-plan-share-patch-1-10-1-2026-11.md) (**v1.10.1** ready to tag). Charter: [product-plan-desktop-trust-path-truth-2026-11.md](./product-plan-desktop-trust-path-truth-2026-11.md) — **A1–A3 · B1–B3 · D1 · V\*** done locally.
+**Charter:** [product-plan-path-exit-clarity-2026-11.md](./product-plan-path-exit-clarity-2026-11.md) — **complete @ v1.10.2** (P·U·L1·D1·V\*). Share plan: [product-plan-share-patch-1-10-2-2026-11.md](./product-plan-share-patch-1-10-2-2026-11.md). Prior: [product-plan-share-patch-1-10-1-2026-11.md](./product-plan-share-patch-1-10-1-2026-11.md).
 
 ## Local data
 
@@ -70,8 +70,17 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [product-plan-ui-density-modes-2026-11.md](./product-plan-ui-density-modes-2026-11.md) — Quick vs Advanced UI (**complete**)
 - [product-plan-script-risk-scan-2026-11.md](./product-plan-script-risk-scan-2026-11.md) — bounded script-risk scan (**complete**; not AV)
 - [product-plan-share-patch-1-10-0-2026-11.md](./product-plan-share-patch-1-10-0-2026-11.md) — share release **v1.10.0**
-- [product-plan-share-patch-1-10-1-2026-11.md](./product-plan-share-patch-1-10-1-2026-11.md) — share patch **v1.10.1** (ready to tag)
+- [product-plan-share-patch-1-10-1-2026-11.md](./product-plan-share-patch-1-10-1-2026-11.md) — share patch **v1.10.1**
+- [product-plan-share-patch-1-10-2-2026-11.md](./product-plan-share-patch-1-10-2-2026-11.md) — share patch **v1.10.2**
 - [product-plan-desktop-trust-path-truth-2026-11.md](./product-plan-desktop-trust-path-truth-2026-11.md) — desktop trust (A) + Path Truth sharpen (B) — **complete @ v1.10.1**
+- [product-plan-path-exit-clarity-2026-11.md](./product-plan-path-exit-clarity-2026-11.md) — path/exit clarity (**complete @ v1.10.2**)
+- [frontend-spec-site-geo-quick-playbook-2026-11.md](./frontend-spec-site-geo-quick-playbook-2026-11.md) — site/geo Quick playbook (P1)
+- [frontend-spec-path-exit-journal-2026-11.md](./frontend-spec-path-exit-journal-2026-11.md) — path/exit journal (P2)
+- [frontend-spec-tunnel-bufferbloat-overlap-2026-11.md](./frontend-spec-tunnel-bufferbloat-overlap-2026-11.md) — tunnel ∩ bufferbloat (P3)
+- [frontend-spec-connect-unsupported-honesty-2026-11.md](./frontend-spec-connect-unsupported-honesty-2026-11.md) — Connect unsupported (U1)
+- [frontend-spec-path-evidence-focus-2026-11.md](./frontend-spec-path-evidence-focus-2026-11.md) — Path evidence focus (U2)
+- [frontend-spec-tryout-one-liner-2026-11.md](./frontend-spec-tryout-one-liner-2026-11.md) — tryout one-liner (U3)
+- [frontend-spec-probe-language-honesty-2026-11.md](./frontend-spec-probe-language-honesty-2026-11.md) — probe-language honesty (L1)
 - [frontend-spec-empty-failure-ctas-2026-11.md](./frontend-spec-empty-failure-ctas-2026-11.md) — empty/failure one-CTA map (A1)
 - [frontend-spec-network-advanced-nav-2026-11.md](./frontend-spec-network-advanced-nav-2026-11.md) — Advanced Network section nav (A2)
 - [frontend-spec-next-step-ranking-2026-11.md](./frontend-spec-next-step-ranking-2026-11.md) — next-step ranking (B1)

@@ -1,6 +1,8 @@
 # KnotTrace for community tryouts
 
-**Current release (prep):** **v1.10.1** — tag when gates pass · [CHANGELOG](../CHANGELOG.md) · prior installers: [v1.10.0](https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.10.0)
+**Current release (prep):** **v1.10.2** — tag when gates pass · [CHANGELOG](../CHANGELOG.md) · prior installers: [v1.10.1](https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.10.1)
+
+**Job:** Path truth — tell whether the break is local, DNS, active path, or destination/policy. Not a speed booster.
 
 This page is the short public entry kit (community-readiness Band **C1**). Maintainer internals stay in [START-HERE.md](./START-HERE.md).
 
@@ -37,11 +39,11 @@ macOS/Linux: same Releases page — use the `.dmg` / AppImage / `.deb` / `.rpm` 
 
 ## First five minutes
 
-1. Click **Run health check** in the header (or press **Ctrl+K**). The UI starts in **Quick** mode.  
-2. On **Overview**, read the grade/score, ranked **next steps**, and short Path / Integrity teasers. Path may add a one-line expectation when VPN/Tor/proxy is active (slower can be normal — not a speed-boost pitch).  
-3. Theme, language, Quick/Advanced density, and the background monitor live under **Settings** (Quick keeps the header calm).  
-4. Switch to **Advanced** for full Path Truth detail, or open **Network** for link / local repair (Quick) vs section-jumpable probes (Advanced).  
-5. Use **DNS** / **Connect** / MTU / local-caps only when you want a reversible change — next steps avoid DNS-first on captive portals and avoid “fix local to speed up Tor.”  
+1. Click **Run health check** in the header (or press **Ctrl+K**). The UI starts in **Quick** mode (dismissible tip: path truth, not speed boost).  
+2. On **Overview**, read the grade/score, ranked **next steps**, Path / Integrity teasers, and the compact **path/exit journal**. Path may add a tunnel expectation; partial-site failures name a plain layer (local / DNS / active path / destination).  
+3. Theme, language (en / zh-Hans), Quick/Advanced density, and the background monitor live under **Settings**. zh-Hans labels remaining English probe text so mixed UI is not silent.  
+4. Switch to **Advanced** for full Path Truth detail, or open **Network** for link / local repair (Quick) vs section-jumpable Path (start-here + quiet accordion) in Advanced.  
+5. Use **DNS** / **Connect** / MTU / local-caps only when you want a reversible change. Without a Mihomo/sing-box API, **Connect** stays diagnosis-only — no dead Switch button.  
 6. If something looks wrong, use **Diagnostic export → Copy JSON** (below) before asking for help.  
 
 ## Export a diagnostic bundle (for help)

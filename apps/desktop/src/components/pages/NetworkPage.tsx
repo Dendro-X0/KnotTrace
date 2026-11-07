@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import { Network, Radar } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
+import { EnglishProbeNote } from "@/components/EnglishProbeNote";
 import { FactList } from "@/components/shared";
 import { StabilityProbesPanel } from "@/components/StabilityProbesPanel";
 import { LinkFactsPanel } from "@/components/LinkFactsPanel";
@@ -20,10 +22,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLocale } from "@/hooks/useLocale";
 import { useUiDensity } from "@/hooks/useUiDensity";
 import type { CompanionState } from "@/hooks/useCompanion";
+import {
+  pathEvidenceFocusFromReport,
+  type PathEvidenceFocusId,
+} from "@/lib/pathEvidenceFocus";
 import { cn } from "@/lib/utils";
 import { formatTag } from "@/types";
+
+function PathQuietDetails({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className="rounded-xl border border-border/60 bg-muted/10 xl:col-span-2">
+      <summary className="text-muted-foreground hover:text-foreground cursor-pointer px-3 py-2.5 text-sm font-medium">
+        {title}
+      </summary>
+      <div className="border-border/50 border-t p-2">{children}</div>
+    </details>
+  );
+}
 
 interface NetworkPageProps {
   state: CompanionState;
@@ -42,10 +66,12 @@ function scrollToSection(id: string) {
 
 export function NetworkPage({ state }: NetworkPageProps) {
   const { isQuick } = useUiDensity();
+  const { t } = useLocale();
   const env = state.report?.environment;
   const probe = state.report?.probe;
   const score = state.report?.score;
   const loading = state.bootstrapping && !state.report;
+  const pathFocus = pathEvidenceFocusFromReport(state.report);
 
   const probeCard = (
     <Card className="min-h-0 border-border/70 bg-card/80">
@@ -298,31 +324,105 @@ export function NetworkPage({ state }: NetworkPageProps) {
           <h2 className="text-muted-foreground px-0.5 text-[0.68rem] font-semibold tracking-wide uppercase">
             Path
           </h2>
+          <Card className="border-border/50 bg-muted/10">
+            <CardContent className="space-y-1 py-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+                  {t("pathFocus.startHere")}
+                </p>
+                <EnglishProbeNote />
+              </div>
+              <p className="text-sm leading-relaxed">{t(pathFocus.reasonKey)}</p>
+            </CardContent>
+          </Card>
           <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-            <NetworkInsightsPanel
-              loading={loading}
-              egress={state.report?.egress}
-              networkContext={state.report?.network_context}
-              recommendations={state.report?.recommendations}
-            />
-            <PathBreakPanel
-              loading={loading}
-              report={state.report?.path_break}
-              checking={state.checking}
-              onRunCheck={() => void state.runCheck()}
-            />
-            <ProxyPathPanel
-              loading={loading}
-              proxyEnabled={env?.proxy.enabled}
-              report={state.report?.proxy_path_report}
-            />
-            <UpstreamPoolPanel
-              loading={loading}
-              proxyEnabled={env?.proxy.enabled}
-              proof={state.report?.upstream_pool}
-            />
-            <TunnelComparePanel loading={loading} report={state.report?.tunnel_compare} />
-            <EgressTimelinePanel loading={loading} report={state.report?.egress_timeline} />
+            {(() => {
+              const panels: Array<{
+                id: PathEvidenceFocusId | "network_insights";
+                title: string;
+                node: ReactNode;
+              }> = [
+                {
+                  id: "network_insights",
+                  title: t("pathFocus.panel.insights"),
+                  node: (
+                    <NetworkInsightsPanel
+                      loading={loading}
+                      egress={state.report?.egress}
+                      networkContext={state.report?.network_context}
+                      recommendations={state.report?.recommendations}
+                    />
+                  ),
+                },
+                {
+                  id: "path_break",
+                  title: t("pathFocus.panel.pathBreak"),
+                  node: (
+                    <PathBreakPanel loading={loading} report={state.report?.path_break} />
+                  ),
+                },
+                {
+                  id: "proxy_path",
+                  title: t("pathFocus.panel.proxyPath"),
+                  node: (
+                    <ProxyPathPanel
+                      loading={loading}
+                      proxyEnabled={env?.proxy.enabled}
+                      report={state.report?.proxy_path_report}
+                    />
+                  ),
+                },
+                {
+                  id: "upstream_pool",
+                  title: t("pathFocus.panel.upstreamPool"),
+                  node: (
+                    <UpstreamPoolPanel
+                      loading={loading}
+                      proxyEnabled={env?.proxy.enabled}
+                      proof={state.report?.upstream_pool}
+                    />
+                  ),
+                },
+                {
+                  id: "tunnel_compare",
+                  title: t("pathFocus.panel.tunnelCompare"),
+                  node: (
+                    <TunnelComparePanel
+                      loading={loading}
+                      report={state.report?.tunnel_compare}
+                    />
+                  ),
+                },
+                {
+                  id: "egress_timeline",
+                  title: t("pathFocus.panel.egressTimeline"),
+                  node: (
+                    <EgressTimelinePanel
+                      loading={loading}
+                      report={state.report?.egress_timeline}
+                    />
+                  ),
+                },
+              ];
+
+              const focused = panels.find((panel) => panel.id === pathFocus.id);
+              const rest = panels.filter((panel) => panel.id !== pathFocus.id);
+
+              return (
+                <>
+                  {focused ? (
+                    <div className="xl:col-span-2" data-path-focus={focused.id}>
+                      {focused.node}
+                    </div>
+                  ) : null}
+                  {rest.map((panel) => (
+                    <PathQuietDetails key={panel.id} title={panel.title}>
+                      {panel.node}
+                    </PathQuietDetails>
+                  ))}
+                </>
+              );
+            })()}
           </div>
         </section>
 

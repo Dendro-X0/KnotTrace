@@ -1277,6 +1277,9 @@ pub struct HistoryTrendPoint {
     pub egress_ip: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub upstream_claim: Option<UpstreamPoolClaim>,
+    /// Active Path Truth path when the stored report had `path_break`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_path: Option<PathBreakPath>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

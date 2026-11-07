@@ -9,45 +9,62 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLocale } from "@/hooks/useLocale";
 import { useUiDensity } from "@/hooks/useUiDensity";
 import type { CompanionState } from "@/hooks/useCompanion";
+import {
+  isConnectUnsupported,
+  shouldShowConnectSwitch,
+} from "@/lib/connectUnsupported";
 import { cn } from "@/lib/utils";
 
 interface ConnectPageProps {
   state: CompanionState;
 }
 
-function connectBadge(state: CompanionState) {
+function connectBadge(
+  state: CompanionState,
+  unsupportedLabel: string,
+): { label: string; variant: "muted" | "recommended" | "active" | "info" } {
   const rec = state.connectRecommendation;
-  if (!rec?.kernel) return { label: "Not found", variant: "muted" as const };
-  if (rec.should_apply) return { label: "Recommended", variant: "recommended" as const };
-  return { label: "Connected", variant: "active" as const };
+  if (isConnectUnsupported(rec)) {
+    return { label: unsupportedLabel, variant: "info" };
+  }
+  if (rec?.should_apply) return { label: "Recommended", variant: "recommended" };
+  return { label: "Connected", variant: "active" };
 }
 
 export function ConnectPage({ state }: ConnectPageProps) {
   const { isQuick } = useUiDensity();
-  const badge = connectBadge(state);
+  const { t } = useLocale();
   const rec = state.connectRecommendation;
+  const unsupported = isConnectUnsupported(rec);
+  const showSwitch = shouldShowConnectSwitch(rec);
+  const badge = connectBadge(state, t("connectPage.badgeUnsupported"));
   const switchTarget = rec?.recommended_switch;
   const loading = state.bootstrapping && !rec && !state.connectError;
-  const canApply = !!rec?.kernel && !!rec.should_apply && !!switchTarget;
   const groups = rec?.groups ?? [];
+  const description = unsupported
+    ? t("connectPage.unsupportedSummary")
+    : state.connectSummary;
 
   return (
     <FeaturePage
       title="Connect"
-      description={state.connectSummary}
+      description={description}
       icon={Activity}
       badge={loading ? undefined : badge}
       error={state.connectError}
       loading={loading}
       footer={
-        <Button
-          onClick={() => void state.applyRecommendedConnect()}
-          disabled={!canApply || state.connectApplying}
-        >
-          {state.connectApplying ? "Switching..." : "Switch to recommended node"}
-        </Button>
+        showSwitch ? (
+          <Button
+            onClick={() => void state.applyRecommendedConnect()}
+            disabled={state.connectApplying}
+          >
+            {state.connectApplying ? "Switching..." : "Switch to recommended node"}
+          </Button>
+        ) : undefined
       }
     >
       {loading ? (
@@ -84,11 +101,30 @@ export function ConnectPage({ state }: ConnectPageProps) {
             <Skeleton key={index} className="h-11 rounded-lg" />
           ))}
         </div>
+      ) : unsupported ? (
+        <div className="grid gap-3">
+          <EmptyState
+            icon={PlugZap}
+            title={t("connectPage.unsupportedTitle")}
+            description={t("connectPage.unsupportedSummary")}
+          />
+          <div className="rounded-lg border border-border/70 bg-muted/15 px-3 py-2.5">
+            <p className="text-sm font-medium">{t("connectPage.measuredTitle")}</p>
+            <ul className="text-muted-foreground mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed">
+              <li>{t("connectPage.measuredPath")}</li>
+              <li>{t("connectPage.measuredProxy")}</li>
+              <li>{t("connectPage.measuredTunnel")}</li>
+            </ul>
+            <p className="text-muted-foreground mt-2 text-xs leading-relaxed">
+              {t("connectPage.openNetwork")}
+            </p>
+          </div>
+        </div>
       ) : groups.length === 0 ? (
         <EmptyState
           icon={PlugZap}
-          title="No proxy controller found"
-          description="Enable external-controller in Mihomo or sing-box, or save a custom API URL below."
+          title={t("connectPage.noGroupsTitle")}
+          description={t("connectPage.noGroupsSummary")}
         />
       ) : (
         <ScrollArea className="min-h-0 flex-1">
@@ -128,37 +164,37 @@ export function ConnectPage({ state }: ConnectPageProps) {
       {!isQuick && <Separator />}
 
       {!isQuick && (
-      <details className="rounded-xl border border-border/70 bg-muted/15 p-3">
-        <summary className="cursor-pointer text-sm font-medium">API settings</summary>
-        <div className="mt-3 grid gap-3">
-          <div className="grid gap-1.5">
-            <Label htmlFor="connect-api-base">API URL</Label>
-            <Input
-              id="connect-api-base"
-              value={state.connectApiBase}
-              onChange={(event) => state.setConnectApiBase(event.target.value)}
-              placeholder="http://127.0.0.1:9090"
-            />
+        <details className="rounded-xl border border-border/70 bg-muted/15 p-3">
+          <summary className="cursor-pointer text-sm font-medium">API settings</summary>
+          <div className="mt-3 grid gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="connect-api-base">API URL</Label>
+              <Input
+                id="connect-api-base"
+                value={state.connectApiBase}
+                onChange={(event) => state.setConnectApiBase(event.target.value)}
+                placeholder="http://127.0.0.1:9090"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="connect-secret">Secret (optional)</Label>
+              <Input
+                id="connect-secret"
+                type="password"
+                value={state.connectSecret}
+                onChange={(event) => state.setConnectSecret(event.target.value)}
+                placeholder="Bearer secret"
+              />
+            </div>
+            <Button
+              variant="secondary"
+              onClick={() => void state.saveConnectConfig()}
+              disabled={state.connectSaving}
+            >
+              {state.connectSaving ? "Saving..." : "Save API settings"}
+            </Button>
           </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="connect-secret">Secret (optional)</Label>
-            <Input
-              id="connect-secret"
-              type="password"
-              value={state.connectSecret}
-              onChange={(event) => state.setConnectSecret(event.target.value)}
-              placeholder="Bearer secret"
-            />
-          </div>
-          <Button
-            variant="secondary"
-            onClick={() => void state.saveConnectConfig()}
-            disabled={state.connectSaving}
-          >
-            {state.connectSaving ? "Saving..." : "Save API settings"}
-          </Button>
-        </div>
-      </details>
+        </details>
       )}
     </FeaturePage>
   );

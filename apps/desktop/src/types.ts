@@ -1019,6 +1019,7 @@ export interface HistoryTrendPoint {
   likely_provider_side?: boolean | null;
   egress_ip?: string | null;
   upstream_claim?: UpstreamPoolClaim | null;
+  active_path?: PathBreakPath | null;
 }
 
 export interface UpdateCheck {

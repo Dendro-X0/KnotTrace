@@ -8,17 +8,17 @@
 ```text
 GOAL:     Tag v1.10.1 so desktop-trust + Path Truth Quick honesty ship in installers.
 POSTURE:  Indicators only · not antivirus · P2b parked · CompanionShell desktop preview
-DONE:     Charter · V1 version/docs · community-gate
-NEXT:     Commit · tag v1.10.1 · push tag · verify-release-assets.sh v1.10.1
+DONE:     Charter · V1 · community-gate · commit/tag/push
+NEXT:     After CI Release: verify-release-assets.sh v1.10.1 · stamp V3
 ```
 
-_Gate note: community-gate green 2026-11-06 after version bump._
+_Gate note: community-gate green 2026-11-06; pushed `a5da649` + tag `v1.10.1`._
 
 | Order | Band | Status |
 |------:|------|--------|
 | 1 | Version + CHANGELOG + docs stamp | **Done** |
 | 2 | `bash scripts/community-gate.sh` | **Done** (R1 + R4 + H3 + O3) |
-| 3 | Commit `Release v1.10.1` · tag · push | Pending maintainer |
+| 3 | Commit `Release v1.10.1` · tag · push | **Done** (`a5da649` · `v1.10.1`) |
 | 4 | `verify-release-assets.sh v1.10.1` · stamp | Pending after GitHub Release |
 
 ### Ships in this release

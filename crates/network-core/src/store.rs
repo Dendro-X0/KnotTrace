@@ -138,5 +138,106 @@ fn report_to_trend_point(report: HealthReport) -> HistoryTrendPoint {
             .upstream_pool
             .as_ref()
             .map(|proof| proof.claim),
+        active_path: report.path_break.as_ref().map(|pb| pb.active_path),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::*;
+    use chrono::Utc;
+
+    fn bare_report(active: Option<PathBreakPath>) -> HealthReport {
+        HealthReport {
+            timestamp: Utc::now(),
+            environment: EnvironmentSnapshot {
+                hostname: "h".into(),
+                interfaces: vec![],
+                dns_servers: vec![],
+                proxy: ProxySettings {
+                    enabled: false,
+                    server: None,
+                    source: "none".into(),
+                },
+                tags: vec![],
+                default_gateway: None,
+                active_interface: None,
+                tor: default_tor_status(),
+            },
+            probe: ProbeResult {
+                gateway: None,
+                internet: None,
+                dns: vec![],
+                duration_ms: 0,
+            },
+            score: HealthScore {
+                grade: HealthGrade::Fair,
+                score: 70,
+                summary: "fair".into(),
+                reasons: vec![],
+            },
+            dns_integrity: None,
+            diagnosis: Some(NetworkDiagnosis {
+                summary: "partial".into(),
+                primary_bottleneck: None,
+                slowdown_shape: SlowdownShape::PartialSiteFailure,
+                confidence: DiagnosisConfidence::Medium,
+                hints: vec![],
+            }),
+            stability: None,
+            site_reachability: None,
+            egress: Some(EgressReport {
+                primary_ip: Some("203.0.113.9".into()),
+                confidence: EgressConfidence::High,
+                system_path: EgressPathReport {
+                    kind: EgressPathKind::System,
+                    primary_ip: Some("203.0.113.9".into()),
+                    endpoints: vec![],
+                    summary: "system".into(),
+                },
+                tor_path: None,
+                summary: "egress".into(),
+            }),
+            network_context: None,
+            recommendations: None,
+            proxy_path_report: None,
+            link_facts: None,
+            local_caps: None,
+            mtu_assist: None,
+            local_repair: None,
+            tunnel_compare: None,
+            upstream_pool: None,
+            path_break: active.map(|active_path| PathBreakReport {
+                local_ok: true,
+                local_issues: vec![],
+                active_path,
+                paths_present: vec![active_path],
+                break_hop: PathBreakHop::None,
+                environment_class: PathEnvironmentClass::HomeLan,
+                confidence: PathBreakConfidence::Medium,
+                title: "path".into(),
+                summary: "path".into(),
+                evidence: vec![],
+                not_checked: vec![],
+            }),
+            integrity: None,
+            egress_timeline: None,
+        }
+    }
+
+    #[test]
+    fn trend_point_includes_active_path_and_egress() {
+        let point = report_to_trend_point(bare_report(Some(PathBreakPath::SystemProxy)));
+        assert_eq!(point.active_path, Some(PathBreakPath::SystemProxy));
+        assert_eq!(point.egress_ip.as_deref(), Some("203.0.113.9"));
+        assert_eq!(point.grade, HealthGrade::Fair);
+        assert_eq!(point.slowdown_shape, Some(SlowdownShape::PartialSiteFailure));
+    }
+
+    #[test]
+    fn trend_point_omits_active_path_when_path_break_missing() {
+        let point = report_to_trend_point(bare_report(None));
+        assert_eq!(point.active_path, None);
     }
 }

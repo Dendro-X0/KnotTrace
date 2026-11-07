@@ -9,17 +9,17 @@
 GOAL:     Tag v1.10.2 so path/exit clarity (site/geo, journal, tunnel∩bloat,
           Connect honesty, Path focus, tryout line, probe-language) ships.
 POSTURE:  Indicators only · not antivirus · P2b parked · CompanionShell desktop preview
-DONE:     Charter · V1 · community-gate · commit/tag
-NEXT:     Push · after CI Release: verify-release-assets.sh v1.10.2 · stamp V3
+DONE:     Charter · V1 · community-gate · commit/tag/push
+NEXT:     After CI Release: verify-release-assets.sh v1.10.2 · stamp V3
 ```
 
-_Gate note: community-gate green 2026-11-07; commit `bcd887a` + tag `v1.10.2`._
+_Gate note: community-gate green 2026-11-07; pushed `c1e22e5` + tag `v1.10.2`._
 
 | Order | Band | Status |
 |------:|------|--------|
 | 1 | Version + CHANGELOG + docs stamp | **Done** |
 | 2 | `bash scripts/community-gate.sh` | **Done** (R1 + R4 + H3 + O3) |
-| 3 | Commit `Release v1.10.2` · tag · push | Tag done (`bcd887a` · `v1.10.2`); push next |
+| 3 | Commit `Release v1.10.2` · tag · push | **Done** (`c1e22e5` · `v1.10.2`) |
 | 4 | `verify-release-assets.sh v1.10.2` · stamp | Pending after GitHub Release |
 
 ### Ships in this release

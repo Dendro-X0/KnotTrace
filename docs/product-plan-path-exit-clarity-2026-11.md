@@ -11,8 +11,8 @@
 GOAL:     Answer “is this this node/path, or my line?” in under ten seconds for
           proxy/VPN-heavy users — without fake Mbps or auto node thrash.
 POSTURE:  Observe-first · indicators only · reversible assists · no fake Mbps
-DONE:     P1–P3 · U1–U3 · L1 · D1 · V* (v1.10.2)
-NEXT:     After CI Release: verify-release-assets.sh v1.10.2
+DONE:     P1–P3 · U1–U3 · L1 · D1 · V* (v1.10.2 · c1e22e5)
+NEXT:     After CI Release: verify-release-assets.sh v1.10.2 · stamp V3
 PARKED:   P2b CompanionShell device proof · Obscur · AV · auto node rotation
 ```
 
@@ -91,7 +91,7 @@ Do **not** open mobile L3, AV, or auto rotation under this charter.
 | 6 | **U3** Tryout one-liner | U | Done |
 | 7 | **L1** Probe-language honesty | L | Done |
 | 8 | **D1** Docs stamp | Docs | Done |
-| 9 | **V\*** Share patch **v1.10.2** | Release | Tagged (`bcd887a`) · push next |
+| 9 | **V\*** Share patch **v1.10.2** | Release | **Done** (`c1e22e5` · tag pushed) |
 
 Interleave: finish **P1** design before UI; **U3** may ship as docs-only anytime after P1 copy exists; **L1** after P1–P3 strings settle.
 

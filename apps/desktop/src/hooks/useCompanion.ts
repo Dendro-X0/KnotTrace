@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useState } from "react";
 
+import { buildProtectReviewNote } from "@/lib/protectReviewPass";
 import { invokeErrorMessage } from "@/lib/utils";
 import type {
   AppCapabilities,
@@ -33,6 +34,7 @@ import type {
   PageId,
   ProxyPathComparison,
   ProtectAction,
+  ProtectAlert,
   ProtectSettings,
   ProtectStatus,
   ThroughputProbeResult,
@@ -41,6 +43,11 @@ import type {
   UpdateProgress,
 } from "@/types";
 import { isPageId, PAGE_STORAGE_KEY } from "@/types";
+
+export interface ProtectReviewPassOutcome {
+  note: string;
+  fingerprints: string[];
+}
 
 export function useCompanion() {
   const [page, setPage] = useState<PageId>("overview");
@@ -788,6 +795,88 @@ export function useCompanion() {
     [navigate, refreshAssist, refreshConnect, runCheck],
   );
 
+  /** One-click Protect review: apply eligible reversible assists, then caller acknowledges rows. */
+  const processProtectReview = useCallback(
+    async (alerts: ProtectAlert[]): Promise<ProtectReviewPassOutcome> => {
+      const { alertFingerprint } = await import("@/lib/protectReviewPass");
+      const fingerprints = alerts.map(alertFingerprint);
+      const skipped: string[] = [];
+      let appliedDns = false;
+      let appliedConnect = false;
+      let dnsMessage: string | null = null;
+      let connectMessage: string | null = null;
+
+      try {
+        const dnsRec = await invoke<DnsAssistRecommendation>("recommend_dns");
+        setDnsRecommendation(dnsRec);
+        const resolver = dnsRec.recommended?.resolver;
+        const dnsHinted = alerts.some((a) =>
+          a.actions.some((action) => action.kind === "dns_assist"),
+        );
+        if (resolver && (dnsRec.should_apply || dnsHinted)) {
+          try {
+            const result = await invoke<{ message: string; kept: boolean }>("apply_dns", {
+              resolver,
+            });
+            appliedDns = result.kept !== false;
+            dnsMessage = result.message;
+            setDnsSummary(result.message);
+          } catch (error) {
+            skipped.push(error instanceof Error ? error.message : "DNS assist failed");
+          }
+        } else if (!resolver) {
+          skipped.push(dnsRec.reason || "No DNS recommendation available");
+        } else {
+          skipped.push(dnsRec.reason || "DNS already acceptable");
+        }
+      } catch (error) {
+        skipped.push(error instanceof Error ? error.message : "DNS recommend unavailable");
+      }
+
+      try {
+        await invoke<ConnectConfig | null>("discover_connect");
+        const connectRec = await invoke<ConnectRecommendation>("recommend_connect");
+        setConnectRecommendation(connectRec);
+        setConnectSummary(connectRec.reason);
+        if (connectRec.should_apply) {
+          try {
+            const result = await invoke<{ message: string }>("apply_recommended_connect");
+            appliedConnect = true;
+            connectMessage = result.message;
+            setConnectSummary(result.message);
+          } catch (error) {
+            skipped.push(error instanceof Error ? error.message : "Connect assist failed");
+          }
+        } else {
+          skipped.push(connectRec.reason || "Connect assist not eligible");
+        }
+      } catch (error) {
+        skipped.push(error instanceof Error ? error.message : "Connect unavailable");
+      }
+
+      if (appliedDns || appliedConnect) {
+        await runCheck();
+        await refreshAssist();
+        await refreshConnect();
+        await refreshProtect();
+      }
+
+      const note = buildProtectReviewNote({
+        appliedDns,
+        appliedConnect,
+        dnsMessage,
+        connectMessage,
+        acknowledgedCount: fingerprints.length,
+        skipped: appliedDns || appliedConnect
+          ? skipped.filter((s) => !/not eligible|No DNS recommendation/i.test(s))
+          : skipped,
+      });
+
+      return { note, fingerprints };
+    },
+    [refreshAssist, refreshConnect, refreshProtect, runCheck],
+  );
+
   const applyAutoProtectResult = useCallback((result: AutoProtectResult) => {
     if (result.skipped_reason && result.applied.length === 0) {
       setAutoProtectNote(result.skipped_reason);
@@ -1056,6 +1145,7 @@ export function useCompanion() {
     applyRecommendedConnect,
     saveProtectSettings,
     handleProtectAction,
+    processProtectReview,
     checkForUpdates,
     installUpdate,
     openUpdateRelease,

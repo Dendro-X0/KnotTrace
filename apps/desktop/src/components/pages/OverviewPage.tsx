@@ -16,6 +16,7 @@ import { PathExitJournal } from "@/components/PathExitJournal";
 import { PathTruthTip } from "@/components/PathTruthTip";
 import { QuickIntegrityTeaser } from "@/components/QuickIntegrityTeaser";
 import { QuickPathTeaser } from "@/components/QuickPathTeaser";
+import { OverviewScoreHero } from "@/components/OverviewScoreHero";
 import { StatusHero } from "@/components/StatusHero";
 import { TrendCharts } from "@/components/TrendCharts";
 import { UpstreamPoolPanel } from "@/components/UpstreamPoolPanel";
@@ -30,7 +31,10 @@ import type { CompanionState } from "@/hooks/useCompanion";
 import { useLocale } from "@/hooks/useLocale";
 import {
   buildNextStepPlan,
+  buildQuickHeroHeadline,
   buildQuickHeroSummary,
+  integrityNeedsAttention,
+  pathNeedsAttention,
   shouldSurfaceQuickNextCtas,
 } from "@/lib/nextStepPlan";
 
@@ -76,76 +80,70 @@ export function OverviewPage({ state }: OverviewPageProps) {
   // Good-grade checks stay calm unless Path/Integrity/captive/bufferbloat need a look.
   const surfaceNextCtas = shouldSurfaceQuickNextCtas(state, nextPlan);
   const primaryNext = surfaceNextCtas ? nextPlan?.actions[0] : undefined;
-  const secondaryNext = surfaceNextCtas ? nextPlan?.actions[1] : undefined;
+  // One primary body CTA when attention surfaces — secondary stays in the evidence cards.
   const heroSummary = buildQuickHeroSummary(state);
   const heroSummaryText =
     heroSummary.kind === "key" ? t(heroSummary.key) : heroSummary.text;
   const heroShowsEnglishText = heroSummary.kind === "text";
+  const heroHeadline = buildQuickHeroHeadline(state);
+  const heroHeadlineText =
+    heroHeadline.kind === "key" ? t(heroHeadline.key) : undefined;
+  const showPathAttention = isQuick && pathNeedsAttention(state);
+  const showIntegrityAttention = isQuick && integrityNeedsAttention(state);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className={isQuick ? "flex w-full min-w-0 flex-col gap-2.5" : "flex flex-col gap-3"}>
       {isQuick ? (
-        <>
+        <div className="overview-hero-flow motion-stagger flex w-full min-w-0 flex-col gap-3">
           <PathTruthTip />
-          <section className="bento-grid motion-stagger" aria-label="Connection status">
-            <div className="bento-hero">
-              <StatusHero
-                emphasis="hero"
-                loading={loading}
-                grade={grade}
-                score={state.report?.score.score}
-                dnsIntegrity={state.report?.dns_integrity}
-                summary={heroSummaryText}
-                footer={heroShowsEnglishText ? <EnglishProbeNote variant="note" /> : undefined}
-                metrics={
-                  loading
-                    ? undefined
-                    : quickStats.map((stat) => ({ label: stat.label, value: stat.value }))
-                }
-                primaryAction={
-                  primaryNext
-                    ? {
-                        label: t(primaryNext.labelKey),
-                        onClick: () => state.navigate(primaryNext.page),
-                      }
-                    : undefined
-                }
-                secondaryAction={
-                  secondaryNext
-                    ? {
-                        label: t(secondaryNext.labelKey),
-                        onClick: () => state.navigate(secondaryNext.page),
-                      }
-                    : undefined
-                }
-              />
-            </div>
-            <div className="bento-path h-full">
-              <QuickPathTeaser
-                loading={loading}
-                report={state.report?.path_break}
-                tunnelCompare={state.report?.tunnel_compare}
-              />
-            </div>
-            <div className="bento-integrity h-full">
-              <QuickIntegrityTeaser
-                loading={loading}
-                report={state.report?.integrity}
-                checking={state.checking}
-                onRunCheck={() => void state.runCheck()}
-                onOpenProtect={() => state.navigate("protect")}
-              />
-            </div>
-            <div className="bento-export h-full">
-              <DiagnosticBundlePanel state={state} compact />
-            </div>
-          </section>
-          <PathExitJournal
+          <OverviewScoreHero
             loading={loading}
-            points={state.trends}
-            compact
+            grade={grade}
+            score={state.report?.score.score}
+            headline={heroHeadlineText}
+            pathAttention={showPathAttention}
+            integrityAttention={showIntegrityAttention}
+            dnsIntegrity={state.report?.dns_integrity}
+            summary={heroSummaryText}
+            footer={heroShowsEnglishText ? <EnglishProbeNote variant="note" /> : undefined}
+            metrics={
+              loading
+                ? undefined
+                : quickStats.map((stat) => ({ label: stat.label, value: stat.value }))
+            }
+            primaryAction={
+              primaryNext
+                ? {
+                    label: t(primaryNext.labelKey),
+                    onClick: () => state.navigate(primaryNext.page),
+                  }
+                : undefined
+            }
           />
-        </>
+
+          <section
+            className="overview-category-grid grid items-stretch gap-2.5 md:grid-cols-3"
+            aria-label="Path evidence"
+          >
+            <QuickPathTeaser
+              loading={loading}
+              report={state.report?.path_break}
+              tunnelCompare={state.report?.tunnel_compare}
+            />
+            <QuickIntegrityTeaser
+              loading={loading}
+              report={state.report?.integrity}
+              checking={state.checking}
+              onRunCheck={() => void state.runCheck()}
+              onOpenProtect={() => state.navigate("protect")}
+            />
+            <DiagnosticBundlePanel state={state} compact />
+          </section>
+
+          <section aria-label={t("pathJournal.title")}>
+            <PathExitJournal loading={loading} points={state.trends} compact />
+          </section>
+        </div>
       ) : (
         <>
           <section className="grid gap-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(11rem,0.85fr)]">

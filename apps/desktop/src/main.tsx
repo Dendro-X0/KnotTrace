@@ -4,11 +4,13 @@ import { App } from "./App";
 import { LocaleProvider } from "./hooks/useLocale";
 import { UiDensityProvider } from "./hooks/useUiDensity";
 import { initLocale } from "./lib/i18n";
+import { initReduceMotion } from "./lib/motionPref";
 import { initTheme } from "./lib/theme";
 import "./styles.css";
 
 initTheme();
 initLocale();
+initReduceMotion();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <LocaleProvider>

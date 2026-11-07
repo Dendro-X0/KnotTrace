@@ -45,8 +45,9 @@
   --sidebar-foreground: #0c1929;
   --sidebar-border: #cfd9e6;
   --shell-gradient:
-    radial-gradient(ellipse 80% 55% at 8% -10%, color-mix(in srgb, #2dd4bf 22%, transparent), transparent 55%),
-    radial-gradient(ellipse 60% 45% at 96% 0%, color-mix(in srgb, #38bdf8 18%, transparent), transparent 50%),
+    radial-gradient(ellipse 90% 60% at 4% -12%, color-mix(in srgb, #2dd4bf 28%, transparent), transparent 58%),
+    radial-gradient(ellipse 70% 50% at 98% 0%, color-mix(in srgb, #38bdf8 22%, transparent), transparent 52%),
+    radial-gradient(ellipse 50% 40% at 50% 110%, color-mix(in srgb, #0f766e 10%, transparent), transparent 55%),
     linear-gradient(165deg, #f4f7fb 0%, var(--background) 48%, #dde7f2 100%);
   --panel-gradient: linear-gradient(
     155deg,
@@ -60,6 +61,8 @@
   );
   /* Outer shadow only — inset highlights + border-radius bleed in WebView2. */
   --shadow-tile: 0 8px 24px -16px color-mix(in srgb, #0c1929 28%, transparent);
+  --hub-rim: color-mix(in srgb, var(--primary) 28%, transparent);
+  --hub-glow: 0 0 24px -6px color-mix(in srgb, var(--primary) 45%, transparent);
 }
 
 [data-theme="dark"] {
@@ -84,8 +87,9 @@
   --sidebar-foreground: #e8eef6;
   --sidebar-border: #1e2c3a;
   --shell-gradient:
-    radial-gradient(ellipse 70% 50% at 6% -8%, color-mix(in srgb, #14b8a6 16%, transparent), transparent 52%),
-    radial-gradient(ellipse 55% 40% at 100% 4%, color-mix(in srgb, #0284c7 12%, transparent), transparent 48%),
+    radial-gradient(ellipse 85% 55% at 3% -10%, color-mix(in srgb, #14b8a6 22%, transparent), transparent 55%),
+    radial-gradient(ellipse 65% 48% at 100% 0%, color-mix(in srgb, #0284c7 16%, transparent), transparent 50%),
+    radial-gradient(ellipse 55% 45% at 40% 120%, color-mix(in srgb, #0f766e 14%, transparent), transparent 58%),
     linear-gradient(170deg, #0b121a 0%, var(--background) 42%, #04070b 100%);
   --panel-gradient: linear-gradient(
     155deg,
@@ -98,6 +102,8 @@
     color-mix(in srgb, var(--accent) 40%, var(--card))
   );
   --shadow-tile: 0 12px 28px -18px color-mix(in srgb, black 70%, transparent);
+  --hub-rim: color-mix(in srgb, var(--primary) 32%, transparent);
+  --hub-glow: 0 0 28px -4px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 * {
@@ -128,6 +134,45 @@ summary {
 .surface-panel {
   background: var(--panel-gradient);
   backdrop-filter: blur(14px);
+}
+
+.hub-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.hub-shell::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 40% 28% at 12% 8%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 70%),
+    radial-gradient(ellipse 35% 30% at 88% 12%, color-mix(in srgb, #38bdf8 8%, transparent), transparent 65%);
+  opacity: 0.9;
+}
+
+/* Keep shell children above the atmosphere layer — but never force
+   position:relative onto full-window overlays (breaks fixed/absolute). */
+.hub-shell > *:not([data-hub-overlay]) {
+  position: relative;
+  z-index: 1;
+}
+
+.hub-stage {
+  background: var(--panel-gradient);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    var(--shadow-tile),
+    0 0 0 1px color-mix(in srgb, var(--primary) 14%, var(--border)),
+    inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+}
+
+.hub-rail-active {
+  box-shadow:
+    var(--hub-glow),
+    0 0 0 1px color-mix(in srgb, var(--primary) 35%, transparent);
 }
 
 .surface-card {
@@ -172,7 +217,21 @@ summary {
   height: 0;
 }
 
-/* Bento / brick-wall Overview */
+/* Overview command deck (Quick) — one full-width surface */
+.overview-deck {
+  min-width: 0;
+}
+
+.overview-deck-evidence > * {
+  min-width: 0;
+}
+
+.overview-category-grid > * {
+  min-width: 0;
+  min-height: 100%;
+}
+
+/* Bento / brick-wall Overview (legacy / Advanced-adjacent) */
 .bento-grid {
   display: grid;
   gap: 0.75rem;
@@ -229,57 +288,107 @@ summary {
   }
 }
 
-/* Motion */
+/* Motion — hub fluid (no card translateY: WebView2 hairline ghosts) */
 @keyframes motion-fade-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px) scale(0.985);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes motion-hub-enter {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes motion-cta-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 1px 2px color-mix(in srgb, black 12%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--primary) 0%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 1px 2px color-mix(in srgb, black 12%, transparent),
+      0 0 18px -2px color-mix(in srgb, var(--primary) 55%, transparent);
   }
 }
 
 .motion-page-enter {
-  animation: motion-fade-up 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: motion-hub-enter 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .motion-stagger > * {
-  animation: motion-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: motion-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .motion-stagger > *:nth-child(1) {
   animation-delay: 0ms;
 }
 .motion-stagger > *:nth-child(2) {
-  animation-delay: 45ms;
+  animation-delay: 55ms;
 }
 .motion-stagger > *:nth-child(3) {
-  animation-delay: 90ms;
+  animation-delay: 110ms;
 }
 .motion-stagger > *:nth-child(4) {
-  animation-delay: 135ms;
+  animation-delay: 165ms;
 }
 .motion-stagger > *:nth-child(5) {
-  animation-delay: 180ms;
+  animation-delay: 220ms;
+}
+.motion-stagger > *:nth-child(6) {
+  animation-delay: 275ms;
+}
+
+.hub-cta {
+  animation: motion-cta-glow 3.6s ease-in-out infinite;
 }
 
 [data-slot="card"] {
   overflow: hidden;
   border-radius: 0.75rem;
   transition:
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
+    border-color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.28s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
   [data-slot="card"]:hover {
     /* Prefer shadow (not translateY) — transforms leave hairline border ghosts in WebView2. */
-    border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+    border-color: color-mix(in srgb, var(--primary) 42%, var(--border));
     box-shadow:
       var(--shadow-tile),
-      0 0 0 1px color-mix(in srgb, var(--primary) 18%, transparent);
+      0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent),
+      0 0 28px -12px color-mix(in srgb, var(--primary) 35%, transparent);
+  }
+}
+
+.hub-nav-item {
+  transition:
+    background-color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.22s ease,
+    box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hub-nav-item:not([aria-current="page"]):hover {
+    transform: translateX(2px);
   }
 }
 
@@ -287,31 +396,83 @@ button,
 [role="button"],
 a {
   transition:
-    background-color 0.18s ease,
-    color 0.18s ease,
-    border-color 0.18s ease,
-    opacity 0.18s ease,
-    transform 0.18s ease;
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-slot="button"]:active {
+    transform: scale(0.97);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .motion-page-enter,
-  .motion-stagger > * {
-    animation: none;
+  .motion-stagger > *,
+  .hub-cta {
+    animation: none !important;
   }
 
   [data-slot="card"],
+  .hub-nav-item,
   button,
   [role="button"],
   a {
-    transition: none;
+    transition: none !important;
   }
 
   @media (hover: hover) and (pointer: fine) {
     [data-slot="card"]:hover {
       box-shadow: var(--shadow-tile);
     }
+
+    .hub-nav-item:not([aria-current="page"]):hover {
+      transform: none;
+    }
+
+    [data-slot="button"]:active {
+      transform: none;
+    }
   }
+}
+
+:root[data-reduce-motion="true"] .motion-page-enter,
+:root[data-reduce-motion="true"] .motion-stagger > *,
+:root[data-reduce-motion="true"] .hub-cta {
+  animation: none !important;
+}
+
+:root[data-reduce-motion="true"] [data-slot="card"],
+:root[data-reduce-motion="true"] .hub-nav-item,
+:root[data-reduce-motion="true"] button,
+:root[data-reduce-motion="true"] [role="button"],
+:root[data-reduce-motion="true"] a {
+  transition: none !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-reduce-motion="true"] [data-slot="card"]:hover {
+    box-shadow: var(--shadow-tile);
+  }
+
+  :root[data-reduce-motion="true"] .hub-nav-item:not([aria-current="page"]):hover {
+    transform: none;
+  }
+
+  :root[data-reduce-motion="true"] [data-slot="button"]:active {
+    transform: none;
+  }
+}
+
+/* Settings hub */
+.settings-hub-nav-active {
+  box-shadow:
+    var(--hub-glow),
+    0 0 0 1px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 @media (max-width: 1023px) {

@@ -26,7 +26,7 @@ Product direction: fix what is on the machine (DNS, link, OS caps, MTU) first; t
 
 Community tryouts: prefer [COMMUNITY.md](./COMMUNITY.md). Report problems via [GitHub Issues](https://github.com/Dendro-X0/KnotTrace/issues).
 
-**Charter:** [product-plan-path-exit-clarity-2026-11.md](./product-plan-path-exit-clarity-2026-11.md) — **complete @ v1.10.2** (P·U·L1·D1·V\*). Share plan: [product-plan-share-patch-1-10-2-2026-11.md](./product-plan-share-patch-1-10-2-2026-11.md). Prior: [product-plan-share-patch-1-10-1-2026-11.md](./product-plan-share-patch-1-10-1-2026-11.md).
+**Charter:** Hub UI share **v1.11.0** — [product-plan-share-1-11-0-2026-11.md](./product-plan-share-1-11-0-2026-11.md). Prior path/exit clarity **complete @ v1.10.2** — [product-plan-path-exit-clarity-2026-11.md](./product-plan-path-exit-clarity-2026-11.md).
 
 ## Local data
 
@@ -71,6 +71,7 @@ Windows: `%LOCALAPPDATA%/KnotTrace/` (legacy `NetworkCompanion/` is still read i
 - [product-plan-script-risk-scan-2026-11.md](./product-plan-script-risk-scan-2026-11.md) — bounded script-risk scan (**complete**; not AV)
 - [product-plan-share-patch-1-10-0-2026-11.md](./product-plan-share-patch-1-10-0-2026-11.md) — share release **v1.10.0**
 - [product-plan-share-patch-1-10-1-2026-11.md](./product-plan-share-patch-1-10-1-2026-11.md) — share patch **v1.10.1**
+- [product-plan-share-1-11-0-2026-11.md](./product-plan-share-1-11-0-2026-11.md) — share release **v1.11.0** (hub UI)
 - [product-plan-share-patch-1-10-2-2026-11.md](./product-plan-share-patch-1-10-2-2026-11.md) — share patch **v1.10.2**
 - [product-plan-desktop-trust-path-truth-2026-11.md](./product-plan-desktop-trust-path-truth-2026-11.md) — desktop trust (A) + Path Truth sharpen (B) — **complete @ v1.10.1**
 - [product-plan-path-exit-clarity-2026-11.md](./product-plan-path-exit-clarity-2026-11.md) — path/exit clarity (**complete @ v1.10.2**)

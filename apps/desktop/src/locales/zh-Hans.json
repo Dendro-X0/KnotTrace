@@ -25,6 +25,21 @@
     "trayNoteShort": "关闭后仍在托盘运行。",
     "disclaimer": "KnotTrace 是网络伴侣——提供指标与辅助，不是杀毒软件。"
   },
+  "chrome": {
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "restore": "还原",
+    "close": "关闭",
+    "dragHint": "拖动以移动窗口"
+  },
+  "protect": {
+    "processReview": "一键处理",
+    "processReviewBusy": "处理中…",
+    "processReviewHint": "有可用时应用可逆的 DNS/连接辅助；其余标为已审阅。指标不会被自动“修复”。",
+    "toReview": "{count} 项待处理",
+    "allClear": "此处暂无事项",
+    "needsCheck": "需要先检查"
+  },
   "common": {
     "details": "详情",
     "loading": "加载中",
@@ -46,7 +61,8 @@
   },
   "pathJournal": {
     "title": "路径 / 出口日志",
-    "empty": "多跑几次健康检查后，这里会显示最近的路径、出口 IP、形态与评分。"
+    "empty": "多跑几次健康检查后，这里会显示最近的路径、出口 IP、形态与评分。",
+    "latest": "最近出口"
   },
   "overviewTip": {
     "pathTruth": "KnotTrace 的工作是路径真相——中断在哪里——不是网络加速。",
@@ -116,7 +132,13 @@
       "partialLocal": "部分站点失败，但中断更像本机问题——先修本地跃点，再归咎目标站或节点。",
       "partialDns": "部分站点失败且呈 DNS 形态。先检查解析器，不要靠频繁换节点。",
       "partialActivePath": "部分站点在当前活动路径失败。先对比上游池/隧道证据，再考虑一次谨慎的连接切换。",
-      "partialDestination": "本机路径看起来正常但部分站点失败——更像目标站、过滤或策略限制，不是本机修复能解决的。"
+      "partialDestination": "本机路径看起来正常但部分站点失败——更像目标站、过滤或策略限制，不是本机修复能解决的。",
+      "pathAttention": "延迟看起来正常，但活动路径仍有中断——请到网络页查看跃点证据。",
+      "integrityAttention": "延迟看起来正常，但防护页有暴露或路由信号待查看——这不是恶意软件判定。",
+      "pathAndIntegrity": "延迟看起来正常，但路径与防护都需要留意——先看下方证据卡片。",
+      "headlinePath": "路径需要留意",
+      "headlineIntegrity": "查看防护信号",
+      "headlineReviewBoth": "需要进一步查看"
     },
     "path": {
       "expectationLocalFirst": "先修复本机/路径中断。在本地跃点恢复前，隧道开销只是次要因素。",
@@ -165,7 +187,9 @@
     }
   },
   "search": {
-    "placeholder": "搜索页面与操作",
+    "placeholder": "搜索页面…",
+    "dialogPlaceholder": "搜索页面与操作…",
+    "empty": "没有匹配的页面或操作。",
     "shortcut": "Ctrl+K",
     "runCheckHint": "立即开始一次手动快速检查",
     "settingsHint": "主题、语言、简洁/高级、监视与更新",
@@ -196,7 +220,7 @@
   },
   "settings": {
     "appearanceTitle": "外观",
-    "appearanceDescription": "KnotTrace 的外观、页面详细程度以及使用的语言。",
+    "appearanceDescription": "自定义 KnotTrace 的外观、页面详细程度以及使用的语言。",
     "monitoringTitle": "监视",
     "monitoringDescription": "在托盘运行时的后台检查。简洁模式下，这里是开关监视的唯一位置。",
     "monitorLabel": "后台监视",
@@ -218,6 +242,19 @@
     "installing": "正在安装…",
     "releaseNotes": "发行说明",
     "upToDate": "当前已是最近检查到的版本。",
-    "trayNote": "关闭窗口后 KnotTrace 会留在托盘中。"
+    "trayNote": "关闭窗口后 KnotTrace 会留在托盘中。",
+    "searchPlaceholder": "搜索设置…",
+    "searchEmpty": "没有匹配的设置项。",
+    "categories": "设置分类",
+    "groupGeneral": "通用",
+    "groupTools": "工具",
+    "groupAbout": "关于",
+    "current": "当前：{value}",
+    "reset": "重置",
+    "motionTitle": "动效",
+    "motionLabel": "减少动效",
+    "motionHelp": "减弱应用内的动画与过渡效果。",
+    "motionOn": "开",
+    "motionOff": "关"
   }
 }

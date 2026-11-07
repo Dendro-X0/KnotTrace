@@ -37,22 +37,29 @@ export function DnsPage({ state }: DnsPageProps) {
   return (
     <FeaturePage
       title="DNS Assist"
-      description={state.dnsSummary || "Compare public resolvers and apply a recommended DNS when it helps."}
+      description={
+        state.dnsSummary ||
+        "Compare public resolvers and apply a recommended DNS when it helps."
+      }
       icon={Globe}
       badge={loading ? undefined : badge}
       error={state.dnsError}
       loading={loading}
       footer={
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Button onClick={() => void state.applyRecommendedDns()} disabled={!canApply || state.dnsApplying}>
-            {state.dnsApplying ? "Applying..." : "Apply recommended DNS"}
+          <Button
+            className={cn(canApply && "hub-cta")}
+            onClick={() => void state.applyRecommendedDns()}
+            disabled={!canApply || state.dnsApplying}
+          >
+            {state.dnsApplying ? "Applying…" : "Apply recommended DNS"}
           </Button>
           <Button
             variant="secondary"
             onClick={() => void state.restoreDns()}
             disabled={!state.dnsState?.can_apply || !state.dnsState.active || state.dnsRestoring}
           >
-            {state.dnsRestoring ? "Restoring..." : "Restore original DNS"}
+            {state.dnsRestoring ? "Restoring…" : "Restore original DNS"}
           </Button>
         </div>
       }
@@ -60,7 +67,7 @@ export function DnsPage({ state }: DnsPageProps) {
       {loading ? (
         <div className="grid gap-2">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-11 rounded-lg" />
+            <Skeleton key={index} className="h-11 rounded-xl" />
           ))}
         </div>
       ) : candidates.length === 0 ? (
@@ -69,8 +76,13 @@ export function DnsPage({ state }: DnsPageProps) {
           title="No resolver benchmarks yet"
           description="Run a health check to benchmark public DNS resolvers against your current setup."
           action={
-            <Button size="sm" onClick={() => void state.runCheck()} disabled={state.checking}>
-              Run health check
+            <Button
+              size="sm"
+              className="hub-cta"
+              onClick={() => void state.runCheck()}
+              disabled={state.checking}
+            >
+              {state.checking ? "Checking…" : "Run health check"}
             </Button>
           }
         />
@@ -84,17 +96,18 @@ export function DnsPage({ state }: DnsPageProps) {
                 <li
                   key={candidate.resolver}
                   className={cn(
-                    "flex items-center justify-between rounded-lg border px-3 py-2 text-sm",
+                    "flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm",
                     recommended
                       ? "border-emerald-500/30 bg-emerald-500/10"
-                      : "border-border/70 bg-muted/20",
+                      : "border-border/50 bg-muted/15",
                     !candidate.success && "opacity-60",
                   )}
                 >
-                  <span>
-                    {candidate.label} ({candidate.resolver})
+                  <span className="min-w-0 truncate">
+                    {candidate.label}{" "}
+                    <span className="text-muted-foreground">({candidate.resolver})</span>
                   </span>
-                  <span className="text-muted-foreground">
+                  <span className="text-muted-foreground shrink-0 tabular-nums">
                     {candidate.success ? `${candidate.latency_ms.toFixed(0)} ms` : "unavailable"}
                   </span>
                 </li>
@@ -105,7 +118,9 @@ export function DnsPage({ state }: DnsPageProps) {
       )}
 
       {state.dnsState?.platform_note && (
-        <p className="text-muted-foreground text-xs">{state.dnsState.platform_note}</p>
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {state.dnsState.platform_note}
+        </p>
       )}
 
       <DnsIntegrityPanel integrity={state.report?.dns_integrity} />

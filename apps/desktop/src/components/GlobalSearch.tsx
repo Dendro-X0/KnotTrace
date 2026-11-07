@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { createPortal } from "react-dom";
 import {
   Activity,
   Globe,
@@ -157,10 +158,10 @@ export function GlobalSearchTrigger({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="text-muted-foreground hover:bg-muted/65 hover:text-foreground flex w-full items-center gap-2 rounded-md border border-border/60 bg-muted/20 px-2.5 py-2 text-left text-xs transition-colors"
+      className="text-muted-foreground hover:border-primary/30 hover:bg-muted/65 hover:text-foreground hover:shadow-[0_0_16px_-8px] hover:shadow-primary/40 flex w-full items-center gap-2 rounded-lg border border-border/60 bg-muted/25 px-2.5 py-2.5 text-left text-xs transition-all"
       aria-label={t("search.placeholder")}
     >
-      <Search className="size-3.5 shrink-0 opacity-80" />
+      <Search className="size-3.5 shrink-0 opacity-80" aria-hidden />
       <span className="min-w-0 flex-1 truncate">{t("search.placeholder")}</span>
       <kbd className="bg-muted/50 text-muted-foreground hidden rounded px-1.5 py-0.5 font-mono text-[0.62rem] sm:inline">
         {isMac ? "⌘K" : t("search.shortcut")}
@@ -233,11 +234,14 @@ export function GlobalSearch({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeIndex, filtered, open, onOpenChange]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  // Portal to body so hub-shell stacking rules cannot turn this into a flex sibling
+  // that paints below the stage (the previous “detached palette” bug).
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/45 px-3 pt-[min(18vh,8rem)] backdrop-blur-[2px]"
+      data-hub-overlay
+      className="fixed inset-0 z-[100] flex items-start justify-center bg-black/50 px-3 pt-[max(3.5rem,min(12vh,5.5rem))] pb-6 backdrop-blur-[2px]"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onOpenChange(false);
@@ -246,29 +250,33 @@ export function GlobalSearch({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Global search"
-        className="surface-panel border-border/70 w-full max-w-md overflow-hidden rounded-xl border shadow-lg"
+        aria-label={t("search.placeholder")}
+        className="surface-panel border-border/70 flex max-h-[min(28rem,calc(100dvh-6rem))] w-full max-w-md flex-col overflow-hidden rounded-xl border shadow-lg"
       >
-        <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2.5">
-          <Search className="text-muted-foreground size-4 shrink-0" />
+        <div className="flex shrink-0 items-center gap-2 border-b border-border/60 px-3 py-2.5">
+          <Search className="text-muted-foreground size-4 shrink-0" aria-hidden />
           <Input
             ref={inputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search pages and actions…"
+            placeholder={t("search.dialogPlaceholder")}
             className="border-0 bg-transparent shadow-none focus-visible:ring-0"
             aria-autocomplete="list"
             aria-controls="global-search-results"
           />
-          <kbd className="text-muted-foreground rounded border border-border/60 px-1.5 py-0.5 font-mono text-[0.62rem]">
+          <kbd className="text-muted-foreground shrink-0 rounded border border-border/60 px-1.5 py-0.5 font-mono text-[0.62rem]">
             Esc
           </kbd>
         </div>
 
-        <ul id="global-search-results" className="max-h-72 overflow-y-auto p-1.5" role="listbox">
+        <ul
+          id="global-search-results"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5"
+          role="listbox"
+        >
           {filtered.length === 0 ? (
             <li className="text-muted-foreground px-3 py-6 text-center text-sm">
-              No matching pages or actions.
+              {t("search.empty")}
             </li>
           ) : (
             filtered.map((action, index) => {
@@ -279,9 +287,9 @@ export function GlobalSearch({
                   <button
                     type="button"
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors",
+                      "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors",
                       active
-                        ? "bg-primary text-primary-foreground"
+                        ? "hub-rail-active bg-primary text-primary-foreground"
                         : "hover:bg-muted/70 text-foreground",
                     )}
                     onMouseEnter={() => setActiveIndex(index)}
@@ -290,7 +298,10 @@ export function GlobalSearch({
                       onOpenChange(false);
                     }}
                   >
-                    <Icon className={cn("size-4 shrink-0", active ? "opacity-100" : "opacity-80")} />
+                    <Icon
+                      className={cn("size-4 shrink-0", active ? "opacity-100" : "opacity-80")}
+                      aria-hidden
+                    />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">{action.label}</span>
                       <span
@@ -309,6 +320,7 @@ export function GlobalSearch({
           )}
         </ul>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

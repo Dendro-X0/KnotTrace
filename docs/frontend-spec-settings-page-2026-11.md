@@ -1,7 +1,7 @@
 # Frontend spec — Settings page
 
-Status: **shipped in tree**  
-Pairs with: [frontend-spec-consumer-calm-protect-2026-11.md](./frontend-spec-consumer-calm-protect-2026-11.md)
+Status: **shipped in tree** (layout evolved — see hub spec)  
+Pairs with: [frontend-spec-consumer-calm-protect-2026-11.md](./frontend-spec-consumer-calm-protect-2026-11.md) · [frontend-spec-settings-hub-2026-11.md](./frontend-spec-settings-hub-2026-11.md)
 
 ## Goal
 

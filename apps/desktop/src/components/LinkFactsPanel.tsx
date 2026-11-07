@@ -48,17 +48,23 @@ export function LinkFactsPanel({ loading, report }: LinkFactsPanelProps) {
     active?.friendly_name ?? active?.name ?? report.adapters[0]?.name ?? "Unknown";
 
   return (
-    <Card className="min-h-0 border-border/70 bg-card/80">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
-            <Cable className="size-4" />
-          </div>
-          <CardTitle>Link</CardTitle>
-        </div>
-        <div className="flex flex-wrap justify-end gap-1">
-          {active?.kind && <Badge variant="info">{formatTag(active.kind)}</Badge>}
-          {active?.duplex && <Badge variant="info">{formatTag(active.duplex)}</Badge>}
+    <Card className="min-h-0 h-full border-border/50">
+      <CardHeader className="pb-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Cable className="text-muted-foreground size-3.5" aria-hidden />
+          <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Link
+          </CardTitle>
+          {active?.kind && (
+            <Badge variant="info" className="normal-case">
+              {formatTag(active.kind)}
+            </Badge>
+          )}
+          {active?.duplex && (
+            <Badge variant="info" className="normal-case">
+              {formatTag(active.duplex)}
+            </Badge>
+          )}
         </div>
       </CardHeader>
       <CardContent className="min-h-0">

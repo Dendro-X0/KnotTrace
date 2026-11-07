@@ -1,6 +1,7 @@
 import type { HealthGrade, HistoryTrendPoint } from "../types.ts";
 
-export const PATH_EXIT_JOURNAL_QUICK_LIMIT = 3;
+/** Quick Overview: latest exit only — avoid a peer “history deck” under the hero. */
+export const PATH_EXIT_JOURNAL_QUICK_LIMIT = 1;
 export const PATH_EXIT_JOURNAL_ADVANCED_LIMIT = 8;
 
 export interface PathExitJournalRow {

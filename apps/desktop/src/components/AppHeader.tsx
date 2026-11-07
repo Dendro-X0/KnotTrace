@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { useLocale } from "@/hooks/useLocale";
 import { useUiDensity } from "@/hooks/useUiDensity";
 import type { CompanionState } from "@/hooks/useCompanion";
+import { buildNextStepPlan, shouldSurfaceQuickNextCtas } from "@/lib/nextStepPlan";
+import { cn } from "@/lib/utils";
 import { formatReason } from "@/types";
 
 interface AppHeaderProps {
@@ -30,6 +32,13 @@ export function AppHeader({ state }: AppHeaderProps) {
   const checkedWhen = state.report
     ? new Date(state.report.timestamp).toLocaleString(locale === "zh-Hans" ? "zh-CN" : "en")
     : null;
+  // When Overview Quick already owns a next-step primary CTA, keep Run check secondary.
+  const overviewNextPlan =
+    isQuick && state.page === "overview" ? buildNextStepPlan(state) : null;
+  const demoteRunCheck =
+    isQuick &&
+    state.page === "overview" &&
+    shouldSurfaceQuickNextCtas(state, overviewNextPlan);
 
   return (
     <div className="flex flex-col gap-2">
@@ -70,7 +79,15 @@ export function AppHeader({ state }: AppHeaderProps) {
         <Separator className="lg:hidden" />
 
         <div className="flex shrink-0 flex-col items-stretch gap-2 min-[420px]:flex-row min-[420px]:items-center">
-          <Button className="w-full min-[420px]:w-auto" onClick={() => void state.runCheck()} disabled={state.checking}>
+          <Button
+            variant={demoteRunCheck ? "secondary" : "default"}
+            className={cn(
+              "w-full min-[420px]:w-auto",
+              !demoteRunCheck && "hub-cta",
+            )}
+            onClick={() => void state.runCheck()}
+            disabled={state.checking}
+          >
             {state.checking ? (
               <>
                 <Loader2 className="size-4 animate-spin" />

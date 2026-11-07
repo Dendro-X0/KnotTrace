@@ -166,7 +166,48 @@ const KEY = {
   heroNoReport: "nextSteps.hero.noReport",
   heroGoodDefault: "nextSteps.hero.goodDefault",
   heroLookCloser: "nextSteps.hero.lookCloser",
+  heroPathAttention: "nextSteps.hero.pathAttention",
+  heroIntegrityAttention: "nextSteps.hero.integrityAttention",
+  heroPathAndIntegrity: "nextSteps.hero.pathAndIntegrity",
+  heroHeadlinePath: "nextSteps.hero.headlinePath",
+  heroHeadlineIntegrity: "nextSteps.hero.headlineIntegrity",
+  heroHeadlineReviewBoth: "nextSteps.hero.headlineReviewBoth",
 } as const;
+
+/** Path break hop is classified and not clear. */
+export function pathNeedsAttention(state: NextStepStateSource): boolean {
+  const hop = state.report?.path_break?.break_hop;
+  return Boolean(hop && hop !== "none");
+}
+
+/** Integrity board reported one or more indicators on this check. */
+export function integrityNeedsAttention(state: NextStepStateSource): boolean {
+  return (state.report?.integrity?.indicator_count ?? 0) > 0;
+}
+
+export type QuickHeroHeadline =
+  | { kind: "key"; key: string }
+  | { kind: "grade"; grade: string | null | undefined };
+
+/**
+ * Headline for Quick Overview hero.
+ * Good latency score must not say “Looking good” when Path/Integrity need a look.
+ */
+export function buildQuickHeroHeadline(state: NextStepStateSource): QuickHeroHeadline {
+  const report = state.report;
+  if (!report) return { kind: "grade", grade: undefined };
+
+  const grade = report.score?.grade;
+  if (grade === "good") {
+    const path = pathNeedsAttention(state);
+    const integrity = integrityNeedsAttention(state);
+    if (path && integrity) return { kind: "key", key: KEY.heroHeadlineReviewBoth };
+    if (path) return { kind: "key", key: KEY.heroHeadlinePath };
+    if (integrity) return { kind: "key", key: KEY.heroHeadlineIntegrity };
+  }
+
+  return { kind: "grade", grade };
+}
 
 function confidenceBudget(confidence: DiagnosisConfidence): number {
   switch (confidence) {
@@ -639,6 +680,18 @@ export function buildQuickHeroSummary(state: NextStepStateSource): QuickHeroSumm
 
   const scoreGrade = report.score?.grade;
   const scoreLine = report.score?.summary?.trim();
+  const pathAttention = pathNeedsAttention(state);
+  const integrityAttention = integrityNeedsAttention(state);
+
+  // Good latency score + path/integrity evidence: never claim “healthy” as the only story.
+  if (scoreGrade === "good" && (pathAttention || integrityAttention)) {
+    if (pathAttention && integrityAttention) {
+      return { kind: "key", key: KEY.heroPathAndIntegrity };
+    }
+    if (pathAttention) return { kind: "key", key: KEY.heroPathAttention };
+    return { kind: "key", key: KEY.heroIntegrityAttention };
+  }
+
   if (scoreGrade === "good") {
     return scoreLine
       ? { kind: "text", text: scoreLine }
@@ -660,14 +713,12 @@ export function shouldSurfaceQuickNextCtas(
   if (!report) return false;
 
   const grade = report.score?.grade;
-  const integrityCount = report.integrity?.indicator_count ?? 0;
-  const pathBroken = Boolean(report.path_break && report.path_break.break_hop !== "none");
   const captive = normalizeCaptiveState(report.network_context?.captive_portal?.state);
   const bufferbloat = normalizeBufferbloatGrade(report.stability?.bufferbloat?.grade);
   const shape = report.diagnosis?.slowdown_shape;
 
   if (grade !== "good") return true;
-  if (integrityCount > 0 || pathBroken) return true;
+  if (pathNeedsAttention(state) || integrityNeedsAttention(state)) return true;
   if (isCaptiveSignal(captive)) return true;
   if (shape && isPromotedBufferbloat(shape, bufferbloat)) return true;
   if (bufferbloat !== "other") return true;

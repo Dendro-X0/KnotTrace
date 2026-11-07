@@ -1,6 +1,6 @@
 # KnotTrace
 
-**v1.10.2** — Desktop companion for connection health, Path Truth diagnosis, and **local-first, reversible** assists — without fake “speed boosts.”
+**v1.11.0** — Desktop companion for connection health, Path Truth diagnosis, and **local-first, reversible** assists — without fake “speed boosts.”
 
 **Trying it out?** Start here → **[docs/COMMUNITY.md](docs/COMMUNITY.md)** (install, first five minutes, diagnostic export, what it is / is not).
 
@@ -73,6 +73,7 @@ Full setup: **[docs/START-HERE.md](docs/START-HERE.md)** · **[docs/development.
 | [docs/development.md](docs/development.md) | Dev setup + R1 reliability gate |
 | [docs/release.md](docs/release.md) | Installer build |
 | [docs/platform-support.md](docs/platform-support.md) | OS feature matrix |
+| [docs/product-plan-share-1-11-0-2026-11.md](docs/product-plan-share-1-11-0-2026-11.md) | Share release **v1.11.0** (hub UI) |
 | [docs/product-plan-path-exit-clarity-2026-11.md](docs/product-plan-path-exit-clarity-2026-11.md) | Path/exit clarity — **complete @ v1.10.2** |
 | [docs/product-plan-share-patch-1-10-2-2026-11.md](docs/product-plan-share-patch-1-10-2-2026-11.md) | Share patch **v1.10.2** |
 | [docs/product-plan-share-patch-1-10-1-2026-11.md](docs/product-plan-share-patch-1-10-1-2026-11.md) | Share patch **v1.10.1** |

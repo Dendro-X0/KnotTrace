@@ -13,14 +13,24 @@ interface QuickPathTeaserProps {
   loading?: boolean;
   report?: PathBreakReport | null;
   tunnelCompare?: TunnelPathCompareReport | null;
+  /** Borderless cell inside the command deck. */
+  flush?: boolean;
 }
 
-export function QuickPathTeaser({ loading, report, tunnelCompare }: QuickPathTeaserProps) {
+export function QuickPathTeaser({
+  loading,
+  report,
+  tunnelCompare,
+  flush = false,
+}: QuickPathTeaserProps) {
   const { t } = useLocale();
+  const shell = flush
+    ? "h-full rounded-none border-0 bg-transparent shadow-none"
+    : "h-full border-border/50";
 
   if (loading) {
     return (
-      <Card className="h-full border-border/50">
+      <Card className={shell}>
         <CardContent className="py-3">
           <Skeleton className="h-14 w-full rounded-lg" />
         </CardContent>
@@ -37,7 +47,7 @@ export function QuickPathTeaser({ loading, report, tunnelCompare }: QuickPathTea
         : content.expectation.text;
 
   return (
-    <Card className="h-full border-border/50">
+    <Card className={shell}>
       <CardHeader className="pb-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <Route className="text-muted-foreground size-3.5" />
@@ -45,7 +55,10 @@ export function QuickPathTeaser({ loading, report, tunnelCompare }: QuickPathTea
             Path
           </CardTitle>
           {report?.active_path && (
-            <Badge variant={content.tunnelActive ? "caution" : "info"}>
+            <Badge
+              variant={content.tunnelActive ? "caution" : "info"}
+              className="normal-case"
+            >
               {formatTag(report.active_path)}
             </Badge>
           )}

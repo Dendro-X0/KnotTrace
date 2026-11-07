@@ -1,6 +1,7 @@
 # Frontend spec — UX pass (pages)
 
 Status: **P0 shipped in tree** (X1–X5); P2 deferred  
+Follow-on chrome: [frontend-spec-pages-hub-harmony-2026-11.md](./frontend-spec-pages-hub-harmony-2026-11.md)  
 Depends on: [frontend-spec-ui-density-modes.md](./frontend-spec-ui-density-modes.md)
 
 ## Designer verdict (current product)

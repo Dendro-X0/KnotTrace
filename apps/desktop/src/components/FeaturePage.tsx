@@ -36,7 +36,7 @@ export function FeaturePage({
   const embedded = chrome === "embedded";
 
   return (
-    <Card className="min-h-0 border-border/60 bg-card/70 shadow-sm">
+    <Card className="min-h-0 border-border/50 bg-card/70 shadow-sm">
       <CardHeader className={cn(embedded && "space-y-0 pb-2")}>
         {embedded ? (
           <div className="flex flex-wrap items-center gap-2">
@@ -45,7 +45,9 @@ export function FeaturePage({
             </div>
             <span className="sr-only">{title}</span>
             {badge ? (
-              <Badge variant={badge.variant}>{badge.label}</Badge>
+              <Badge variant={badge.variant} className="normal-case">
+                {badge.label}
+              </Badge>
             ) : loading ? (
               <Skeleton className="h-5 w-20 rounded-full" />
             ) : null}
@@ -54,12 +56,14 @@ export function FeaturePage({
           <>
             <div className="flex items-center gap-2">
               <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
-                <Icon className="size-4" />
+                <Icon className="size-4" aria-hidden />
               </div>
               <CardTitle>{title}</CardTitle>
             </div>
             {badge ? (
-              <Badge variant={badge.variant}>{badge.label}</Badge>
+              <Badge variant={badge.variant} className="normal-case">
+                {badge.label}
+              </Badge>
             ) : loading ? (
               <Skeleton className="h-5 w-20 rounded-full" />
             ) : null}
@@ -73,7 +77,9 @@ export function FeaturePage({
             <Skeleton className="h-4 w-2/3" />
           </div>
         ) : (
-          <CardDescription className={cn(embedded && "text-sm leading-relaxed")}>
+          <CardDescription
+            className={cn(embedded && "text-sm leading-relaxed text-pretty")}
+          >
             {description}
           </CardDescription>
         )}

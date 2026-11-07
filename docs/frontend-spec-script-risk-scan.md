@@ -13,8 +13,9 @@ Protect page, **both Quick and Advanced**, directly under alerts (before automat
 - Neutral card (not amber alarm chrome); badge `Indicators only`
 - Short one-line scope copy
 - Compact consent + “Also run with health checks”
-- Primary CTA: **Run scan** (consent alone is enough; enables settings if needed)
-- Results: match count badge + three hit lists + honest empty copy
+- Primary CTA: **Allow & scan** / **Scan this PC** (one-click; see interactive spec)
+- Results: indicator cards with Reveal / Copy + **What to do next** guidance  
+- Follow-on: [frontend-spec-script-risk-interactive-2026-11.md](./frontend-spec-script-risk-interactive-2026-11.md)
 
 ## Copy bans
 

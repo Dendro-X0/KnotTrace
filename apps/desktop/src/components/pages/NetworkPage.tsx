@@ -3,7 +3,9 @@ import { Network, Radar } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { EnglishProbeNote } from "@/components/EnglishProbeNote";
-import { FactList } from "@/components/shared";
+import { MetricStrip } from "@/components/MetricStrip";
+import { QuickPathTeaser } from "@/components/QuickPathTeaser";
+import { FactList, formatLatency, gradeBadgeVariant, statusCardClass } from "@/components/shared";
 import { StabilityProbesPanel } from "@/components/StabilityProbesPanel";
 import { LinkFactsPanel } from "@/components/LinkFactsPanel";
 import { LocalCapsPanel } from "@/components/LocalCapsPanel";
@@ -29,6 +31,7 @@ import {
   pathEvidenceFocusFromReport,
   type PathEvidenceFocusId,
 } from "@/lib/pathEvidenceFocus";
+import { pathNeedsAttention } from "@/lib/nextStepPlan";
 import { cn } from "@/lib/utils";
 import { formatTag } from "@/types";
 
@@ -141,51 +144,97 @@ export function NetworkPage({ state }: NetworkPageProps) {
     </Card>
   );
 
-  const internetMs = probe?.internet?.avg_ms;
-  const gatewayMs = probe?.gateway?.avg_ms;
-  const dnsMs = probe?.dns.find((sample) => sample.success)?.latency_ms;
-  const quickSummary = loading
-    ? null
+  const firstDns = probe?.dns.find((sample) => sample.success);
+  const showPathBand = pathNeedsAttention(state);
+  const quickMetrics = loading
+    ? []
     : [
-        internetMs == null ? "Internet unavailable" : `Internet ${internetMs.toFixed(0)} ms`,
-        gatewayMs == null ? "Gateway not measured" : `Gateway ${gatewayMs.toFixed(0)} ms`,
-        dnsMs == null ? "DNS unavailable" : `DNS ${dnsMs.toFixed(0)} ms`,
-      ].join(" · ");
+        { label: "Internet", value: formatLatency(probe?.internet?.avg_ms) },
+        { label: "Gateway", value: formatLatency(probe?.gateway?.avg_ms, "Not measured") },
+        { label: "DNS", value: formatLatency(firstDns?.latency_ms) },
+      ];
 
   if (isQuick) {
     return (
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-2">
-        <Card className="border-border/60 bg-card/70 xl:col-span-2">
-          <CardContent className="flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-            <div>
-              <p className="text-sm font-medium">Link snapshot</p>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {quickSummary ?? "Run a health check to measure this link."}
-              </p>
+      <div className="motion-stagger flex min-h-0 w-full min-w-0 flex-col gap-3">
+        <Card className={cn(statusCardClass(score?.grade), "overflow-visible")}>
+          <CardContent className="space-y-3 px-4 py-5 sm:px-6">
+            <div className="flex flex-wrap items-center justify-center gap-2 text-center">
+              <p className="text-lg font-semibold tracking-tight sm:text-xl">Link snapshot</p>
+              {score && (
+                <Badge variant={gradeBadgeVariant(score.grade)} className="normal-case">
+                  {score.score}/100
+                </Badge>
+              )}
+              {showPathBand && (
+                <Badge variant="caution" className="normal-case">
+                  Path
+                </Badge>
+              )}
             </div>
-            {score && (
-              <Badge variant={score.grade === "good" ? "good" : score.grade === "fair" ? "fair" : "poor"}>
-                {score.grade.toUpperCase()} · {score.score}/100
-              </Badge>
+            <p className="text-muted-foreground mx-auto max-w-xl text-center text-sm leading-snug text-pretty">
+              {loading
+                ? "Measuring this link…"
+                : probe
+                  ? showPathBand
+                    ? "Latency below — path evidence needs a look in the Path card."
+                    : "Latency for this check. Local assists sit underneath."
+                  : "Run a health check to measure this link."}
+            </p>
+            {loading ? (
+              <div className="mx-auto grid w-full max-w-lg grid-cols-3 gap-2">
+                <Skeleton className="h-14 rounded-xl" />
+                <Skeleton className="h-14 rounded-xl" />
+                <Skeleton className="h-14 rounded-xl" />
+              </div>
+            ) : (
+              <MetricStrip metrics={quickMetrics} />
+            )}
+            {!probe && !loading && (
+              <div className="flex justify-center pt-1">
+                <Button
+                  size="sm"
+                  className="hub-cta"
+                  disabled={state.checking}
+                  onClick={() => void state.runCheck()}
+                >
+                  {state.checking ? "Checking…" : "Run health check"}
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
-        {probeCard}
-        <LinkFactsPanel loading={loading} report={state.report?.link_facts} />
-        <LocalRepairPanel
-          loading={loading}
-          report={state.report?.local_repair}
-          runningAction={state.localRepairRunning}
-          error={state.localRepairError}
-          onRun={(action) => void state.runLocalRepair(action)}
-        />
-        <Card className="border-border/50 bg-card/50 xl:col-span-2">
-          <CardContent className="text-muted-foreground py-3 text-xs leading-relaxed">
-            Quick mode shows link health and common local assists. Switch to{" "}
-            <span className="text-foreground font-medium">Advanced</span> in the sidebar for MTU,
-            caps, path break, integrity evidence, and throughput.
-          </CardContent>
-        </Card>
+
+        {showPathBand && (
+          <section className="grid gap-2.5" aria-label="Path evidence">
+            <QuickPathTeaser
+              loading={loading}
+              report={state.report?.path_break}
+              tunnelCompare={state.report?.tunnel_compare}
+            />
+          </section>
+        )}
+
+        <section
+          className="overview-category-grid grid items-stretch gap-2.5 md:grid-cols-2"
+          aria-label="Link assists"
+        >
+          <LinkFactsPanel loading={loading} report={state.report?.link_facts} />
+          <LocalRepairPanel
+            loading={loading}
+            report={state.report?.local_repair}
+            runningAction={state.localRepairRunning}
+            error={state.localRepairError}
+            onRun={(action) => void state.runLocalRepair(action)}
+          />
+        </section>
+
+        <p className="text-muted-foreground border-border/35 border-t pt-2 text-xs leading-relaxed">
+          Quick shows link health
+          {showPathBand ? ", path evidence," : ""} and common local assists. Switch to{" "}
+          <span className="text-foreground font-medium">Advanced</span> for MTU, caps, full path
+          panels, integrity, and throughput.
+        </p>
       </div>
     );
   }
@@ -201,7 +250,7 @@ export function NetworkPage({ state }: NetworkPageProps) {
         </div>
         <div className="flex flex-wrap justify-end gap-1">
           {(env?.tags ?? []).map((tag) => (
-            <Badge key={tag} variant="info">
+            <Badge key={tag} variant="info" className="normal-case">
               {formatTag(tag)}
             </Badge>
           ))}
@@ -270,7 +319,7 @@ export function NetworkPage({ state }: NetworkPageProps) {
             key={section.id}
             type="button"
             className={cn(
-              "rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+              "hub-nav-item rounded-lg px-2.5 py-1.5 text-xs font-medium",
               "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
             )}
             onClick={() => scrollToSection(section.id)}

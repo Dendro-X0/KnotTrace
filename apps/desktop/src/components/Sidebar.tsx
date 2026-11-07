@@ -55,15 +55,15 @@ function NavButton({
     <button
       type="button"
       className={cn(
-        "font-medium transition-colors",
+        "hub-nav-item font-medium",
         compact
-          ? "flex min-w-[4.75rem] shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-md px-2.5 py-2 text-center"
-          : "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left",
+          ? "flex min-w-[4.75rem] shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-lg px-2.5 py-2 text-center"
+          : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left",
         active
-          ? "bg-primary text-primary-foreground shadow-sm"
+          ? "hub-rail-active bg-primary text-primary-foreground"
           : compact
             ? "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-            : "text-foreground/90 hover:bg-muted/65",
+            : "text-foreground/90 hover:bg-muted/65 hover:shadow-[inset_2px_0_0_0] hover:shadow-primary/50",
       )}
       aria-current={active ? "page" : undefined}
       aria-label={compact ? `${label}: ${hint}` : undefined}
@@ -89,13 +89,13 @@ export function Sidebar({ page, onNavigate, onOpenSearch, version }: SidebarProp
   const { t } = useLocale();
 
   return (
-    <aside className="surface-panel text-sidebar-foreground flex shrink-0 flex-col gap-2 overflow-x-hidden border-b border-sidebar-border py-2 sm:gap-3 sm:py-3 lg:min-h-0 lg:w-[220px] lg:border-r lg:border-b-0 lg:py-3">
-      <div className="px-3">
+    <aside className="text-sidebar-foreground flex shrink-0 flex-col gap-2 overflow-x-hidden border-b border-sidebar-border/70 py-2 sm:gap-3 sm:py-3 lg:min-h-0 lg:w-[220px] lg:border-r lg:border-b-0 lg:py-3">
+      <div className="px-3 lg:hidden">
         <div className="flex items-center gap-2.5">
           <img
             src="/knottrace-icon.png"
             alt=""
-            className="size-9 shrink-0 rounded-md sm:size-10"
+            className="size-9 shrink-0 rounded-md shadow-[0_0_16px_-4px] shadow-primary/35 sm:size-10"
           />
           <div className="min-w-0">
             <p className="text-muted-foreground truncate text-[0.62rem] tracking-[0.08em] uppercase sm:text-[0.68rem]">

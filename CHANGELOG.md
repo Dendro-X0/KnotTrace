@@ -8,7 +8,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Planned
 
-- (none — path/exit clarity shipped in v1.10.2)
+- (none — hub UI surface shipped in v1.11.0)
+
+## [1.11.0] - 2026-11-07
+
+Share release — desktop hub UI: frameless chrome, Overview trust, cross-page harmony, interactive Script risk. Still indicators, not AV.
+
+### Added
+
+- **Custom window chrome** — frameless TitleBar with drag region and window controls ([design](specs/backend/custom-window-chrome-design.md))
+- **Overview score hero** — centered ring, metric strip, CTA below hero ([spec](docs/frontend-spec-overview-hero-sections-2026-11.md))
+- **Overview trust reconciliation** — good latency score no longer says “Looking good” when Path or Protect needs attention ([spec](docs/frontend-spec-overview-trust-2026-11.md))
+- **Settings hub** — category rail + focused preference panes ([spec](docs/frontend-spec-settings-hub-2026-11.md))
+- **Protect Process review** — honest apply + acknowledge pass for review items ([design](specs/backend/protect-review-pass-design.md))
+- **Script risk interactive** — one-click Allow & scan, result cards (Reveal / Copy), What to do next guidance without quarantine ([spec](docs/frontend-spec-script-risk-interactive-2026-11.md))
+
+### Changed
+
+- **Hub polish** — stage rim, rail active glow, page enter / stagger, primary CTA treatment ([spec](docs/frontend-spec-hub-polish-2026-11.md))
+- **Cross-page hub harmony** — Network Quick link snapshot + path teaser; DNS/Connect primary CTAs; Protect/Script risk section chrome ([spec](docs/frontend-spec-pages-hub-harmony-2026-11.md))
+- **Global search** — portal overlay so hub-shell stacking no longer detaches the palette under the stage
+
+### Notes
+
+- Feedback: [issue templates](https://github.com/Dendro-X0/KnotTrace/issues/new/choose)
+- Pre-share: `bash scripts/community-gate.sh` · assets: `bash scripts/verify-release-assets.sh v1.11.0`
+- Still not AV/EDR; Script risk remains indicators + guidance only (no kill/delete)
+- Share plan: [product-plan-share-1-11-0-2026-11.md](docs/product-plan-share-1-11-0-2026-11.md)
 
 ## [1.10.2] - 2026-11-07
 
@@ -429,6 +455,7 @@ Community-readiness share tag — reliability gates and honest public entry with
 - **DNS Assist** — reversible DNS resolver improvements on Windows
 - Background health monitor, system tray, and desktop shell (Tauri v2 + React)
 
+[1.11.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.10.2...v1.11.0
 [1.10.2]: https://github.com/Dendro-X0/KnotTrace/compare/v1.10.1...v1.10.2
 [1.10.1]: https://github.com/Dendro-X0/KnotTrace/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/Dendro-X0/KnotTrace/compare/v1.9.3...v1.10.0

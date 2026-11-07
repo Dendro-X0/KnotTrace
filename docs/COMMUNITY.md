@@ -1,6 +1,6 @@
 # KnotTrace for community tryouts
 
-**Current release (tagged):** **v1.10.2** — installers after CI · [CHANGELOG](../CHANGELOG.md) · prior: [v1.10.1](https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.10.1)
+**Current release (tagged):** **v1.11.0** — installers after CI · [CHANGELOG](../CHANGELOG.md) · prior: [v1.10.2](https://github.com/Dendro-X0/KnotTrace/releases/tag/v1.10.2)
 **Job:** Path truth — tell whether the break is local, DNS, active path, or destination/policy. Not a speed booster.
 
 This page is the short public entry kit (community-readiness Band **C1**). Maintainer internals stay in [START-HERE.md](./START-HERE.md).

@@ -25,6 +25,21 @@
     "trayNoteShort": "Runs in the tray when closed.",
     "disclaimer": "KnotTrace is a network companion — indicators and assists, not antivirus."
   },
+  "chrome": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "close": "Close",
+    "dragHint": "Drag to move window"
+  },
+  "protect": {
+    "processReview": "Process review",
+    "processReviewBusy": "Processing…",
+    "processReviewHint": "Applies reversible DNS/Connect when available; marks the rest reviewed. Indicators are not auto-fixed.",
+    "toReview": "{count} to review",
+    "allClear": "All clear here",
+    "needsCheck": "Needs a check"
+  },
   "common": {
     "details": "Details",
     "loading": "Loading",
@@ -46,7 +61,8 @@
   },
   "pathJournal": {
     "title": "Path / exit journal",
-    "empty": "Run a few health checks to see recent path, egress IP, shape, and grade."
+    "empty": "Run a few health checks to see recent path, egress IP, shape, and grade.",
+    "latest": "Latest exit"
   },
   "overviewTip": {
     "pathTruth": "KnotTrace’s job is path truth — where the break is — not a speed boost.",
@@ -116,7 +132,13 @@
       "partialLocal": "Some sites fail, but the break looks local first — fix the local hop before blaming a destination or node.",
       "partialDns": "Some sites fail with a DNS-shaped break. Check resolvers before thrashing proxy nodes.",
       "partialActivePath": "Some sites fail on the active path. Compare Upstream pool / tunnel evidence before a careful Connect change.",
-      "partialDestination": "Some sites fail while the local path looks OK — likely destination, filter, or policy, not a local repair job."
+      "partialDestination": "Some sites fail while the local path looks OK — likely destination, filter, or policy, not a local repair job.",
+      "pathAttention": "Latency looks fine, but the active path still shows a break — open Network for hop evidence.",
+      "integrityAttention": "Latency looks fine, but Protect has exposure or routing signals to review — not a malware verdict.",
+      "pathAndIntegrity": "Latency looks fine, but path and Protect both need a look — start with the evidence cards below.",
+      "headlinePath": "Path needs attention",
+      "headlineIntegrity": "Review Protect signals",
+      "headlineReviewBoth": "Needs a closer look"
     },
     "path": {
       "expectationLocalFirst": "Fix the local/path break first. Tunnel overhead is secondary until the local hop is healthy.",
@@ -165,7 +187,9 @@
     }
   },
   "search": {
-    "placeholder": "Search pages and actions",
+    "placeholder": "Search pages…",
+    "dialogPlaceholder": "Search pages and actions…",
+    "empty": "No matching pages or actions.",
     "shortcut": "Ctrl+K",
     "runCheckHint": "Start a manual fast check now",
     "settingsHint": "Theme, language, Quick/Advanced, monitor, updates",
@@ -196,7 +220,7 @@
   },
   "settings": {
     "appearanceTitle": "Appearance",
-    "appearanceDescription": "How KnotTrace looks, how much detail each page shows, and which language to use.",
+    "appearanceDescription": "Customize how KnotTrace looks, how much detail each page shows, and which language to use.",
     "monitoringTitle": "Monitoring",
     "monitoringDescription": "Background checks while KnotTrace runs in the tray. In Quick mode this is the only place to turn the monitor on or off.",
     "monitorLabel": "Background monitor",
@@ -218,6 +242,19 @@
     "installing": "Installing…",
     "releaseNotes": "Release notes",
     "upToDate": "You’re on the latest checked version.",
-    "trayNote": "Closing the window keeps KnotTrace in the tray."
+    "trayNote": "Closing the window keeps KnotTrace in the tray.",
+    "searchPlaceholder": "Search settings…",
+    "searchEmpty": "No settings match that search.",
+    "categories": "Settings categories",
+    "groupGeneral": "General",
+    "groupTools": "Tools",
+    "groupAbout": "About",
+    "current": "Current: {value}",
+    "reset": "Reset",
+    "motionTitle": "Motion",
+    "motionLabel": "Reduce motion",
+    "motionHelp": "Reduce animations and transitions across the app.",
+    "motionOn": "On",
+    "motionOff": "Off"
   }
 }

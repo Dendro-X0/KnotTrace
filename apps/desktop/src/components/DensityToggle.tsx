@@ -40,8 +40,9 @@ export function DensityToggle({
             size="sm"
             variant={active ? "default" : "secondary"}
             className={cn(
-              "h-7 gap-1.5 rounded-[0.3rem] px-2",
+              "h-8 gap-1.5 rounded-lg px-2.5",
               compact && "flex-1",
+              active && "hub-rail-active",
               !active && "text-muted-foreground hover:text-foreground",
             )}
             aria-pressed={active}

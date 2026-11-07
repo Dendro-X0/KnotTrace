@@ -47,16 +47,18 @@ export function LocalRepairPanel({
   }
 
   return (
-    <Card className="min-h-0 border-border/70 bg-card/80">
-      <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
-              <Wrench className="size-4" />
-            </div>
-            <CardTitle>Local repair</CardTitle>
-          </div>
-          {report.local_problem_likely && <Badge variant="caution">Local issue likely</Badge>}
+    <Card className="min-h-0 h-full border-border/50">
+      <CardHeader className="pb-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Wrench className="text-muted-foreground size-3.5" aria-hidden />
+          <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Local repair
+          </CardTitle>
+          {report.local_problem_likely && (
+            <Badge variant="caution" className="normal-case">
+              Local issue likely
+            </Badge>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">

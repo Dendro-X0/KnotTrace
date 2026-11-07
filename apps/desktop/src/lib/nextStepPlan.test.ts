@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   buildNextStepPlanFromInput,
+  buildQuickHeroHeadline,
   buildQuickHeroSummary,
   classifySiteFailureLayer,
   shouldSurfaceQuickNextCtas,
@@ -430,6 +431,72 @@ describe("buildQuickHeroSummary", () => {
       kind: "key",
       key: "nextSteps.copy.pageStartSummary",
     });
+  });
+
+  it("does not claim healthy summary when good score has a path break", () => {
+    const summary = buildQuickHeroSummary({
+      trends: [],
+      report: {
+        score: { grade: "good", summary: "Connection looks healthy." },
+        path_break: {
+          active_path: "system_proxy",
+          local_ok: false,
+          break_hop: "unknown",
+        },
+        diagnosis: {
+          slowdown_shape: "general_degradation",
+          confidence: "low",
+          summary: "General degradation.",
+        },
+      },
+    });
+    assert.deepEqual(summary, { kind: "key", key: "nextSteps.hero.pathAttention" });
+  });
+
+  it("names integrity attention when good score has Protect signals", () => {
+    const summary = buildQuickHeroSummary({
+      trends: [],
+      report: {
+        score: { grade: "good", summary: "Connection looks healthy." },
+        integrity: { indicator_count: 8 },
+        diagnosis: {
+          slowdown_shape: "general_degradation",
+          confidence: "low",
+        },
+      },
+    });
+    assert.deepEqual(summary, {
+      kind: "key",
+      key: "nextSteps.hero.integrityAttention",
+    });
+  });
+});
+
+describe("buildQuickHeroHeadline", () => {
+  it("overrides Looking good when path break fires on a good score", () => {
+    const headline = buildQuickHeroHeadline({
+      trends: [],
+      report: {
+        score: { grade: "good", summary: "Connection looks healthy." },
+        path_break: { break_hop: "unknown", local_ok: false },
+      },
+    });
+    assert.deepEqual(headline, {
+      kind: "key",
+      key: "nextSteps.hero.headlinePath",
+    });
+  });
+
+  it("keeps grade headline when good score has no path or integrity pressure", () => {
+    const headline = buildQuickHeroHeadline({
+      trends: [],
+      report: {
+        score: { grade: "good", summary: "Connection looks healthy." },
+        path_break: { break_hop: "none", local_ok: true },
+        integrity: { indicator_count: 0 },
+      },
+    });
+    assert.deepEqual(headline, { kind: "grade", grade: "good" });
   });
 });
 

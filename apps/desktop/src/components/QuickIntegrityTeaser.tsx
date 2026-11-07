@@ -13,6 +13,7 @@ interface QuickIntegrityTeaserProps {
   checking?: boolean;
   onRunCheck?: () => void;
   onOpenProtect?: () => void;
+  flush?: boolean;
 }
 
 function levelVariant(level: IntegrityBoardReport["level"] | undefined) {
@@ -27,10 +28,15 @@ export function QuickIntegrityTeaser({
   checking,
   onRunCheck,
   onOpenProtect,
+  flush = false,
 }: QuickIntegrityTeaserProps) {
+  const shell = flush
+    ? "h-full rounded-none border-0 bg-transparent shadow-none"
+    : "h-full border-border/50";
+
   if (loading) {
     return (
-      <Card className="h-full border-border/50">
+      <Card className={shell}>
         <CardContent className="py-3">
           <Skeleton className="h-14 w-full rounded-lg" />
         </CardContent>
@@ -40,14 +46,16 @@ export function QuickIntegrityTeaser({
 
   if (!report) {
     return (
-      <Card className="h-full border-border/50">
+      <Card className={shell}>
         <CardHeader className="pb-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <ShieldAlert className="text-muted-foreground size-3.5" />
             <CardTitle className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
               Integrity
             </CardTitle>
-            <Badge variant="muted">Needs a check</Badge>
+            <Badge variant="muted" className="normal-case">
+              Needs a check
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -70,7 +78,7 @@ export function QuickIntegrityTeaser({
 
   return (
     <Card
-      className={cn("h-full border-border/50", openable && "cursor-pointer")}
+      className={cn(shell, openable && "cursor-pointer")}
       onClick={openable ? onOpenProtect : undefined}
       role={openable ? "button" : undefined}
       tabIndex={openable ? 0 : undefined}
@@ -92,9 +100,13 @@ export function QuickIntegrityTeaser({
             Integrity
           </CardTitle>
           {count > 0 ? (
-            <Badge variant={levelVariant(level)}>{count} indicator(s)</Badge>
+            <Badge variant={levelVariant(level)} className="normal-case">
+              {count === 1 ? "1 signal" : `${count} signals`}
+            </Badge>
           ) : (
-            <Badge variant="muted">Clear this check</Badge>
+            <Badge variant="muted" className="normal-case">
+              Clear this check
+            </Badge>
           )}
         </div>
       </CardHeader>

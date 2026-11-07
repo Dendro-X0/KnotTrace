@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { AlertTriangle, History, Shield, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { AlertTriangle, History, Shield, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
 
 import { ScriptRiskPanel } from "@/components/ScriptRiskPanel";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { statusCardClass } from "@/components/shared";
+import { useLocale } from "@/hooks/useLocale";
 import { useUiDensity } from "@/hooks/useUiDensity";
+import {
+  alertFingerprint,
+  filterActiveProtectAlerts,
+} from "@/lib/protectReviewPass";
 import { cn } from "@/lib/utils";
 import type { CompanionState } from "@/hooks/useCompanion";
 import type {
@@ -19,6 +24,28 @@ import type {
   ProtectAction,
   ProtectSettings,
 } from "@/types";
+
+const PROTECT_ACK_KEY = "knottrace-protect-ack";
+
+function loadAcknowledged(): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(PROTECT_ACK_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((item): item is string => typeof item === "string"));
+  } catch {
+    return new Set();
+  }
+}
+
+function persistAcknowledged(next: Set<string>) {
+  try {
+    sessionStorage.setItem(PROTECT_ACK_KEY, JSON.stringify([...next]));
+  } catch {
+    // Ignore quota / private mode.
+  }
+}
 
 interface ProtectPageProps {
   state: CompanionState;
@@ -150,6 +177,7 @@ function SettingsSection({
 
 export function ProtectPage({ state }: ProtectPageProps) {
   const { isQuick } = useUiDensity();
+  const { t } = useLocale();
   const status = state.protectStatus;
   const loading = state.bootstrapping && !status && !state.protectError;
   const alerts = status?.alerts ?? [];
@@ -163,6 +191,14 @@ export function ProtectPage({ state }: ProtectPageProps) {
   const [autoruns, setAutoruns] = useState<AutorunSettings | null>(null);
   const [autorunsError, setAutorunsError] = useState<string | null>(null);
   const [autorunsConsent, setAutorunsConsent] = useState(false);
+  const [acknowledged, setAcknowledged] = useState<Set<string>>(() => loadAcknowledged());
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewNote, setReviewNote] = useState<string | null>(null);
+
+  const activeAlerts = useMemo(
+    () => filterActiveProtectAlerts(alerts, acknowledged),
+    [alerts, acknowledged],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -232,15 +268,21 @@ export function ProtectPage({ state }: ProtectPageProps) {
                     <p className="text-2xl font-semibold tracking-tight sm:text-3xl">
                       {trustHeadline(status?.trust_level)}
                     </p>
-                    {alerts.length > 0 ? (
-                      <Badge variant="caution">{alerts.length} to review</Badge>
+                    {activeAlerts.length > 0 ? (
+                      <Badge variant="caution" className="normal-case">
+                        {t("protect.toReview", { count: activeAlerts.length })}
+                      </Badge>
                     ) : status ? (
-                      <Badge variant="muted">All clear here</Badge>
+                      <Badge variant="muted" className="normal-case">
+                        {t("protect.allClear")}
+                      </Badge>
                     ) : (
-                      <Badge variant="muted">Needs a check</Badge>
+                      <Badge variant="muted" className="normal-case">
+                        {t("protect.needsCheck")}
+                      </Badge>
                     )}
                   </div>
-                  <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+                  <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed text-pretty">
                     {state.protectError ??
                       status?.summary ??
                       "Run a health check to refresh how this network looks."}
@@ -252,6 +294,7 @@ export function ProtectPage({ state }: ProtectPageProps) {
                 <div className="border-t border-border/40 pt-3">
                   <Button
                     size="sm"
+                    className="hub-cta"
                     disabled={state.checking}
                     onClick={() => void state.runCheck()}
                   >
@@ -260,64 +303,113 @@ export function ProtectPage({ state }: ProtectPageProps) {
                 </div>
               )}
 
-              {alerts.length > 0 && (
-                <ul className="grid gap-1.5 border-t border-border/40 pt-3">
-                  {alerts.map((alert) => {
-                    const usefulActions = alert.actions.filter(
-                      (action) =>
-                        action.kind !== "run_check" &&
-                        action.label.toLowerCase() !== "run health check",
-                    );
-                    return (
-                      <li key={`${alert.title}-${alert.message}`}>
-                        <details className="group rounded-xl border border-border/40 bg-background/30 open:bg-background/40">
-                          <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
-                            <span
-                              className={cn(
-                                "size-1.5 shrink-0 rounded-full",
-                                alert.level === "critical"
-                                  ? "bg-rose-500"
-                                  : alert.level === "warning"
-                                    ? "bg-amber-500"
-                                    : "bg-sky-500",
+              {activeAlerts.length > 0 && (
+                <div className="grid gap-2 border-t border-border/40 pt-3">
+                  <ul className="grid gap-1.5">
+                    {activeAlerts.map((alert) => {
+                      const usefulActions = alert.actions.filter(
+                        (action) =>
+                          action.kind !== "run_check" &&
+                          action.label.toLowerCase() !== "run health check",
+                      );
+                      return (
+                        <li key={alertFingerprint(alert)}>
+                          <details className="group rounded-xl border border-border/40 bg-background/30 open:bg-background/40">
+                            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
+                              <span
+                                className={cn(
+                                  "size-1.5 shrink-0 rounded-full",
+                                  alert.level === "critical"
+                                    ? "bg-rose-500"
+                                    : alert.level === "warning"
+                                      ? "bg-amber-500"
+                                      : "bg-sky-500",
+                                )}
+                                aria-hidden
+                              />
+                              <span className="min-w-0 flex-1 text-sm font-medium leading-snug">
+                                {alert.title}
+                              </span>
+                              <span className="text-muted-foreground text-[0.65rem] group-open:hidden">
+                                Details
+                              </span>
+                            </summary>
+                            <div className="space-y-2 border-t border-border/30 px-3 py-2.5">
+                              <p className="text-muted-foreground text-xs leading-relaxed">
+                                {isQuick ? firstSentence(alert.message) : alert.message}
+                              </p>
+                              {usefulActions.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {usefulActions.map((action) => (
+                                    <Button
+                                      key={action.label}
+                                      size="sm"
+                                      variant="secondary"
+                                      onClick={() =>
+                                        state.handleProtectAction(
+                                          action.kind as ProtectAction["kind"],
+                                        )
+                                      }
+                                    >
+                                      {action.label}
+                                    </Button>
+                                  ))}
+                                </div>
                               )}
-                              aria-hidden
-                            />
-                            <span className="min-w-0 flex-1 text-sm font-medium leading-snug">
-                              {alert.title}
-                            </span>
-                            <span className="text-muted-foreground text-[0.65rem] group-open:hidden">
-                              Details
-                            </span>
-                          </summary>
-                          <div className="space-y-2 border-t border-border/30 px-3 py-2.5">
-                            <p className="text-muted-foreground text-xs leading-relaxed">
-                              {isQuick ? firstSentence(alert.message) : alert.message}
-                            </p>
-                            {usefulActions.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {usefulActions.map((action) => (
-                                  <Button
-                                    key={action.label}
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={() =>
-                                      state.handleProtectAction(
-                                        action.kind as ProtectAction["kind"],
-                                      )
-                                    }
-                                  >
-                                    {action.label}
-                                  </Button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </details>
-                      </li>
-                    );
-                  })}
-                </ul>
+                            </div>
+                          </details>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-muted-foreground text-[0.68rem] leading-relaxed sm:max-w-md">
+                      {t("protect.processReviewHint")}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="hub-cta shrink-0"
+                      disabled={reviewBusy || state.checking}
+                      onClick={() => {
+                        void (async () => {
+                          setReviewBusy(true);
+                          setReviewNote(null);
+                          try {
+                            const outcome = await state.processProtectReview(activeAlerts);
+                            const next = new Set(acknowledged);
+                            for (const fp of outcome.fingerprints) next.add(fp);
+                            setAcknowledged(next);
+                            persistAcknowledged(next);
+                            setReviewNote(outcome.note);
+                          } catch (error) {
+                            setReviewNote(
+                              error instanceof Error
+                                ? error.message
+                                : "Could not process review items.",
+                            );
+                          } finally {
+                            setReviewBusy(false);
+                          }
+                        })();
+                      }}
+                    >
+                      <Sparkles className="size-3.5" />
+                      {reviewBusy ? t("protect.processReviewBusy") : t("protect.processReview")}
+                    </Button>
+                  </div>
+                  {reviewNote && (
+                    <p className="text-muted-foreground rounded-lg border border-border/40 bg-muted/20 px-3 py-2 text-xs leading-relaxed">
+                      {reviewNote}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {activeAlerts.length === 0 && reviewNote && (
+                <p className="text-muted-foreground border-t border-border/40 pt-3 text-xs leading-relaxed">
+                  {reviewNote}
+                </p>
               )}
             </>
           )}
@@ -326,13 +418,17 @@ export function ProtectPage({ state }: ProtectPageProps) {
 
       <ScriptRiskPanel state={state} />
 
-      <details className="rounded-xl border border-border/50 bg-card/50 open:bg-card/70">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-3 text-sm [&::-webkit-details-marker]:hidden">
+      <details className="rounded-xl border border-border/40 bg-muted/5 open:bg-card/50">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-sm [&::-webkit-details-marker]:hidden">
           <span className="flex items-center gap-2">
-            <History className="text-muted-foreground size-3.5" />
-            <span className="font-medium">Recent activity</span>
+            <History className="text-muted-foreground size-3.5" aria-hidden />
+            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              Recent activity
+            </span>
           </span>
-          <Badge variant="muted">{log.length}</Badge>
+          <Badge variant="muted" className="normal-case">
+            {log.length}
+          </Badge>
         </summary>
         <div className="space-y-2 border-t border-border/40 px-3.5 py-3">
           {state.autoProtectLogError ? (
@@ -352,7 +448,10 @@ export function ProtectPage({ state }: ProtectPageProps) {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="text-xs font-medium capitalize">{entry.kind}</span>
-                        <Badge variant={entry.success ? "active" : "muted"} className="text-[0.6rem]">
+                        <Badge
+                          variant={entry.success ? "active" : "muted"}
+                          className="normal-case text-[0.6rem]"
+                        >
                           {entry.success ? "applied" : "skipped"}
                         </Badge>
                       </div>
@@ -378,18 +477,22 @@ export function ProtectPage({ state }: ProtectPageProps) {
       </details>
 
       <details
-        className="rounded-xl border border-border/60 bg-card/70"
+        className="rounded-xl border border-border/50 bg-card/70"
         open={!isQuick}
       >
         <summary
           className={cn(
-            "flex cursor-pointer list-none items-center gap-2 px-3.5 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden",
+            "flex cursor-pointer list-none items-center gap-2 px-3.5 py-3 [&::-webkit-details-marker]:hidden",
             !isQuick && "pointer-events-none",
           )}
         >
-          Protection preferences
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Protection preferences
+          </span>
           {isQuick && (
-            <span className="text-muted-foreground text-xs font-normal">Smart protect & autos</span>
+            <span className="text-muted-foreground text-xs font-normal normal-case">
+              Smart protect & autos
+            </span>
           )}
         </summary>
         <div className="flex flex-col gap-3 border-t border-border/40 px-3.5 py-3.5">

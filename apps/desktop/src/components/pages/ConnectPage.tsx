@@ -59,19 +59,24 @@ export function ConnectPage({ state }: ConnectPageProps) {
       footer={
         showSwitch ? (
           <Button
+            className="hub-cta"
             onClick={() => void state.applyRecommendedConnect()}
             disabled={state.connectApplying}
           >
-            {state.connectApplying ? "Switching..." : "Switch to recommended node"}
+            {state.connectApplying ? "Switching…" : "Switch to recommended node"}
+          </Button>
+        ) : unsupported ? (
+          <Button className="hub-cta" onClick={() => state.navigate("network")}>
+            {t("nextSteps.action.network")}
           </Button>
         ) : undefined
       }
     >
       {loading ? (
-        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-24 rounded-xl" />
       ) : isQuick ? (
         rec?.kernel ? (
-          <p className="text-muted-foreground text-xs">
+          <p className="text-muted-foreground text-xs leading-relaxed">
             Controller detected:{" "}
             <span className="text-foreground font-medium">
               {rec.kernel.kind}
@@ -98,7 +103,7 @@ export function ConnectPage({ state }: ConnectPageProps) {
       {loading ? (
         <div className="grid gap-2">
           {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-11 rounded-lg" />
+            <Skeleton key={index} className="h-11 rounded-xl" />
           ))}
         </div>
       ) : unsupported ? (
@@ -108,8 +113,10 @@ export function ConnectPage({ state }: ConnectPageProps) {
             title={t("connectPage.unsupportedTitle")}
             description={t("connectPage.unsupportedSummary")}
           />
-          <div className="rounded-lg border border-border/70 bg-muted/15 px-3 py-2.5">
-            <p className="text-sm font-medium">{t("connectPage.measuredTitle")}</p>
+          <div className="rounded-xl border border-border/50 bg-muted/10 px-3 py-2.5">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {t("connectPage.measuredTitle")}
+            </p>
             <ul className="text-muted-foreground mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed">
               <li>{t("connectPage.measuredPath")}</li>
               <li>{t("connectPage.measuredProxy")}</li>
@@ -142,16 +149,16 @@ export function ConnectPage({ state }: ConnectPageProps) {
                 <li
                   key={group.name}
                   className={cn(
-                    "flex items-center justify-between rounded-lg border px-3 py-2 text-sm",
+                    "flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-sm",
                     highlight
                       ? "border-amber-500/30 bg-amber-500/10"
-                      : "border-border/70 bg-muted/20",
+                      : "border-border/50 bg-muted/15",
                   )}
                 >
-                  <span>
+                  <span className="min-w-0 truncate">
                     {group.name} · {group.group_type}
                   </span>
-                  <span className="text-muted-foreground text-right text-xs">
+                  <span className="text-muted-foreground shrink-0 text-right text-xs tabular-nums">
                     {group.current ?? "none"} → {bestLabel}
                   </span>
                 </li>
@@ -164,7 +171,7 @@ export function ConnectPage({ state }: ConnectPageProps) {
       {!isQuick && <Separator />}
 
       {!isQuick && (
-        <details className="rounded-xl border border-border/70 bg-muted/15 p-3">
+        <details className="rounded-xl border border-border/50 bg-muted/10 p-3">
           <summary className="cursor-pointer text-sm font-medium">API settings</summary>
           <div className="mt-3 grid gap-3">
             <div className="grid gap-1.5">
@@ -191,7 +198,7 @@ export function ConnectPage({ state }: ConnectPageProps) {
               onClick={() => void state.saveConnectConfig()}
               disabled={state.connectSaving}
             >
-              {state.connectSaving ? "Saving..." : "Save API settings"}
+              {state.connectSaving ? "Saving…" : "Save API settings"}
             </Button>
           </div>
         </details>

@@ -55,11 +55,9 @@ describe("buildPathExitJournal", () => {
       PATH_EXIT_JOURNAL_QUICK_LIMIT,
     );
     assert.equal(journal.empty, false);
-    assert.equal(journal.rows.length, 3);
+    assert.equal(journal.rows.length, 1);
     assert.equal(journal.rows[0]?.activePath, "vpn_tunnel");
     assert.equal(journal.rows[0]?.egressIp, "8.8.8.8");
-    assert.equal(journal.rows[1]?.activePath, "system_proxy");
-    assert.equal(journal.rows[2]?.grade, "good");
   });
 
   it("does not invent active_path when missing", () => {
